@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EM&AC Lab</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for in-browser JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+      body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+      .font-mono { font-family: 'JetBrains Mono', monospace; }
+      /* Hide scrollbar for Chrome, Safari and Opera */
+      .scrollbar-hide::-webkit-scrollbar { display: none; }
+      /* Hide scrollbar for IE, Edge and Firefox */
+      .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0"
+  }
+}
+</script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        // --- 1. CONSTANTS ---
+        const Tab = {
+            OVERVIEW: 'OVERVIEW',
+            MAXWELL: 'MAXWELL',
+            GAUSS: 'GAUSS',
+            COULOMB: 'COULOMB',
+            AMPERE: 'AMPERE',
+            LORENTZ: 'LORENTZ',
+            FARADAY: 'FARADAY',
+            LENZ: 'LENZ',
+            EM_WAVE: 'EM_WAVE',
+            POLARIZATION: 'POLARIZATION',
+        };
+
+        const WaveViewMode = { VIEW_2D: '2D', VIEW_3D: '3D', VIEW_VI: 'VI' };
+
+        const COLORS = {
+            E_FIELD: '#dc2626',
+            B_FIELD: '#2563eb',
+            CURRENT: '#d97706',
+            POWER: '#9333ea',
+            TEXT_MAIN: '#0f172a',
+            TEXT_MUTED: '#64748b',
+            AXIS: '#94a3b8',
+            GRID: '#e2e8f0',
+        };
+
+        // --- 2. ICONS ---
+        const Icon = ({ name, size = 20, className = "" }) => {
+            const icons = {
+                Activity: <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />,
+                BookOpen: <g><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></g>,
+                Zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />,
+                Radio: <g><circle cx="12" cy="12" r="2" /><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14" /></g>,
+                Move: <g><polyline points="5 9 2 12 5 15" /><polyline points="9 5 12 2 15 5" /><polyline points="19 9 22 12 19 15" /><polyline points="15 19 12 22 9 19" /><line x1="2" y1="12" x2="22" y2="12" /><line x1="12" y1="2" x2="12" y2="22" /></g>,
+                CircleDot: <g><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="1" /></g>,
+                Layers: <g><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" /></g>,
+                Magnet: <g><path d="m6 15-4-4 6.75-6.77a7.79 7.79 0 0 1 10.5 10.5L12.5 21l-4-4" /><path d="m9 21 12-12" /></g>,
+                Settings2: <g><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" /><circle cx="10" cy="12" r="2" /><circle cx="16" cy="6" r="2" /><circle cx="8" cy="18" r="2" /></g>,
+                Sliders: <g><line x1="4" x2="20" y1="21" y2="21" /><line x1="4" x2="20" y1="14" y2="14" /><line x1="4" x2="20" y1="7" y2="7" /><circle cx="12" cy="21" r="2" /><circle cx="8" cy="7" r="2" /><circle cx="16" cy="14" r="2" /></g>,
+                Info: <g><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></g>,
+                Plus: <g><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></g>,
+                Trash2: <g><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></g>,
+                MousePointer2: <g><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="m13 13 6 6"/></g>,
+                Orbit: <g><circle cx="12" cy="12" r="3"/><path d="M2.5 12a9.5 9.5 0 0 1 19 0"/><path d="M12 2.5a9.5 9.5 0 0 1 0 19"/></g>,
+                Lightbulb: <g><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-1 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></g>,
+                Home: <g><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></g>,
+                AlertTriangle: <g><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></g>
+            };
+            return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{icons[name] || null}</svg>;
+        };
+
+        const Activity = (p) => <Icon name="Activity" {...p} />;
+        const BookOpen = (p) => <Icon name="BookOpen" {...p} />;
+        const Zap = (p) => <Icon name="Zap" {...p} />;
+        const Radio = (p) => <Icon name="Radio" {...p} />;
+        const Move = (p) => <Icon name="Move" {...p} />;
+        const CircleDot = (p) => <Icon name="CircleDot" {...p} />;
+        const Layers = (p) => <Icon name="Layers" {...p} />;
+        const Magnet = (p) => <Icon name="Magnet" {...p} />;
+        const Settings2 = (p) => <Icon name="Settings2" {...p} />;
+        const Sliders = (p) => <Icon name="Sliders" {...p} />;
+        const Info = (p) => <Icon name="Info" {...p} />;
+        const Plus = (p) => <Icon name="Plus" {...p} />;
+        const Trash2 = (p) => <Icon name="Trash2" {...p} />;
+        const MousePointer2 = (p) => <Icon name="MousePointer2" {...p} />;
+        const Orbit = (p) => <Icon name="Orbit" {...p} />;
+        const Lightbulb = (p) => <Icon name="Lightbulb" {...p} />;
+        const Home = (p) => <Icon name="Home" {...p} />;
+        const AlertTriangle = (p) => <Icon name="AlertTriangle" {...p} />;
+
+        // --- 3. SHARED COMPONENTS ---
+        const Slider = ({ label, value, min, max, step = 1, unit = '', onChange, color = 'bg-blue-600' }) => {
+            let accentColor = '#2563eb';
+            if (color.includes('red')) accentColor = '#dc2626';
+            if (color.includes('orange')) accentColor = '#ea580c';
+            if (color.includes('emerald') || color.includes('green')) accentColor = '#059669';
+            if (color.includes('purple')) accentColor = '#7c3aed';
+            if (color.includes('pink')) accentColor = '#db2777';
+            if (color.includes('slate')) accentColor = '#64748b';
+
+            return (
+                <div className="mb-4">
+                    <div className="flex justify-between text-sm mb-1">
+                        <span className="font-semibold text-slate-700">{label}</span>
+                        <span className="font-mono text-slate-500 font-medium">{value}{unit}</span>
+                    </div>
+                    <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(parseFloat(e.target.value))} className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-200" style={{ accentColor }} />
+                </div>
+            );
+        };
+
+        const ControlPanel = ({ title, children }) => (
+            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm h-full overflow-y-auto">
+                <h3 className="text-lg font-bold mb-4 border-b border-slate-100 pb-3 text-slate-800">{title}</h3>
+                {children}
+            </div>
+        );
+
+        const HintBox = ({ children }) => (
+            <div className="mt-4 p-3 bg-amber-50 border border-amber-100 rounded-lg text-xs text-amber-900 flex gap-2 leading-relaxed">
+                <div className="mt-0.5 shrink-0 text-amber-600"><Lightbulb size={14} /></div>
+                <div><span className="font-bold text-amber-700">Hint:</span> {children}</div>
+            </div>
+        );
+
+        const PlayControls = ({ isPlaying, onToggle, onReset }) => (
+            <div className="flex gap-2 mt-4">
+                <button onClick={onToggle} className={`flex-1 py-2 rounded-lg font-semibold transition-colors shadow-sm text-white ${isPlaying ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
+                    {isPlaying ? 'Pause' : 'Play'}
+                </button>
+                <button onClick={onReset} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg font-semibold transition-colors shadow-sm">
+                    Reset
+                </button>
+            </div>
+        );
+
+        const parseLatex = (latex) => {
+            let html = latex;
+            html = html.replace(/\\frac\{((?:[^{}]|\{[^{}]*\})*)\}\{((?:[^{}]|\{[^{}]*\})*)\}/g, '<span class="inline-flex flex-col align-middle text-center text-xs mx-0.5 relative -top-2"><span class="border-b border-current pb-[1px] mb-[1px] leading-tight">$1</span><span class="leading-tight">$2</span></span>');
+            html = html.replace(/\\vec\{(\w+)\}/g, '<b class="italic font-serif">$1</b>');
+            html = html.replace(/\\vec\s+(\w)/g, '<b class="italic font-serif">$1</b>');
+            html = html.replace(/\\hat\{(\w)\}/g, '<span class="italic font-serif">$1&#770;</span>');
+            html = html.replace(/\\sum/g, '<span class="text-lg relative top-[2px] mx-0.5">∑</span>');
+            html = html.replace(/\\oint/g, '<span class="text-lg relative top-[2px] mx-0.5">∮</span>');
+            const symbols = {
+                '\\epsilon_0': 'ε₀', '\\epsilon': 'ε', '\\mu_0': 'μ₀', '\\mu': 'μ',
+                '\\Phi_B': 'Φ<sub class="text-[0.6em]">B</sub>', '\\Phi_E': 'Φ<sub class="text-[0.6em]">E</sub>', '\\Phi': 'Φ',
+                '\\omega': 'ω', '\\delta': 'δ', '\\pi': 'π', '\\lambda': 'λ', '\\theta': 'θ', '\\Delta': 'Δ',
+                '\\cdot': '·', '\\times': '×', '\\rightarrow': '→', '\\approx': '≈', '\\pm': '±', '\\propto': '∝',
+                '\\sin': '<span class="font-sans">sin</span>', '\\cos': '<span class="font-sans">cos</span>', '\\mathcal{E}': 'ℰ',
+                '\\neq': '≠'
+            };
+            Object.keys(symbols).sort((a,b) => b.length - a.length).forEach(key => html = html.split(key).join(symbols[key]));
+            html = html.replace(/_\{([^{}]+)\}/g, '<sub class="text-[0.65em] relative bottom-0">$1</sub>');
+            html = html.replace(/_([a-zA-Z0-9])/g, '<sub class="text-[0.65em] relative bottom-0">$1</sub>');
+            html = html.replace(/\^\{([^{}]+)\}/g, '<sup class="text-[0.65em]">$1</sup>');
+            html = html.replace(/\^([a-zA-Z0-9])/g, '<sup class="text-[0.65em]">$1</sup>');
+            html = html.replace(/\\text\{([^{}]+)\}/g, '<span class="font-sans text-xs">$1</span>');
+            html = html.replace(/\^\\circ/g, '°'); 
+            return html;
+        };
+
+        const LatexRenderer = ({ latex, className = '' }) => (
+            <span className={`font-serif leading-relaxed ${className}`} dangerouslySetInnerHTML={{ __html: parseLatex(latex) }} />
+        );
+
+        const EquationBox = ({ title, equations }) => (
+            <div className="bg-white p-4 rounded-lg text-sm border-l-4 border-indigo-500 shadow-sm border border-slate-100">
+                <h4 className="text-xs uppercase tracking-wider text-slate-400 mb-3 font-sans font-bold">{title}</h4>
+                <div className="space-y-3">
+                    {equations.map((eq, idx) => (
+                        <div key={idx} className="flex flex-col sm:flex-row sm:items-baseline gap-2">
+                            {eq.label && <span className="text-slate-500 font-semibold min-w-[80px] text-xs font-sans">{eq.label}:</span>}
+                            <span className={`${eq.color || 'text-slate-800'} text-base font-medium flex items-center flex-wrap`}>
+                                <LatexRenderer latex={eq.math} />
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+
+        // --- 4. TABS ---
+        const OverviewTab = ({ onNavigate }) => {
+            const ModuleCard = ({ title, desc, icon, tab }) => (
+                <div 
+                    onClick={() => onNavigate(tab)}
+                    className="bg-white p-5 rounded-xl border border-slate-200 hover:border-indigo-400 hover:shadow-md transition-all cursor-pointer group flex flex-col h-full"
+                >
+                    <div className="mb-4 text-indigo-600 group-hover:scale-110 transition-transform">{icon}</div>
+                    <h3 className="font-bold text-slate-800 mb-2">{title}</h3>
+                    <p className="text-xs text-slate-500 leading-relaxed flex-grow">{desc}</p>
+                    <div className="mt-4 text-xs font-semibold text-indigo-600 flex items-center gap-1 group-hover:gap-2 transition-all">
+                        Explore <Move size={12} />
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="max-w-7xl mx-auto p-4 md:p-8 h-full overflow-y-auto">
+                    {/* Hero */}
+                    <div className="text-center space-y-6 py-8 mb-8 border-b border-slate-100">
+                        <div className="inline-flex items-center justify-center p-4 bg-indigo-100 rounded-2xl mb-2">
+                            <Activity size={48} className="text-indigo-600" />
+                        </div>
+                        <h1 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight">EM&AC Lab</h1>
+                        <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                            An interactive simulation suite designed for engineering students to visualize and experiment with the fundamental laws of Electromagnetism and AC Circuits.
+                        </p>
+                        <button onClick={() => onNavigate(Tab.COULOMB)} className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 mx-auto">
+                            Start Experimenting <Move size={18} />
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                        {/* Modules Grid */}
+                        <div className="lg:col-span-8 xl:col-span-9">
+                            <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2"><BookOpen size={20} className="text-slate-400"/> Learning Modules</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                <ModuleCard tab={Tab.COULOMB} title="Coulomb's Law" icon={<CircleDot size={28}/>} desc="Visualize electric fields and forces between multiple charges using the superposition principle." />
+                                <ModuleCard tab={Tab.AMPERE} title="Ampère's Law" icon={<Activity size={28}/>} desc="Explore magnetic fields generated by currents and the Right-Hand Grip Rule." />
+                                <ModuleCard tab={Tab.LORENTZ} title="Lorentz Force" icon={<Move size={28}/>} desc="Simulate charged particle motion in magnetic fields (Cyclotron motion)." />
+                                <ModuleCard tab={Tab.FARADAY} title="Faraday & Lenz" icon={<Zap size={28}/>} desc="Observe electromagnetic induction and how nature opposes flux changes." />
+                                <ModuleCard tab={Tab.MAXWELL} title="Maxwell's Eq." icon={<BookOpen size={28}/>} desc="A comparative overview of the four fundamental equations of electromagnetism." />
+                                <ModuleCard tab={Tab.EM_WAVE} title="EM Waves" icon={<Radio size={28}/>} desc="Analyze wave propagation, E/B field relationships, and AC power in circuits." />
+                                <ModuleCard tab={Tab.POLARIZATION} title="Polarization" icon={<Layers size={28}/>} desc="Understand Linear, Circular, and Elliptical polarization states." />
+                            </div>
+                        </div>
+
+                        {/* Sidebar - Disclaimer & Info */}
+                        <div className="lg:col-span-4 xl:col-span-3 space-y-6">
+                            
+                            {/* Disclaimer Section */}
+                            <div className="bg-red-50 border-l-4 border-red-500 p-5 rounded-r-lg shadow-sm">
+                                <div className="flex items-start gap-3">
+                                    <div className="mt-1 text-red-600 shrink-0"><AlertTriangle size={24} /></div>
+                                    <div className="space-y-2">
+                                        <h3 className="font-bold text-red-800 text-base">AI Generation Disclaimer</h3>
+                                        <div className="text-xs text-red-700 leading-relaxed text-justify space-y-2">
+                                            <p>
+                                                This educational application was architected and generated using <strong>Google's Gemini 3 Flash</strong> model. 
+                                                While designed to align with rigorous engineering standards, it may contain errors, simplifications, or hallucinations.
+                                            </p>
+                                            <p>
+                                                <strong>Always cross-reference</strong> all formulas, diagrams, and explanations with your official course reference books. 
+                                            </p>
+                                            <p>
+                                                This tool is a supplementary study aid and should not be used as the sole resource for exam preparation.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* License Section */}
+                            <div className="bg-slate-100 p-5 rounded-lg border border-slate-200 text-xs text-slate-500 space-y-4">
+                                <div>
+                                    <h4 className="font-bold text-slate-700 mb-1 uppercase tracking-wider">License & Ownership</h4>
+                                    <p className="mb-1">© 2026 [CA/EM&CA], LUT University.</p>
+                                    <p>Licensed under CC BY-NC-SA 4.0.</p>
+                                </div>
+                                <div className="border-t border-slate-200 pt-3">
+                                    <h4 className="font-bold text-slate-700 mb-1 uppercase tracking-wider">Usage in Teaching</h4>
+                                    <p>Provided for educational purposes within LUT University. Third-party materials used under Kopiosto License.</p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const CoulombsTab = () => {
+            const [charges, setCharges] = useState([{ id: 1, x: 0.35, y: 0.5, q: 4 }, { id: 2, x: 0.65, y: 0.5, q: -4 }]);
+            const [draggingId, setDraggingId] = useState(null);
+            const [showGrid, setShowGrid] = useState(true);
+            const canvasRef = useRef(null);
+            const animationRef = useRef(0);
+
+            const getNetField = useCallback((x, y, excludeId, width, height) => {
+                let Ex = 0, Ey = 0;
+                charges.forEach(charge => {
+                    if (charge.id === excludeId) return;
+                    const cx = charge.x * width, cy = charge.y * height;
+                    const dx = x - cx, dy = y - cy;
+                    const rSq = dx*dx + dy*dy;
+                    if (rSq < 100) return;
+                    const r = Math.sqrt(rSq);
+                    const E_mag = (charge.q) / rSq;
+                    Ex += E_mag * (dx / r);
+                    Ey += E_mag * (dy / r);
+                });
+                return { Ex, Ey };
+            }, [charges]);
+
+            const drawFieldLine = (ctx, startX, startY, startQ, width, height) => {
+                ctx.beginPath();
+                ctx.strokeStyle = startQ > 0 ? `${COLORS.E_FIELD}50` : `${COLORS.B_FIELD}50`;
+                ctx.lineWidth = 1.5;
+                ctx.moveTo(startX, startY);
+                let cx = startX, cy = startY, active = true, steps = 0;
+                const direction = startQ > 0 ? 1 : -1;
+                const arrowLocs = [];
+
+                while (active && steps < 600) {
+                    steps++;
+                    const { Ex, Ey } = getNetField(cx, cy, null, width, height);
+                    const mag = Math.hypot(Ex, Ey);
+                    if (mag === 0) break;
+                    const stepLen = 5;
+                    const dx = (Ex / mag) * stepLen * direction;
+                    const dy = (Ey / mag) * stepLen * direction;
+                    cx += dx; cy += dy;
+                    ctx.lineTo(cx, cy);
+                    
+                    if (steps % 20 === 0) {
+                        arrowLocs.push({x: cx, y: cy, angle: Math.atan2(dy, dx)});
+                    }
+
+                    if (cx < 0 || cx > width || cy < 0 || cy > height) active = false;
+                    for (const c of charges) {
+                        const cPx = c.x * width, cPy = c.y * height;
+                        if (Math.hypot(cx - cPx, cy - cPy) < 15) {
+                            active = false;
+                            ctx.lineTo(cPx - (cPx-cx)*0.5, cPy - (cPy-cy)*0.5); 
+                        }
+                    }
+                }
+                ctx.stroke();
+
+                ctx.fillStyle = startQ > 0 ? `${COLORS.E_FIELD}90` : `${COLORS.B_FIELD}90`;
+                for (const loc of arrowLocs) {
+                    ctx.save();
+                    ctx.translate(loc.x, loc.y);
+                    ctx.rotate(loc.angle);
+                    ctx.beginPath();
+                    ctx.moveTo(-4, -3);
+                    ctx.lineTo(4, 0);
+                    ctx.lineTo(-4, 3);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            };
+
+            const drawArrow = (ctx, x, y, vx, vy, color, label) => {
+                const mag = Math.hypot(vx, vy);
+                const maxLen = 100;
+                let scale = 1;
+                if (mag > maxLen) scale = maxLen / mag;
+                const dx = vx * scale, dy = vy * scale;
+                ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 3;
+                ctx.moveTo(x, y); ctx.lineTo(x + dx, y + dy); ctx.stroke();
+                const angle = Math.atan2(dy, dx), headLen = 10;
+                ctx.beginPath(); ctx.fillStyle = color;
+                ctx.moveTo(x + dx, y + dy);
+                ctx.lineTo(x + dx - headLen * Math.cos(angle - Math.PI/6), y + dy - headLen * Math.sin(angle - Math.PI/6));
+                ctx.lineTo(x + dx - headLen * Math.cos(angle + Math.PI/6), y + dy - headLen * Math.sin(angle + Math.PI/6));
+                ctx.fill();
+                if (mag > 20) { ctx.font = 'bold 12px sans-serif'; ctx.fillText(label, x + dx + 15 * Math.cos(angle), y + dy + 15 * Math.sin(angle)); }
+            };
+
+            useEffect(() => {
+                const render = () => {
+                    const canvas = canvasRef.current; if (!canvas) return; const ctx = canvas.getContext('2d');
+                    canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight;
+                    const { width, height } = canvas;
+                    ctx.clearRect(0, 0, width, height);
+                    if (showGrid) {
+                        ctx.strokeStyle = COLORS.GRID; ctx.lineWidth = 1; ctx.beginPath();
+                        for(let x=0; x<width; x+=40) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
+                        for(let y=0; y<height; y+=40) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
+                        ctx.stroke();
+                    }
+                    charges.forEach(charge => {
+                        const cx = charge.x * width, cy = charge.y * height;
+                        if (Math.abs(charge.q) > 0) {
+                            const count = Math.abs(charge.q) * 3;
+                            for (let i = 0; i < count; i++) {
+                                const angle = (i / count) * Math.PI * 2;
+                                drawFieldLine(ctx, cx + Math.cos(angle)*20, cy + Math.sin(angle)*20, charge.q, width, height);
+                            }
+                        }
+                    });
+                    charges.forEach(charge => {
+                        const cx = charge.x * width, cy = charge.y * height;
+                        const { Ex, Ey } = getNetField(cx, cy, charge.id, width, height);
+                        const forceX = Ex * charge.q * 5000, forceY = Ey * charge.q * 5000;
+                        if (Math.hypot(forceX, forceY) > 5) drawArrow(ctx, cx, cy, forceX, forceY, '#ea580c', 'F');
+                        ctx.beginPath(); 
+                        ctx.shadowBlur = 10; ctx.shadowColor = charge.q > 0 ? COLORS.E_FIELD : (charge.q < 0 ? COLORS.B_FIELD : '#94a3b8');
+                        ctx.fillStyle = charge.q > 0 ? COLORS.E_FIELD : (charge.q < 0 ? COLORS.B_FIELD : '#94a3b8');
+                        ctx.arc(cx, cy, 15, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+                        ctx.fillStyle = 'white'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                        ctx.fillText(`${charge.q > 0 ? "+" : ""}${charge.q}`, cx, cy);
+                        if (draggingId === charge.id) { 
+                            ctx.beginPath(); ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 2; 
+                            ctx.arc(cx, cy, 22, 0, Math.PI * 2); ctx.stroke(); 
+                        }
+                    });
+                    animationRef.current = requestAnimationFrame(render);
+                };
+                render();
+                return () => cancelAnimationFrame(animationRef.current);
+            }, [charges, draggingId, showGrid]);
+
+            const handleMouseDown = (e) => {
+                const rect = canvasRef.current.getBoundingClientRect();
+                const clicked = charges.find(c => Math.hypot(e.clientX - rect.left - c.x * canvasRef.current.width, e.clientY - rect.top - c.y * canvasRef.current.height) < 30);
+                if (clicked) setDraggingId(clicked.id);
+            };
+            const handleMouseMove = (e) => {
+                if (draggingId === null) return;
+                const rect = canvasRef.current.getBoundingClientRect();
+                let newX = (e.clientX - rect.left) / canvasRef.current.width, newY = (e.clientY - rect.top) / canvasRef.current.height;
+                setCharges(prev => prev.map(c => c.id === draggingId ? { ...c, x: Math.max(0.05, Math.min(0.95, newX)), y: Math.max(0.05, Math.min(0.95, newY)) } : c));
+            };
+
+            return (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+                    <div className="lg:col-span-2 flex flex-col gap-4">
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex-grow min-h-[400px] cursor-crosshair">
+                            <canvas ref={canvasRef} className="w-full h-full block" onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={() => setDraggingId(null)} onMouseLeave={() => setDraggingId(null)} />
+                            <div className="absolute bottom-4 left-4 bg-white/90 p-2 rounded backdrop-blur text-xs border border-slate-200 shadow-sm pointer-events-none flex items-center gap-2"><MousePointer2 size={14} className="text-slate-500" /><span className="text-slate-700 font-medium">Drag charges</span></div>
+                        </div>
+                        <EquationBox title="Superposition Principle" equations={[{ label: 'Net Field', math: '\\vec{E}_{net} = \\sum k \\frac{q_i}{r_i^2} \\hat{r}_i', color: 'text-indigo-600' }, { label: 'Force', math: '\\vec{F}_{net} \\text{ on } q = q \\vec{E}_{other}' }]} />
+                    </div>
+                    <ControlPanel title="Charge Configuration">
+                        {charges.map((charge, i) => (
+                            <div key={charge.id} className="bg-slate-50 p-3 rounded-lg border border-slate-200 mb-4">
+                                <div className="flex justify-between items-center mb-2"><span className="text-xs font-bold uppercase text-slate-500">Charge {i + 1}</span><button onClick={() => setCharges(p => p.filter(c => c.id !== charge.id))} className="text-slate-400 hover:text-red-500" disabled={charges.length <= 1}><Trash2 size={14} /></button></div>
+                                <input type="range" min={-10} max={10} value={charge.q} onChange={(e) => setCharges(p => p.map(c => c.id === charge.id ? { ...c, q: parseFloat(e.target.value) } : c))} className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-200" style={{ accentColor: charge.q > 0 ? COLORS.E_FIELD : (charge.q < 0 ? COLORS.B_FIELD : '#94a3b8') }} />
+                            </div>
+                        ))}
+                        {charges.length < 4 && <button onClick={() => setCharges([...charges, { id: Math.max(0, ...charges.map(c => c.id)) + 1, x: 0.5, y: 0.5, q: 2 }])} className="w-full py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 mb-4"><Plus size={16} /> Add Charge</button>}
+                        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={showGrid} onChange={(e) => setShowGrid(e.target.checked)} className="rounded text-indigo-600" /> Show Grid</label>
+                        <HintBox><span>Drag charges close to each other. Notice how the Force vector (F) grows rapidly (<LatexRenderer latex="1/r^2" />)!</span></HintBox>
+                        <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm space-y-3">
+                            <div className="flex items-center gap-2 text-slate-600 border-b border-slate-200 pb-2"><Info size={16} /><h4 className="font-bold">Theory Guide</h4></div>
+                            <div className="space-y-2 text-xs text-slate-600">
+                                <p><strong>Coulomb's Law:</strong> Force between charges is proportional to magnitude product, inversely proportional to distance squared: <LatexRenderer latex="F = k \frac{q_1 q_2}{r^2}" />.</p>
+                                <p><strong>Field Lines:</strong> Originate from (+) and terminate on (-). Density represents field strength.</p>
+                            </div>
+                        </div>
+                    </ControlPanel>
+                </div>
+            );
+        };
+
+        const GaussTab = () => {
+            const [mode, setMode] = useState('ELECTRIC'); 
+            const [charge, setCharge] = useState(5); 
+            const [radius, setRadius] = useState(100);
+            const canvasRef = useRef(null);
+            const animationRef = useRef(0);
+
+            useEffect(() => {
+                const render = () => {
+                    const canvas = canvasRef.current; if (!canvas) return; const ctx = canvas.getContext('2d');
+                    canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight;
+                    const cx = canvas.width / 2, cy = canvas.height / 2;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    ctx.beginPath(); ctx.strokeStyle = '#9333ea'; ctx.lineWidth = 2; ctx.setLineDash([8, 6]);
+                    ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+                    ctx.fillStyle = '#9333ea'; ctx.fillText(`Surface A (r=${radius})`, cx + radius + 5, cy);
+
+                    if (mode === 'ELECTRIC') {
+                        ctx.fillStyle = charge > 0 ? COLORS.E_FIELD : COLORS.B_FIELD;
+                        ctx.beginPath(); ctx.arc(cx, cy, 15, 0, Math.PI*2); ctx.fill();
+                        ctx.fillStyle = 'white'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='bold 12px sans-serif';
+                        ctx.fillText(charge > 0 ? `+${charge}` : `${charge}`, cx, cy);
+                        const lines = Math.abs(charge) * 4;
+                        ctx.strokeStyle = charge > 0 ? `${COLORS.E_FIELD}60` : `${COLORS.B_FIELD}60`; ctx.lineWidth = 2;
+                        for(let i=0; i<lines; i++) {
+                            const angle = (i/lines) * Math.PI * 2;
+                            ctx.beginPath();
+                            const rStart = 20; const rEnd = 300;
+                            const sx = cx + Math.cos(angle)*rStart, sy = cy + Math.sin(angle)*rStart;
+                            const ex = cx + Math.cos(angle)*rEnd, ey = cy + Math.sin(angle)*rEnd;
+                            ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke();
+                            const ix = cx + Math.cos(angle)*radius; const iy = cy + Math.sin(angle)*radius;
+                            const arrowAngle = charge > 0 ? angle : angle + Math.PI; const headLen = 8;
+                            ctx.beginPath(); ctx.fillStyle = charge > 0 ? COLORS.E_FIELD : COLORS.B_FIELD;
+                            ctx.moveTo(ix, iy);
+                            ctx.lineTo(ix - headLen * Math.cos(arrowAngle - Math.PI/6), iy - headLen * Math.sin(arrowAngle - Math.PI/6));
+                            ctx.lineTo(ix - headLen * Math.cos(arrowAngle + Math.PI/6), iy - headLen * Math.sin(arrowAngle + Math.PI/6));
+                            ctx.fill();
+                        }
+                    } else {
+                        const mw = 60, mh = 24;
+                        ctx.fillStyle = '#2563eb'; ctx.fillRect(cx - mw/2, cy - mh/2, mw/2, mh);
+                        ctx.fillStyle = '#dc2626'; ctx.fillRect(cx, cy - mh/2, mw/2, mh);
+                        ctx.fillStyle = 'white'; ctx.font='bold 12px sans-serif'; ctx.textAlign='center';
+                        ctx.fillText('S', cx-mw/4, cy+4); ctx.fillText('N', cx+mw/4, cy+4);
+                        ctx.strokeStyle = `${COLORS.B_FIELD}60`; ctx.lineWidth = 2;
+                        const loops = 8;
+                        for(let i=1; i<=loops; i++) {
+                            const scale = i * 25;
+                            ctx.beginPath();
+                            ctx.moveTo(cx+mw/2, cy);
+                            ctx.bezierCurveTo(cx+mw/2+scale, cy-scale, cx-mw/2-scale, cy-scale, cx-mw/2, cy);
+                            ctx.moveTo(cx+mw/2, cy);
+                            ctx.bezierCurveTo(cx+mw/2+scale, cy+scale, cx-mw/2-scale, cy+scale, cx-mw/2, cy);
+                            ctx.stroke();
+                        }
+                        ctx.fillStyle = COLORS.B_FIELD;
+                        const dots = 12;
+                        for(let i=0; i<dots; i++) {
+                            const angle = (i/dots)*Math.PI*2;
+                            const ix = cx + Math.cos(angle)*radius, iy = cy + Math.sin(angle)*radius;
+                            if (radius > 40) { ctx.beginPath(); ctx.arc(ix, iy, 2, 0, Math.PI*2); ctx.fill(); }
+                        }
+                    }
+                    animationRef.current = requestAnimationFrame(render);
+                };
+                render();
+                return () => cancelAnimationFrame(animationRef.current);
+            }, [mode, charge, radius]);
+
+            const equations = mode === 'ELECTRIC' 
+                ? [{ label: 'Gauss Law (E)', math: '\\Phi_E = \\oint \\vec{E} \\cdot d\\vec{A} = \\frac{Q_{enc}}{\\epsilon_0}', color: 'text-red-600' }, { label: 'Result', math: `\\Phi_E \\propto ${charge} \\text{ (Independent of } r\\text{)}` }]
+                : [{ label: 'Gauss Law (B)', math: '\\Phi_B = \\oint \\vec{B} \\cdot d\\vec{A} = 0', color: 'text-blue-600' }, { label: 'Result', math: '\\text{Flux In} = \\text{Flux Out}' }];
+
+            return (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+                    <div className="lg:col-span-2 flex flex-col gap-4">
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
+                            <canvas ref={canvasRef} className="w-full h-full block" />
+                            <div className="absolute top-4 left-4 pointer-events-none bg-white/90 p-2 rounded border border-slate-200 shadow-sm">
+                                <h5 className="font-bold text-xs text-slate-500 uppercase mb-1">Visualization</h5>
+                                <div className="text-lg font-bold text-slate-800">{mode === 'ELECTRIC' ? 'Electric Monopole' : 'Magnetic Dipole'}</div>
+                            </div>
+                        </div>
+                        <EquationBox title={`Gauss's Law for ${mode === 'ELECTRIC' ? 'Electric Fields' : 'Magnetism'}`} equations={equations} />
+                    </div>
+                    <ControlPanel title="Gauss's Law Controls">
+                        <div className="flex gap-2 mb-6 p-1 bg-slate-100 rounded-lg">
+                            <button onClick={() => setMode('ELECTRIC')} className={`flex-1 py-2 text-xs font-bold rounded-md transition-colors ${mode === 'ELECTRIC' ? 'bg-white shadow text-red-600' : 'text-slate-500 hover:text-slate-700'}`}>Electric (E)</button>
+                            <button onClick={() => setMode('MAGNETIC')} className={`flex-1 py-2 text-xs font-bold rounded-md transition-colors ${mode === 'MAGNETIC' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}>Magnetic (B)</button>
+                        </div>
+                        <Slider label="Gaussian Surface Radius (r)" value={radius} min={50} max={200} onChange={setRadius} color="bg-purple-600" />
+                        {mode === 'ELECTRIC' && ( <Slider label="Enclosed Charge (Q)" value={charge} min={-10} max={10} onChange={setCharge} color={charge > 0 ? "bg-red-600" : "bg-blue-600"} /> )}
+                        <HintBox>{mode === 'ELECTRIC' ? "Try changing the radius. Notice the number of field lines crossing the surface stays constant!" : "No matter how big the surface, flux is zero because magnetic lines always loop back."}</HintBox>
+                        <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm space-y-3">
+                            <div className="flex items-center gap-2 text-slate-600 border-b border-slate-200 pb-2"><Info size={16} /><h4 className="font-bold">Theory Guide</h4></div>
+                            <div className="space-y-2 text-xs text-slate-600">
+                                {mode === 'ELECTRIC' ? (
+                                    <p><strong>Electric Flux:</strong> Proportional to enclosed charge (<LatexRenderer latex="Q" />). Independent of surface size (<LatexRenderer latex="r" />). <LatexRenderer latex="\Phi_E \neq 0" />.</p>
+                                ) : (
+                                    <p><strong>Magnetic Flux:</strong> Always zero for closed surfaces (<LatexRenderer latex="\oint B \cdot dA = 0" />). Field lines form loops; what goes in must come out.</p>
+                                )}
+                            </div>
+                        </div>
+                    </ControlPanel>
+                </div>
+            );
+        };
+
+        const AmperesTab = () => {
+            const [current, setCurrent] = useState(50);
+            const canvasRef = useRef(null);
+            const timeRef = useRef(0);
+            const animationRef = useRef(0);
+            const drawArrow = (ctx, x, y, angle, color) => {
+                ctx.save(); ctx.translate(x, y); ctx.rotate(angle);
+                ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(-5, -3); ctx.lineTo(5, 0); ctx.lineTo(-5, 3); ctx.fill(); ctx.restore();
+            };
+            useEffect(() => {
+                const render = () => {
+                    const canvas = canvasRef.current; if (!canvas) return; const ctx = canvas.getContext('2d');
+                    canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight;
+                    const cx = canvas.width / 2, cy = canvas.height / 2;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    timeRef.current += 0.5 * (current / 50);
+                    ctx.fillStyle = '#e2e8f0'; ctx.beginPath(); ctx.arc(cx, cy, 25, 0, Math.PI * 2); ctx.fill();
+                    ctx.strokeStyle = COLORS.CURRENT; ctx.lineWidth = 3; ctx.stroke();
+                    ctx.fillStyle = COLORS.CURRENT; ctx.font = "40px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                    const label = current > 0 ? "In" : (current < 0 ? "Out" : "0");
+                    ctx.fillText(current > 0 ? "⊗" : (current < 0 ? "⊙" : "○"), cx, cy + 2);
+                    ctx.font = "14px sans-serif"; ctx.fillStyle = COLORS.TEXT_MAIN; ctx.fillText(`I (${label})`, cx, cy - 35);
+                    if (Math.abs(current) > 2) {
+                        for(let i=1; i<=4; i++) {
+                            const r = 40 + i * (Math.min(canvas.width, canvas.height) / 2 - 60) / 4;
+                            ctx.beginPath(); ctx.strokeStyle = `${COLORS.B_FIELD}50`; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+                            for(let j=0; j<3+i*2; j++) {
+                                const angle = (j / (3+i*2)) * Math.PI * 2 + timeRef.current * (60/r) * 0.1;
+                                const ax = cx + r * Math.cos(angle), ay = cy + r * Math.sin(angle);
+                                const tan = angle + Math.PI/2 + (current < 0 ? Math.PI : 0);
+                                drawArrow(ctx, ax, ay, tan, COLORS.B_FIELD);
+                            }
+                        }
+                    }
+                    animationRef.current = requestAnimationFrame(render);
+                };
+                render();
+                return () => cancelAnimationFrame(animationRef.current);
+            }, [current]);
+            return (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+                    <div className="lg:col-span-2 flex flex-col gap-4">
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
+                            <canvas ref={canvasRef} className="w-full h-full" />
+                            <div className="absolute bottom-4 right-4 bg-white/90 p-3 rounded border border-slate-200 text-xs max-w-[250px] shadow-sm"><h5 className="font-bold text-slate-800 mb-1">Rule of Thumb</h5><p className="text-slate-600">{current >= 0 ? <span>Current <strong className="text-amber-600">IN</strong> → Field <strong className="text-blue-600">CW</strong></span> : <span>Current <strong className="text-amber-600">OUT</strong> → Field <strong className="text-blue-600">CCW</strong></span>}</p></div>
+                        </div>
+                        <EquationBox title="Ampère's Law" equations={[{ label: 'Integral Form', math: '\\oint \\vec{B} \\cdot d\\vec{l} = \\mu_0 I_{enc}', color: 'text-indigo-600' }, { label: 'Field at r', math: 'B = \\frac{\\mu_0 I}{2\\pi r}' }]} />
+                    </div>
+                    <ControlPanel title="Ampère's Law">
+                        <Slider label="Current Intensity (I)" value={current} min={-100} max={100} onChange={setCurrent} color={current >= 0 ? "bg-amber-600" : "bg-red-600"} />
+                        <HintBox>Reverse the current direction to see the field lines switch between Clockwise and Counter-Clockwise (Right-Hand Grip Rule).</HintBox>
+                        <div className="mt-8 p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm space-y-3"><div className="flex items-center gap-2 text-slate-600 border-b border-slate-200 pb-2"><Info size={16} /><h4 className="font-bold">Theory Guide</h4></div><ul className="list-disc pl-4 space-y-1 text-xs text-slate-600"><li><strong>Right-Hand Grip Rule:</strong> Point thumb in I direction. Fingers curl in B direction.</li><li><strong>Field Strength:</strong> B is proportional to Current (<LatexRenderer latex="I" />) and inversely proportional to radius (<LatexRenderer latex="r" />). Field strength drops as <LatexRenderer latex="1/r" />.</li></ul></div>
+                    </ControlPanel>
+                </div>
+            );
+        };
+
+        const LorentzTab = () => {
+            const [velocity, setVelocity] = useState(50); const [bField, setBField] = useState(50); const [charge, setCharge] = useState(1); const [mass, setMass] = useState(2);
+            const canvasRef = useRef(null); const physicsRef = useRef(null); const animationRef = useRef(0);
+            const handleReset = () => { if(canvasRef.current) physicsRef.current = { x: velocity >= 0 ? 50 : canvasRef.current.width - 50, y: canvasRef.current.height / 2, vx: velocity * 2.5, vy: 0, trail: [] }; };
+            useEffect(() => { if (!physicsRef.current) handleReset(); }, []);
+            const drawVector = (ctx, x, y, vx, vy, color, label) => {
+                const mag = Math.hypot(vx, vy); if (mag < 4) return;
+                ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.moveTo(x, y); ctx.lineTo(x + vx, y + vy); ctx.stroke();
+                const angle = Math.atan2(vy, vx); const headLen = 8;
+                ctx.beginPath(); ctx.fillStyle = color; ctx.moveTo(x + vx, y + vy); ctx.lineTo(x + vx - headLen * Math.cos(angle - Math.PI/6), y + vy - headLen * Math.sin(angle - Math.PI/6)); ctx.lineTo(x + vx - headLen * Math.cos(angle + Math.PI/6), y + vy - headLen * Math.sin(angle + Math.PI/6)); ctx.fill();
+                ctx.fillStyle = color; ctx.font = "bold 12px sans-serif"; ctx.fillText(label, x + vx + 8, y + vy + 8);
+            };
+            useEffect(() => {
+                const loop = () => {
+                    const cvs = canvasRef.current;
+                    if (cvs && physicsRef.current) {
+                        const ctx = cvs.getContext('2d'); cvs.width = cvs.parentElement.clientWidth; cvs.height = cvs.parentElement.clientHeight;
+                        ctx.clearRect(0, 0, cvs.width, cvs.height);
+                        const symbol = bField > 0 ? "⊗" : (bField < 0 ? "⊙" : "·");
+                        ctx.fillStyle = COLORS.B_FIELD; ctx.font = "14px monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.globalAlpha = Math.min(Math.abs(bField)/30, 0.3);
+                        for(let x=25; x<cvs.width; x+=50) for(let y=25; y<cvs.height; y+=50) ctx.fillText(symbol, x, y);
+                        ctx.globalAlpha = 1;
+                        ctx.textAlign = "right"; ctx.fillStyle = COLORS.B_FIELD; ctx.font = "bold 14px sans-serif"; ctx.fillText(`External B: ${bField>0 ? 'Into Page' : (bField<0 ? 'Out of Page' : 'Off')}`, cvs.width - 20, 30);
+                        const p = physicsRef.current;
+                        const ax = (charge * p.vy * (bField/20)) / mass, ay = (charge * (-p.vx) * (bField/20)) / mass;
+                        p.vx += ax * 0.016; p.vy += ay * 0.016; p.x += p.vx * 0.016; p.y += p.vy * 0.016;
+                        if (Math.random() > 0.5) { p.trail.push({x: p.x, y: p.y}); if (p.trail.length > 150) p.trail.shift(); }
+                        ctx.beginPath(); ctx.strokeStyle = charge > 0 ? '#fca5a5' : '#93c5fd'; ctx.lineWidth = 2; p.trail.forEach((pt, i) => i===0 ? ctx.moveTo(pt.x, pt.y) : ctx.lineTo(pt.x, pt.y)); ctx.stroke();
+                        ctx.beginPath(); ctx.fillStyle = charge > 0 ? COLORS.E_FIELD : COLORS.B_FIELD; ctx.arc(p.x, p.y, 6 + mass * 1.5, 0, Math.PI*2); ctx.fill();
+                        ctx.fillStyle = 'white'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(charge > 0 ? `+${charge}` : `${charge}`, p.x, p.y+1);
+                        drawVector(ctx, p.x, p.y, p.vx * 0.3, p.vy * 0.3, '#10b981', 'v');
+                        const Fx = charge * p.vy * (bField/20), Fy = charge * (-p.vx) * (bField/20); drawVector(ctx, p.x, p.y, Fx * 0.4, Fy * 0.4, '#d97706', 'F');
+                    }
+                    animationRef.current = requestAnimationFrame(loop);
+                };
+                loop();
+                return () => cancelAnimationFrame(animationRef.current);
+            }, [velocity, bField, charge, mass]);
+            return (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+                    <div className="lg:col-span-2 flex flex-col gap-4">
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex-grow min-h-[400px]"><canvas ref={canvasRef} className="w-full h-full block" /></div>
+                        <EquationBox title="Lorentz Force" equations={[{ label: 'Force', math: '\\vec{F} = q(\\vec{v} \\times \\vec{B})', color: 'text-amber-600' }, { label: 'Radius', math: 'r = \\frac{mv}{|q|B}', color: 'text-emerald-600' }]} />
+                    </div>
+                    <ControlPanel title="Particle Controls">
+                        <Slider label={`Charge (q): ${charge}`} value={charge} min={-5} max={5} onChange={setCharge} color="bg-red-600" />
+                        <Slider label="Mass (m)" value={mass} min={0.5} max={5} step={0.5} onChange={setMass} color="bg-slate-500" />
+                        <Slider label="Velocity (v)" value={velocity} min={-100} max={100} onChange={setVelocity} color="bg-emerald-600" />
+                        <Slider label="Magnetic Field (B)" value={bField} min={-100} max={100} onChange={setBField} color="bg-blue-600" />
+                        <button onClick={handleReset} className="w-full mt-4 py-3 bg-slate-100 border border-slate-200 rounded-lg font-bold flex justify-center gap-2"><Move size={16} /> Respawn</button>
+                        <HintBox><span>Increase the Mass (<LatexRenderer latex="m" />) to see the radius expand. Heavier particles are harder to deflect!</span></HintBox>
+                        <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm space-y-3">
+                            <div className="flex items-center gap-2 text-slate-600 border-b border-slate-200 pb-2"><Info size={16} /><h4 className="font-bold">Theory Guide</h4></div>
+                            <div className="space-y-2 text-xs text-slate-600">
+                                <p><strong>Right Hand Rule:</strong> Force is perpendicular to both velocity and B-field.</p>
+                                <p><strong>Cyclotron Radius:</strong> <LatexRenderer latex="r = mv / qB" />. Faster/heavier particles orbit wider. Stronger fields tighten the orbit.</p>
+                            </div>
+                        </div>
+                    </ControlPanel>
+                </div>
+            );
+        };
+
+        const FaradaysTab = () => {
+            const [rate, setRate] = useState(1); const [loops, setLoops] = useState(1); const [isPlaying, setIsPlaying] = useState(true);
+            const canvasRef = useRef(null); const timeRef = useRef(0); const animationRef = useRef(0);
+            useEffect(() => {
+                const render = () => {
+                    const canvas = canvasRef.current; if (!canvas) return; const ctx = canvas.getContext('2d');
+                    canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight;
+                    const cx = canvas.width / 2, cy = canvas.height / 2;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    if (isPlaying) timeRef.current += 0.02 * rate;
+                    const t = timeRef.current; const B = Math.sin(t), dBdt = Math.cos(t);
+                    ctx.beginPath(); ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2;
+                    for(let i = 0; i < loops; i++) { ctx.beginPath(); ctx.arc(cx + (i - (loops-1)/2)*4, cy - (i - (loops-1)/2)*4, 150, 0, Math.PI*2); ctx.stroke(); }
+                    ctx.fillStyle = COLORS.B_FIELD; ctx.font = "24px monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                    for(let x = cx - 120; x <= cx + 120; x+=40) for(let y = cy - 120; y <= cy + 120; y+=40) if (Math.hypot(x-cx, y-cy) < 130) { ctx.globalAlpha = Math.abs(B); ctx.fillText(B > 0 ? "⊙" : "⊗", x, y); }
+                    ctx.globalAlpha = 1;
+                    const emf = -dBdt * loops; const isCW = emf < 0;
+                    ctx.fillStyle = COLORS.CURRENT;
+                    for(let i=0; i<8; i++) {
+                        const angle = (i/8)*Math.PI*2 + t*2*(isCW ? 1 : -1); const ax = cx + 150*Math.cos(angle), ay = cy + 150*Math.sin(angle);
+                        ctx.save(); ctx.translate(ax, ay); ctx.rotate(angle + Math.PI/2 + (isCW ? 0 : Math.PI));
+                        ctx.beginPath(); ctx.moveTo(-6, -3); ctx.lineTo(6, 0); ctx.lineTo(-6, 3); ctx.fill(); ctx.restore();
+                    }
+                    ctx.textAlign = "left"; ctx.fillStyle = COLORS.B_FIELD; ctx.font = "14px sans-serif";
+                    ctx.fillText(`B Field: ${Math.abs(B)<0.1?'Zero':(B>0?'Out ⊙':'In ⊗')}`, 20, 30);
+                    ctx.fillStyle = COLORS.E_FIELD; ctx.fillText(`Induced EMF: ${Math.abs(emf)<0.1?'None':(isCW?'CW ↻':'CCW ↺')}`, 20, 50);
+                    animationRef.current = requestAnimationFrame(render);
+                };
+                render();
+                return () => cancelAnimationFrame(animationRef.current);
+            }, [isPlaying, rate, loops]);
+            return (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+                    <div className="lg:col-span-2 flex flex-col gap-4">
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex-grow min-h-[400px]"><canvas ref={canvasRef} className="w-full h-full block" /></div>
+                        <EquationBox title="Faraday's Law" equations={[{ label: 'General', math: '\\mathcal{E} = -N \\frac{d\\Phi_B}{dt}', color: 'text-indigo-600' }]} />
+                    </div>
+                    <ControlPanel title="Experiment Controls">
+                        <Slider label="Rate (ω)" value={rate} min={0.1} max={3.0} step={0.1} onChange={setRate} />
+                        <Slider label="Loops (N)" value={loops} min={1} max={10} onChange={setLoops} color="bg-indigo-600" />
+                        <PlayControls isPlaying={isPlaying} onToggle={() => setIsPlaying(!isPlaying)} onReset={() => timeRef.current = 0} />
+                        <HintBox><span>Increase the Rate (<LatexRenderer latex="\omega" />) or Loops (<LatexRenderer latex="N" />) to generate a stronger induced voltage/current!</span></HintBox>
+                        <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm space-y-3">
+                            <div className="flex items-center gap-2 text-slate-600 border-b border-slate-200 pb-2"><Info size={16} /><h4 className="font-bold">Theory Guide</h4></div>
+                            <div className="space-y-2 text-xs text-slate-600">
+                                <p><strong>Induction:</strong> A changing magnetic field generates an Electric Field (EMF).</p>
+                                <p>
+                                    <strong>Lenz's Law logic:</strong><br/>
+                                    1. B (Out) Increasing<br/>
+                                    2. Flux <LatexRenderer latex="\Phi" /> increases Out<br/>
+                                    3. Nature opposes change -> Needs Induced B (In)<br/>
+                                    4. RHR: Thumb In -> Fingers <span className="font-bold text-amber-600">CW ↻</span>
+                                </p>
+                            </div>
+                        </div>
+                    </ControlPanel>
+                </div>
+            );
+        };
+
+        const LenzTab = () => {
+            const [magnetPos, setMagnetPos] = useState(20); const [prevPos, setPrevPos] = useState(20); const [autoPlay, setAutoPlay] = useState(false); const [speed, setSpeed] = useState(1); const [showField, setShowField] = useState(true); const [numTurns, setNumTurns] = useState(6);
+            const canvasRef = useRef(null); const timeRef = useRef(0); const animationRef = useRef(0);
+            useEffect(() => { if (autoPlay) { const int = setInterval(() => { setPrevPos(magnetPos); timeRef.current += 0.05 * speed; setMagnetPos(50 + 35 * Math.sin(timeRef.current)); }, 16); return () => clearInterval(int); } }, [autoPlay, speed, magnetPos]);
+            const drawArrow = (ctx, x, y, len, angle, color, label) => {
+                ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.moveTo(0, 0); ctx.lineTo(len, 0); ctx.stroke();
+                if (Math.abs(len) > 5) { const headLen = 10, sign = len > 0 ? 1 : -1; ctx.beginPath(); ctx.fillStyle = color; ctx.moveTo(len, 0); ctx.lineTo(len - sign*headLen, -5); ctx.lineTo(len - sign*headLen, 5); ctx.fill(); }
+                ctx.fillStyle = color; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center'; if(label) ctx.fillText(label, len / 2, -10); ctx.restore();
+            };
+            const drawFieldArrow = (ctx, x, y, angle, color) => { ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(-4,-3); ctx.lineTo(4,0); ctx.lineTo(-4,3); ctx.fill(); ctx.restore(); };
+            useEffect(() => {
+                const render = () => {
+                    const canvas = canvasRef.current; if (!canvas) return; const ctx = canvas.getContext('2d');
+                    canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight;
+                    const w = canvas.width, h = canvas.height, cy = h/2, coilX = w/2;
+                    ctx.clearRect(0, 0, w, h);
+                    ctx.fillStyle = '#64748b'; const turnSpacing = Math.min(15, 200/numTurns); const coilWidth = numTurns * turnSpacing;
+                    for(let i=0; i<numTurns; i++) { const x = coilX - (coilWidth)/2 + i*turnSpacing + turnSpacing/2; ctx.beginPath(); ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 4; ctx.arc(x, cy, 60, Math.PI*0.5, Math.PI*1.5, true); ctx.stroke(); }
+                    const mx = (magnetPos/100)*w; ctx.fillStyle = '#2563eb'; ctx.fillRect(mx - 50, cy - 20, 50, 40); ctx.fillStyle = '#dc2626'; ctx.fillRect(mx, cy - 20, 50, 40); ctx.fillStyle = 'white'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('S', mx - 25, cy + 5); ctx.fillText('N', mx + 25, cy + 5);
+                    if (showField) {
+                         ctx.strokeStyle = `${COLORS.B_FIELD}40`; ctx.lineWidth = 2;
+                         for(let i=1; i<=3; i++) { const s = i * 40; ctx.beginPath(); ctx.moveTo(mx+50, cy); ctx.bezierCurveTo(mx+50+s, cy-s, mx-50-s, cy-s, mx-50, cy); ctx.stroke(); drawFieldArrow(ctx, mx, cy - s * 0.75, Math.PI, COLORS.B_FIELD); ctx.beginPath(); ctx.moveTo(mx+50, cy); ctx.bezierCurveTo(mx+50+s, cy+s, mx-50-s, cy+s, mx-50, cy); ctx.stroke(); drawFieldArrow(ctx, mx, cy + s * 0.75, Math.PI, COLORS.B_FIELD); }
+                    }
+                    const v = magnetPos - prevPos; const dist = (magnetPos - 50); const interactionStrength = Math.exp(-(dist * dist) / 200); const intensity = v * interactionStrength * (numTurns * 0.8 + 2); const currentDir = intensity > 0 ? 1 : -1; const alpha = Math.min(Math.abs(intensity)/5, 1);
+                    for(let i=0; i<numTurns; i++) {
+                        const x = coilX - (coilWidth)/2 + i*turnSpacing + turnSpacing/2; ctx.beginPath(); ctx.strokeStyle = `rgba(217, 119, 6, ${0.4 + alpha * 0.6})`; ctx.lineWidth = 4; ctx.arc(x, cy, 60, Math.PI*1.5, Math.PI*0.5, true); ctx.stroke();
+                        if (Math.abs(intensity) > 0.5 && (i===0 || i===numTurns-1)) { ctx.fillStyle = COLORS.CURRENT; ctx.beginPath(); ctx.arc(x, cy-60, 4, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = 'white'; ctx.font='10px sans'; ctx.fillText(currentDir > 0 ? '⊙' : '⊗', x, cy-60); ctx.fillStyle = COLORS.CURRENT; ctx.beginPath(); ctx.arc(x, cy+60, 4, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = 'white'; ctx.fillText(currentDir > 0 ? '⊗' : '⊙', x, cy+60); }
+                    }
+                    if (Math.abs(v) > 0.1) { drawArrow(ctx, mx, cy - 40, v * 20, 0, '#10b981', 'v'); if (Math.abs(interactionStrength) > 0.1) { const isRepulsion = (v * dist) < 0; const fLen = -v * Math.abs(interactionStrength) * numTurns * 3; drawArrow(ctx, mx, cy + 40, fLen, 0, '#ea580c', 'F_mag'); ctx.font = 'bold 18px sans-serif'; ctx.fillStyle = '#ea580c'; ctx.textAlign = 'center'; ctx.fillText(isRepulsion ? "REPULSION" : "ATTRACTION", w/2, h - 50); } }
+                    animationRef.current = requestAnimationFrame(render);
+                };
+                render();
+                return () => cancelAnimationFrame(animationRef.current);
+            }, [magnetPos, prevPos, autoPlay, showField, numTurns]);
+            return (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+                    <div className="lg:col-span-2 flex flex-col gap-4">
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex-grow min-h-[400px]"><canvas ref={canvasRef} className="w-full h-full block" /></div>
+                        <EquationBox title="Lenz's Law" equations={[{ label: 'Effect', math: '\\mathcal{E} = -N \\frac{d\\Phi_B}{dt}' }]} />
+                    </div>
+                    <ControlPanel title="Lenz's Law">
+                        <div className="flex items-center gap-2 mb-4"><input type="checkbox" checked={autoPlay} onChange={(e) => setAutoPlay(e.target.checked)} className="rounded" /> Auto-Oscillate</div>
+                        <div className="flex items-center gap-2 mb-4"><input type="checkbox" checked={showField} onChange={(e) => setShowField(e.target.checked)} className="rounded" /> Show Field Lines</div>
+                        {!autoPlay && <Slider label="Magnet Position" value={magnetPos} min={0} max={100} step={0.5} onChange={(v) => { setPrevPos(magnetPos); setMagnetPos(v); }} color="bg-slate-600" />}
+                        <Slider label="Turns (N)" value={numTurns} min={1} max={20} onChange={setNumTurns} color="bg-slate-600" />
+                        <HintBox>Nature hates change! Move magnet closer -> Coil repels. Move away -> Coil attracts.</HintBox>
+                        <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm space-y-3">
+                            <div className="flex items-center gap-2 text-slate-600 border-b border-slate-200 pb-2"><Info size={16} /><h4 className="font-bold">Theory Guide</h4></div>
+                            <div className="space-y-2 text-xs text-slate-600">
+                                <p><strong>Lenz's Law:</strong> Nature hates change. If you try to increase flux, the coil creates a field to oppose you (Repulsion).</p>
+                                <p>If you try to remove flux, it tries to keep it (Attraction).</p>
+                            </div>
+                        </div>
+                    </ControlPanel>
+                </div>
+            );
+        };
+
+        const MaxwellsTab = () => {
+            const MaxwellCard = ({ title, latex, description, draw }) => {
+                const cvsRef = useRef(null); const tRef = useRef(0);
+                useEffect(() => { let req; const animate = () => { if (cvsRef.current) { const c = cvsRef.current, ctx = c.getContext('2d'); if (ctx) { c.width = c.clientWidth; c.height = c.clientHeight; draw(ctx, c.width, c.height, tRef.current++); } } req = requestAnimationFrame(animate); }; animate(); return () => cancelAnimationFrame(req); }, [draw]);
+                return (<div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col shadow-sm"><h3 className="text-lg font-bold text-slate-800 mb-1">{title}</h3><div className="text-center text-lg text-indigo-700 mb-2 bg-indigo-50 rounded py-2 min-h-[50px] flex items-center justify-center"><LatexRenderer latex={latex} /></div><div className="flex-grow relative bg-white rounded-lg overflow-hidden min-h-[160px] mb-2 border border-slate-100"><canvas ref={cvsRef} className="w-full h-full absolute inset-0" /></div><p className="text-xs text-slate-500 text-center">{description}</p></div>);
+            };
+            const drawGaussE = (ctx, w, h, t) => { const cx = w/2, cy = h/2; ctx.fillStyle = '#dc2626'; ctx.beginPath(); ctx.arc(cx, cy, 15, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = 'white'; ctx.textAlign = 'center'; ctx.textBaseline='middle'; ctx.font='bold 16px sans'; ctx.fillText('+', cx, cy+1); ctx.strokeStyle = '#dc2626'; for(let i=0; i<12; i++) { const angle = (i/12)*Math.PI*2, rEnd = 70 + (Math.sin(t*0.05)+1)*5; ctx.beginPath(); ctx.moveTo(cx+Math.cos(angle)*20, cy+Math.sin(angle)*20); const tipX = cx+Math.cos(angle)*rEnd; const tipY = cy+Math.sin(angle)*rEnd; ctx.lineTo(tipX, tipY); ctx.stroke(); const headLen = 6; ctx.beginPath(); ctx.moveTo(tipX, tipY); ctx.lineTo(tipX - headLen * Math.cos(angle - Math.PI/6), tipY - headLen * Math.sin(angle - Math.PI/6)); ctx.lineTo(tipX - headLen * Math.cos(angle + Math.PI/6), tipY - headLen * Math.sin(angle + Math.PI/6)); ctx.fillStyle = '#dc2626'; ctx.fill(); } };
+            const drawGaussB = (ctx, w, h, t) => { const cx = w/2, cy = h/2; ctx.fillStyle = '#2563eb'; ctx.fillRect(cx-30, cy-12, 30, 24); ctx.fillStyle = '#dc2626'; ctx.fillRect(cx, cy-12, 30, 24); ctx.fillStyle = 'white'; ctx.font='bold 10px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('S', cx-15, cy); ctx.fillText('N', cx+15, cy); ctx.strokeStyle = '#93c5fd'; ctx.lineWidth = 1.5; const loops = 4; for(let i=1; i<=loops; i++) { const scale = i * 25; ctx.beginPath(); ctx.moveTo(cx+30, cy); ctx.bezierCurveTo(cx+30+scale, cy-scale, cx-30-scale, cy-scale, cx-30, cy); ctx.stroke(); ctx.save(); ctx.translate(cx, cy - scale * 0.75); ctx.rotate(Math.PI); ctx.fillStyle = '#93c5fd'; ctx.beginPath(); ctx.moveTo(-3,-2); ctx.lineTo(3,0); ctx.lineTo(-3,2); ctx.fill(); ctx.restore(); ctx.beginPath(); ctx.moveTo(cx+30, cy); ctx.bezierCurveTo(cx+30+scale, cy+scale, cx-30-scale, cy+scale, cx-30, cy); ctx.stroke(); ctx.save(); ctx.translate(cx, cy + scale * 0.75); ctx.rotate(Math.PI); ctx.fillStyle = '#93c5fd'; ctx.beginPath(); ctx.moveTo(-3,-2); ctx.lineTo(3,0); ctx.lineTo(-3,2); ctx.fill(); ctx.restore(); } };
+            const drawFaraday = (ctx, w, h, t) => { const cx = w/2, cy = h/2, flux = Math.sin(t*0.05); ctx.fillStyle = COLORS.B_FIELD; ctx.beginPath(); ctx.arc(cx, cy, 30*Math.abs(flux), 0, Math.PI*2); ctx.fill(); ctx.fillStyle = 'white'; ctx.textAlign = 'center'; ctx.textBaseline='middle'; ctx.fillText(flux > 0 ? "⊙" : "⊗", cx, cy); ctx.strokeStyle = COLORS.E_FIELD; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy, 60, 0, Math.PI*2); ctx.stroke(); const dFlux = Math.cos(t*0.05), angle = t*0.1*(dFlux>0?-1:1); ctx.fillStyle = COLORS.E_FIELD; ctx.beginPath(); ctx.arc(cx+60*Math.cos(angle), cy+60*Math.sin(angle), 4, 0, Math.PI*2); ctx.fill(); };
+            const drawAmpere = (ctx, w, h, t) => { const cx = w/2, cy = h/2; ctx.fillStyle = COLORS.CURRENT; ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = 'white'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText("⊗", cx, cy+1); ctx.strokeStyle = COLORS.B_FIELD; for(let r=30; r<=60; r+=15) { ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke(); const angle = t*0.05+r; const px = cx+r*Math.cos(angle), py = cy+r*Math.sin(angle); ctx.save(); ctx.translate(px, py); ctx.rotate(angle + Math.PI/2); ctx.fillStyle=COLORS.B_FIELD; ctx.beginPath(); ctx.moveTo(-3,-3); ctx.lineTo(3,0); ctx.lineTo(-3,3); ctx.fill(); ctx.restore(); } };
+            return (<div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full p-2"><MaxwellCard title="1. Gauss's Law (E)" latex="\oint \vec{E} \cdot d\vec{A} = \frac{Q}{\epsilon_0}" description="Electric charges produce electric fields. Field lines diverge from (+) charges." draw={drawGaussE} /><MaxwellCard title="2. Gauss's Law (B)" latex="\oint \vec{B} \cdot d\vec{A} = 0" description="No magnetic monopoles exist. Magnetic field lines always form closed loops." draw={drawGaussB} /><MaxwellCard title="3. Faraday's Law" latex="\oint \vec{E} \cdot d\vec{l} = -\frac{d\Phi_B}{dt}" description="Changing B-field induces E-field (and Voltage)." draw={drawFaraday} /><MaxwellCard title="4. Ampère-Maxwell" latex="\oint \vec{B} \cdot d\vec{l} = \mu_0(I + \epsilon_0 \frac{d\Phi_E}{dt})" description="Magnetic fields are generated by currents OR changing E-fields." draw={drawAmpere} /></div>);
+        };
+
+        const EMWaveTab = () => {
+            const [viewMode, setViewMode] = useState(WaveViewMode.VIEW_3D);
+            const [state, setState] = useState({ frequency: 1, amplitude: 40, speed: 1, vAmplitude: 80, iAmplitude: 60, vPhase: 0, iPhase: 0, isPlaying: true, refractiveIndex: 1.0 });
+            const canvasRef = useRef(null); const timeRef = useRef(0); const animationRef = useRef(0); const POINTS = 200;
+            const formatPhase = (phase) => { if (Math.abs(phase) < 0.1) return ''; return phase > 0 ? `+ ${phase.toFixed(0)}°` : `- ${Math.abs(phase).toFixed(0)}°`; };
+            const drawAxisSystem = (ctx, startX, endX, y, xLabel, yLabel) => { ctx.strokeStyle = COLORS.AXIS; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(startX, y); ctx.lineTo(endX, y); ctx.stroke(); ctx.fillStyle = COLORS.AXIS; ctx.beginPath(); ctx.moveTo(endX, y); ctx.lineTo(endX - 8, y - 4); ctx.lineTo(endX - 8, y + 4); ctx.fill(); ctx.font = 'bold 12px sans-serif'; ctx.fillStyle = COLORS.TEXT_MAIN; ctx.textAlign = 'left'; if (xLabel) ctx.fillText(xLabel, endX + 10, y + 4); if (yLabel) { ctx.strokeStyle = COLORS.AXIS; ctx.beginPath(); const axisH = 110; ctx.moveTo(startX, y + axisH); ctx.lineTo(startX, y - axisH); ctx.stroke(); ctx.beginPath(); ctx.moveTo(startX, y - axisH); ctx.lineTo(startX - 4, y - axisH + 8); ctx.lineTo(startX + 4, y - axisH + 8); ctx.fill(); ctx.textAlign = 'center'; ctx.fillText(yLabel, startX, y - axisH - 10); } };
+            const draw3DAxisArrows = (ctx, x, y) => { ctx.strokeStyle = COLORS.AXIS; ctx.lineWidth = 1; const axisLen = 110; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - axisLen); ctx.stroke(); ctx.fillStyle = COLORS.E_FIELD; ctx.fillText('y (E)', x + 5, y - axisLen); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 50, y + 60); ctx.stroke(); ctx.fillStyle = COLORS.B_FIELD; ctx.fillText('z (B)', x - 60, y + 60); };
+            const drawVIView = (ctx, width, height, t, omega) => { 
+                const centerY = height / 2; const startX = 250; const endX = width - 20; 
+                ctx.strokeStyle = COLORS.AXIS; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(startX, centerY); ctx.lineTo(endX, centerY); const axisH = 110; ctx.moveTo(startX, centerY + axisH); ctx.lineTo(startX, centerY - axisH); ctx.stroke(); 
+                ctx.fillStyle = COLORS.TEXT_MAIN; ctx.font = '10px sans-serif'; ctx.fillText('Time (t)', endX - 30, centerY + 15); ctx.fillText('Amplitude', startX + 5, centerY - axisH - 5); 
+                const phasorCX = 120, phasorCY = centerY, phasorRadius = 70; 
+                ctx.beginPath(); ctx.strokeStyle = COLORS.GRID; ctx.arc(phasorCX, phasorCY, phasorRadius, 0, Math.PI * 2); ctx.stroke(); 
+                ctx.fillStyle = COLORS.TEXT_MUTED; ctx.textAlign = 'center'; ctx.fillText('0 rad / 0°', phasorCX + phasorRadius + 30, phasorCY + 3); 
+                const radV = (state.vPhase * Math.PI) / 180; const radI = (state.iPhase * Math.PI) / 180; const timeAngle = omega * t * 0.02 * state.speed; 
+                const vAngle = timeAngle + radV; const vPx = phasorCX + state.vAmplitude * Math.cos(vAngle); const vPy = phasorCY - state.vAmplitude * Math.sin(vAngle); 
+                ctx.beginPath(); ctx.strokeStyle = COLORS.E_FIELD; ctx.lineWidth = 3; ctx.moveTo(phasorCX, phasorCY); ctx.lineTo(vPx, vPy); ctx.stroke(); 
+                const iAngle = timeAngle + radI; const iPx = phasorCX + state.iAmplitude * Math.cos(iAngle); const iPy = phasorCY - state.iAmplitude * Math.sin(iAngle); 
+                ctx.beginPath(); ctx.strokeStyle = COLORS.CURRENT; ctx.lineWidth = 3; ctx.moveTo(phasorCX, phasorCY); ctx.lineTo(iPx, iPy); ctx.stroke(); 
+                ctx.lineWidth = 2; 
+                ctx.beginPath(); for (let x = 0; x < (endX - startX); x++) { const ct = t * state.speed + x * 0.05; const gx = startX + x; const vVal = state.vAmplitude * Math.sin(omega * 0.02 * ct + radV); const vY = centerY - vVal; if (x === 0) ctx.moveTo(gx, vY); else ctx.lineTo(gx, vY); } ctx.strokeStyle = COLORS.E_FIELD; ctx.stroke(); 
+                ctx.beginPath(); for (let x = 0; x < (endX - startX); x++) { const ct = t * state.speed + x * 0.05; const gx = startX + x; const iVal = state.iAmplitude * Math.sin(omega * 0.02 * ct + radI); const iY = centerY - iVal; if (x === 0) ctx.moveTo(gx, iY); else ctx.lineTo(gx, iY); } ctx.strokeStyle = COLORS.CURRENT; ctx.stroke(); 
+                
+                // Phase Lead/Lag Logic
+                let diff = (state.vPhase - state.iPhase) % 360;
+                if (diff > 180) diff -= 360; if (diff < -180) diff += 360;
+                let leadLagText = "In Phase";
+                if (diff > 0.1) leadLagText = "V leads I"; else if (diff < -0.1) leadLagText = "V lags I";
+                
+                // Draw Phase Arc on Phasor Diagram
+                if (Math.abs(diff) > 1) {
+                    ctx.beginPath(); ctx.strokeStyle = COLORS.TEXT_MAIN; ctx.lineWidth = 1;
+                    ctx.arc(phasorCX, phasorCY, 40, -iAngle, -vAngle, diff > 0); 
+                    ctx.stroke();
+                }
+                ctx.font = "bold 12px sans-serif"; ctx.fillStyle = COLORS.TEXT_MAIN; ctx.textAlign = "center";
+                ctx.fillText(leadLagText, phasorCX, phasorCY + phasorRadius + 20);
+                ctx.font = "12px sans-serif"; ctx.fillStyle = COLORS.TEXT_MUTED;
+                ctx.fillText(`Δφ = ${Math.abs(diff).toFixed(0)}°`, phasorCX, phasorCY + phasorRadius + 35);
+
+                // Power Curve Fill & Stroke
+                let maxP = 0; let maxPx = 0;
+                ctx.beginPath(); ctx.fillStyle = `${COLORS.POWER}20`; 
+                for (let x = 0; x < (endX - startX); x++) { 
+                    const ct = t * state.speed + x * 0.05; const gx = startX + x; 
+                    const vVal = state.vAmplitude * Math.sin(omega * 0.02 * ct + radV); 
+                    const iVal = state.iAmplitude * Math.sin(omega * 0.02 * ct + radI); 
+                    const pVal = (vVal * iVal) / 100; const pY = centerY - pVal; 
+                    if (Math.abs(pVal) > maxP) { maxP = Math.abs(pVal); maxPx = gx; }
+                    if (x === 0) ctx.moveTo(gx, centerY); ctx.lineTo(gx, pY); 
+                } 
+                ctx.lineTo(endX, centerY); ctx.fill(); 
+                
+                // Draw Stroke for Power
+                ctx.beginPath(); ctx.strokeStyle = COLORS.POWER; ctx.lineWidth = 1;
+                for (let x = 0; x < (endX - startX); x++) { 
+                    const ct = t * state.speed + x * 0.05; const gx = startX + x; 
+                    const vVal = state.vAmplitude * Math.sin(omega * 0.02 * ct + radV); 
+                    const iVal = state.iAmplitude * Math.sin(omega * 0.02 * ct + radI); 
+                    const pVal = (vVal * iVal) / 100; const pY = centerY - pVal; 
+                    if (x === 0) ctx.moveTo(gx, pY); else ctx.lineTo(gx, pY); 
+                }
+                ctx.stroke();
+                
+                if (maxP > 10) { ctx.fillStyle = COLORS.POWER; ctx.textAlign='center'; ctx.fillText("P(t)", maxPx, centerY - maxP - 10); }
+
+                // Phase Diff Dimension Line (Right Graph)
+                const periodPx = 1000 / state.frequency; const periodY = centerY + 120; const pStart = startX; const pEnd = startX + periodPx; 
+                if (pEnd < endX) { 
+                    ctx.strokeStyle = COLORS.TEXT_MAIN; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(pStart, periodY); ctx.lineTo(pEnd, periodY); ctx.stroke(); 
+                    ctx.beginPath(); ctx.moveTo(pStart, periodY-4); ctx.lineTo(pStart, periodY+4); ctx.stroke(); ctx.beginPath(); ctx.moveTo(pEnd, periodY-4); ctx.lineTo(pEnd, periodY+4); ctx.stroke(); 
+                    ctx.textAlign = 'center'; ctx.fillStyle = COLORS.TEXT_MAIN; ctx.fillText(`T (Period)`, pStart + periodPx/2, periodY + 15); 
+                } 
+                const vAmpX = startX + 50; ctx.strokeStyle = COLORS.TEXT_MUTED; ctx.beginPath(); ctx.moveTo(vAmpX, centerY); ctx.lineTo(vAmpX, centerY - state.vAmplitude); ctx.stroke(); ctx.beginPath(); ctx.moveTo(vAmpX-3, centerY - state.vAmplitude); ctx.lineTo(vAmpX+3, centerY - state.vAmplitude); ctx.stroke(); ctx.fillStyle = COLORS.TEXT_MAIN; ctx.textAlign = 'left'; ctx.fillText(`V_peak=${state.vAmplitude}`, vAmpX + 5, centerY - state.vAmplitude/2); 
+                
+                // Visual Phase Difference Logic
+                if (Math.abs(diff) > 1) {
+                    const pixelPhaseRate = omega * 0.001;
+                    const globalTime = t * state.speed;
+                    const currentPhaseAtStart = (omega * 0.02 * globalTime + radV);
+                    let relativePhaseToPeak = (Math.PI / 2) - (currentPhaseAtStart % (2 * Math.PI));
+                    if (relativePhaseToPeak < 0) relativePhaseToPeak += 2 * Math.PI;
+                    const distToFirstPeak = relativePhaseToPeak / pixelPhaseRate;
+                    let vPeakX = startX + distToFirstPeak;
+                    if (vPeakX < startX + 50) vPeakX += periodPx; if (vPeakX > endX - 50) vPeakX -= periodPx;
+                    const iPeakX = vPeakX + (diff / 360) * periodPx;
+                    
+                    if (vPeakX > startX && vPeakX < endX) {
+                        const dimY = centerY - state.vAmplitude - 25;
+                        ctx.strokeStyle = COLORS.TEXT_MAIN; ctx.lineWidth = 1;
+                        ctx.beginPath(); ctx.moveTo(vPeakX, dimY); ctx.lineTo(iPeakX, dimY); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(vPeakX, dimY-3); ctx.lineTo(vPeakX, dimY+3); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(iPeakX, dimY-3); ctx.lineTo(iPeakX, dimY+3); ctx.stroke();
+                        ctx.fillStyle = COLORS.TEXT_MAIN; ctx.textAlign = 'center';
+                        ctx.fillText(`Δφ`, (vPeakX + iPeakX)/2, dimY - 5);
+                    }
+                }
+            };
+            const drawWave = useCallback((ctx, width, height) => { ctx.clearRect(0, 0, width, height); const t = timeRef.current; const omega = 2 * Math.PI * state.frequency; const k = (2 * Math.PI * state.frequency * state.refractiveIndex) / 300; const bVisualAmplitude = state.amplitude * state.refractiveIndex; if (viewMode === WaveViewMode.VIEW_VI) { drawVIView(ctx, width, height, t, omega); return; } const startX = 60, endX = width - 40, drawWidth = endX - startX; if (viewMode === WaveViewMode.VIEW_2D) { const cyE = height * 0.25, cyB = height * 0.75; ctx.strokeStyle = COLORS.GRID; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(20, height/2); ctx.lineTo(width-20, height/2); ctx.stroke(); drawAxisSystem(ctx, startX, endX, cyE, "x", "E (y)"); ctx.lineWidth = 3; ctx.strokeStyle = COLORS.E_FIELD; ctx.beginPath(); for (let i = 0; i <= POINTS; i++) { const x = startX + (i / POINTS) * drawWidth; const ph = k * ((i / POINTS) * drawWidth) - omega * t * 0.02 * state.speed; const val = state.amplitude * Math.sin(ph); const y = cyE - val; if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); } ctx.stroke(); const ampX = startX + 40; ctx.strokeStyle = COLORS.TEXT_MUTED; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(ampX, cyE); ctx.lineTo(ampX, cyE - state.amplitude); ctx.stroke(); ctx.fillStyle = COLORS.TEXT_MAIN; ctx.textAlign = 'left'; ctx.font = '10px sans-serif'; ctx.fillText(`A=${state.amplitude}`, ampX + 2, cyE - state.amplitude / 2); ctx.beginPath(); ctx.moveTo(ampX - 3, cyE - state.amplitude); ctx.lineTo(ampX + 3, cyE - state.amplitude); ctx.stroke(); const lambdaPx = 300 / (state.frequency * state.refractiveIndex); const waveY = cyE + state.amplitude + 25; const waveStart = startX + 100; const waveEnd = waveStart + lambdaPx; if (waveEnd < endX) { ctx.strokeStyle = COLORS.TEXT_MAIN; ctx.beginPath(); ctx.moveTo(waveStart, waveY); ctx.lineTo(waveEnd, waveY); ctx.stroke(); ctx.beginPath(); ctx.moveTo(waveStart, waveY-4); ctx.lineTo(waveStart, waveY+4); ctx.stroke(); ctx.beginPath(); ctx.moveTo(waveEnd, waveY-4); ctx.lineTo(waveEnd, waveY+4); ctx.stroke(); ctx.textAlign = 'center'; ctx.fillStyle = COLORS.TEXT_MAIN; ctx.fillText(`λ ≈ ${lambdaPx.toFixed(0)}px`, waveStart + lambdaPx/2, waveY + 15); } drawAxisSystem(ctx, startX, endX, cyB, "x", "B (z)"); ctx.lineWidth = 3; ctx.strokeStyle = COLORS.B_FIELD; ctx.beginPath(); for (let i = 0; i <= POINTS; i++) { const x = startX + (i / POINTS) * drawWidth; const ph = k * ((i / POINTS) * drawWidth) - omega * t * 0.02 * state.speed; const val = bVisualAmplitude * Math.sin(ph); const y = cyB - val; if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); } ctx.stroke(); ctx.fillStyle = COLORS.B_FIELD; ctx.font = "14px monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; for (let i = 0; i <= POINTS; i+=10) { const x = startX + (i / POINTS) * drawWidth; const ph = k * ((i / POINTS) * drawWidth) - omega * t * 0.02 * state.speed; const val = bVisualAmplitude * Math.sin(ph); if (Math.abs(val) > 5) { const symbol = val > 0 ? "⊙" : "⊗"; ctx.fillText(symbol, x, cyB + (val > 0 ? 15 : -15)); } } } else { const centerY = height / 2; drawAxisSystem(ctx, startX, endX, centerY, "x", ""); draw3DAxisArrows(ctx, startX, centerY); if (state.refractiveIndex > 1) { ctx.fillStyle = `rgba(37, 99, 235, ${0.05 * state.refractiveIndex})`; ctx.fillRect(startX, 0, drawWidth, height); ctx.fillStyle = COLORS.TEXT_MUTED; ctx.font = '12px sans-serif'; ctx.textAlign = 'right'; ctx.fillText(`Medium n=${state.refractiveIndex}`, endX - 10, height - 10); } ctx.lineWidth = 3; ctx.beginPath(); ctx.strokeStyle = COLORS.E_FIELD; for (let i = 0; i <= POINTS; i++) { const x = startX + (i / POINTS) * drawWidth; const ph = k * ((i / POINTS) * drawWidth) - omega * t * 0.02 * state.speed; const val = state.amplitude * Math.sin(ph); const y = centerY - val; if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); if (i % 8 === 0) { ctx.save(); ctx.lineWidth = 1; ctx.globalAlpha = 0.2; ctx.moveTo(x, centerY); ctx.lineTo(x, y); ctx.stroke(); ctx.restore(); ctx.beginPath(); ctx.moveTo(x, y); } } ctx.stroke(); ctx.beginPath(); ctx.strokeStyle = COLORS.B_FIELD; for (let i = 0; i <= POINTS; i++) { const x = startX + (i / POINTS) * drawWidth; const ph = k * ((i / POINTS) * drawWidth) - omega * t * 0.02 * state.speed; const val = bVisualAmplitude * Math.sin(ph); const drawX = x - val * 0.5; const drawY = centerY + val * 0.6; if (i === 0) ctx.moveTo(drawX, drawY); else ctx.lineTo(drawX, drawY); if (i % 8 === 0) { ctx.save(); ctx.lineWidth = 1; ctx.globalAlpha = 0.2; ctx.moveTo(x, centerY); ctx.lineTo(drawX, drawY); ctx.stroke(); ctx.restore(); ctx.beginPath(); ctx.moveTo(drawX, drawY); } } ctx.stroke(); } }, [state, viewMode]);
+            useEffect(() => { const render = () => { const c = canvasRef.current; if (c) { const ctx = c.getContext('2d'); c.width = c.parentElement.clientWidth; c.height = c.parentElement.clientHeight; drawWave(ctx, c.width, c.height); } if (state.isPlaying) timeRef.current += 1; animationRef.current = requestAnimationFrame(render); }; render(); return () => cancelAnimationFrame(animationRef.current); }, [drawWave, state.isPlaying]);
+            const omega = (2 * Math.PI * state.frequency).toFixed(2); const lambda = (300 / (state.frequency * state.refractiveIndex)).toFixed(0); const kVal = ((2 * Math.PI) / parseFloat(lambda)).toFixed(3); const phaseDiff = state.vPhase - state.iPhase; const pAvg = (0.5 * state.vAmplitude * state.iAmplitude * Math.cos(phaseDiff * Math.PI / 180)).toFixed(0);
+            
+            return (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+                    <div className="lg:col-span-2 flex flex-col gap-4">
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex-grow relative min-h-[350px]">
+                            <div className="absolute top-4 left-4 z-10 flex gap-2"> {[WaveViewMode.VIEW_2D, WaveViewMode.VIEW_3D, WaveViewMode.VIEW_VI].map(m => ( <button key={m} onClick={() => setViewMode(m)} className={`px-3 py-1 rounded text-xs font-bold border ${viewMode === m ? 'bg-indigo-600 text-white' : 'bg-white'}`}>{m}</button> ))} </div>
+                            <canvas ref={canvasRef} className="w-full h-full" />
+                        </div>
+                        <EquationBox 
+                            title={viewMode === WaveViewMode.VIEW_VI ? "AC Circuit Analysis" : "Wave Function"}
+                            equations={viewMode !== WaveViewMode.VIEW_VI ? [
+                                { label: 'E(x,t)', math: `${state.amplitude}\\sin(${kVal}x - ${omega}t)`, color: 'text-red-600' },
+                                { label: 'B(x,t)', math: `${(state.amplitude * state.refractiveIndex).toFixed(0)}\\sin(${kVal}x - ${omega}t)`, color: 'text-blue-600' },
+                                { label: 'Relation', math: 'B_0 = \\frac{E_0}{v} = \\frac{n E_0}{c}' },
+                                { label: 'Velocity', math: `v = \\frac{c}{n}` },
+                                { label: 'Wavelength', math: `\\lambda = \\frac{\\lambda_0}{n}` }
+                            ] : [
+                                { label: 'v(t)', math: `${state.vAmplitude}\\sin(\\omega t + ${formatPhase(state.vPhase)})`, color: 'text-red-600' },
+                                { label: 'i(t)', math: `${state.iAmplitude}\\sin(\\omega t + ${formatPhase(state.iPhase)})`, color: 'text-amber-600' },
+                                { label: 'p(t)', math: `v(t) \\cdot i(t)`, color: 'text-purple-600' },
+                                { label: 'Power', math: `P_{avg} = \\frac{1}{2}V_0 I_0 \\cos(\\Delta\\phi) \\approx ${pAvg} \\text{ W}`, color: 'text-slate-700' },
+                                { label: 'Phase Diff', math: `\\Delta\\phi = \\phi_v - \\phi_i = ${(phaseDiff).toFixed(0)}^\\circ` }
+                            ]}
+                        />
+                    </div>
+                    <div className="lg:col-span-1 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-140px)]">
+                        <ControlPanel title="Configuration">
+                            {viewMode !== WaveViewMode.VIEW_VI && ( <div className="mb-4"> <label className="text-xs font-bold text-slate-500 mb-2 block">Propagation Medium (n)</label> <select value={state.refractiveIndex} onChange={(e) => setState(s => ({...s, refractiveIndex: parseFloat(e.target.value)}))} className="w-full bg-slate-100 rounded-lg p-2 text-sm"> <option value="1.0">Vacuum (n=1.00)</option><option value="1.33">Water (n=1.33)</option><option value="1.5">Glass (n=1.50)</option> </select> </div> )}
+                            <Slider label="Frequency" value={state.frequency} min={0.5} max={3.0} step={0.1} onChange={v => setState(s => ({...s, frequency: v}))} color="bg-purple-600" />
+                            {viewMode !== WaveViewMode.VIEW_VI && <Slider label="Amplitude" value={state.amplitude} min={10} max={100} onChange={v => setState(s => ({...s, amplitude: v}))} color="bg-pink-600" />}
+                            {viewMode === WaveViewMode.VIEW_VI && ( <> <Slider label="V Peak" value={state.vAmplitude} min={10} max={100} onChange={v => setState(s => ({...s, vAmplitude: v}))} color="bg-red-600" /> <Slider label="V Phase" value={state.vPhase} min={-180} max={180} onChange={v => setState(s => ({...s, vPhase: v}))} color="bg-red-600" /> <Slider label="I Peak" value={state.iAmplitude} min={10} max={100} onChange={v => setState(s => ({...s, iAmplitude: v}))} color="bg-amber-600" /> <Slider label="I Phase" value={state.iPhase} min={-180} max={180} onChange={v => setState(s => ({...s, iPhase: v}))} color="bg-amber-600" /> </> )}
+                            <Slider label="Speed" value={state.speed} min={0} max={3} step={0.1} onChange={v => setState(s => ({...s, speed: v}))} color="bg-emerald-600" />
+                            <PlayControls isPlaying={state.isPlaying} onToggle={() => setState(s => ({...s, isPlaying: !s.isPlaying}))} onReset={() => setState(s => ({...s, vPhase:0, iPhase:0, speed:1}))} />
+                            <HintBox>{viewMode === WaveViewMode.VIEW_VI ? "Set V and I phase difference to 90° to see power drop to zero (Pure Inductive/Capacitive Load)." : "Increase the Refractive Index (n) to see the wave slow down and the wavelength shorten."}</HintBox>
+                            <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm space-y-3">
+                                <div className="flex items-center gap-2 text-slate-600 border-b border-slate-200 pb-2"><Info size={16} /><h4 className="font-bold">Theory Guide</h4></div>
+                                <div className="space-y-2 text-xs text-slate-600">
+                                    {viewMode === WaveViewMode.VIEW_VI ? (
+                                        <React.Fragment>
+                                            <p><strong>Instantaneous Power:</strong> <LatexRenderer latex="p(t) = v(t) \cdot i(t)" />. It oscillates at <LatexRenderer latex="2\omega" />.</p>
+                                            <p><strong>Average Power:</strong> Depends on phase difference <LatexRenderer latex="\Delta\phi" />. Max when in phase (<LatexRenderer latex="\Delta\phi=0" />), zero when <LatexRenderer latex="90^\circ" /> out of phase.</p>
+                                        </React.Fragment>
+                                    ) : (
+                                        <React.Fragment>
+                                            <p>An EM wave consists of oscillating <strong className="text-red-600">Electric (E)</strong> and <strong className="text-blue-600">Magnetic (B)</strong> fields. They are perpendicular to each other and to the direction of propagation.</p>
+                                            <p>In a vacuum, velocity <LatexRenderer latex="v = c" />. In a medium with refractive index <LatexRenderer latex="n" />, velocity becomes <LatexRenderer latex="v = c/n" />.</p>
+                                        </React.Fragment>
+                                    )}
+                                </div>
+                            </div>
+                        </ControlPanel>
+                    </div>
+                </div>
+            );
+        };
+
+        const PolarizationTab = () => {
+             const [ex, setEx] = useState(50); const [ey, setEy] = useState(50); const [phaseDelta, setPhaseDelta] = useState(90); const [isPlaying, setIsPlaying] = useState(true);
+             const canvasRef = useRef(null); const timeRef = useRef(0); const animationRef = useRef(0); const traceRef = useRef([]);
+             useEffect(() => { traceRef.current = []; }, [ex, ey, phaseDelta]);
+             useEffect(() => {
+                 const render = () => {
+                     const c = canvasRef.current; if (!c) return; const ctx = c.getContext('2d'); c.width = c.clientWidth; c.height = c.clientHeight; const w = c.width, h = c.height; ctx.clearRect(0,0,w,h);
+                     if(isPlaying) timeRef.current += 0.04;
+                     const t = timeRef.current, rad = (phaseDelta*Math.PI)/180; const midX = w * 0.35;
+                     ctx.beginPath(); ctx.strokeStyle = COLORS.GRID; ctx.moveTo(midX, 20); ctx.lineTo(midX, h - 20); ctx.stroke();
+                     const cx = midX / 2, cy = h/2, maxR = Math.min(midX, h)*0.35, scale = maxR/100;
+                     ctx.strokeStyle = COLORS.AXIS; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx, cy - maxR - 20); ctx.lineTo(cx, cy + maxR + 20); ctx.moveTo(cx - maxR - 20, cy); ctx.lineTo(cx + maxR + 20, cy); ctx.stroke();
+                     ctx.fillStyle = COLORS.TEXT_MUTED; ctx.font = "12px sans-serif"; ctx.fillText("Ex", cx + maxR + 25, cy); ctx.fillText("Ey", cx, cy - maxR - 25);
+                     const valX = ex * Math.cos(t); const valY = ey * Math.cos(t + rad); traceRef.current.push({x: valX, y: valY}); if(traceRef.current.length > 200) traceRef.current.shift();
+                     ctx.beginPath(); ctx.strokeStyle = '#9333ea60'; ctx.lineWidth = 2; traceRef.current.forEach((pt, i) => { const px = cx + pt.x*scale, py = cy - pt.y*scale; i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py); }); ctx.stroke();
+                     const tipX = cx + valX*scale, tipY = cy - valY*scale;
+                     ctx.strokeStyle = COLORS.E_FIELD; ctx.setLineDash([3,3]); ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(tipX, cy); ctx.stroke(); ctx.strokeStyle = COLORS.B_FIELD; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, tipY); ctx.stroke(); ctx.setLineDash([]);
+                     ctx.strokeStyle = COLORS.POWER; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(tipX, tipY); ctx.stroke(); ctx.fillStyle = COLORS.POWER; ctx.beginPath(); ctx.arc(tipX, tipY, 4, 0, Math.PI*2); ctx.fill();
+                     const start3D = midX + 50, end3D = w - 50, len3D = end3D - start3D, cy3D = h/2; ctx.strokeStyle = COLORS.AXIS; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(start3D, cy3D); ctx.lineTo(end3D, cy3D); ctx.stroke(); ctx.fillText("Propagation (z)", end3D + 10, cy3D);
+                     const points = 150, k = 0.1, depthScale = 0.5;
+                     ctx.lineWidth = 2; ctx.beginPath(); ctx.strokeStyle = COLORS.POWER; for(let i=0; i<points; i++) { const z = (i/points)*len3D, ph = t - z*k; const wX = ex * Math.cos(ph), wY = ey * Math.cos(ph + rad); const px = start3D + z - wX * depthScale * 0.5, py = cy3D - wY * scale - wX * depthScale * 0.5; i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py); } ctx.stroke();
+                     ctx.beginPath(); ctx.strokeStyle = `${COLORS.B_FIELD}50`; for(let i=0; i<points; i++) { const z = (i/points)*len3D, ph = t - z*k; const wY = ey * Math.cos(ph + rad); const px = start3D + z, py = cy3D - wY * scale; i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py); } ctx.stroke();
+                     ctx.beginPath(); ctx.strokeStyle = `${COLORS.E_FIELD}50`; for(let i=0; i<points; i++) { const z = (i/points)*len3D, ph = t - z*k; const wX = ex * Math.cos(ph); const px = start3D + z - wX * depthScale * 0.5, py = cy3D - wX * depthScale * 0.5; i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py); } ctx.stroke();
+                     animationRef.current = requestAnimationFrame(render);
+                 };
+                 render(); return () => cancelAnimationFrame(animationRef.current);
+             }, [ex, ey, phaseDelta, isPlaying]);
+             let type = "Elliptical"; if (Math.abs(phaseDelta) % 180 === 0) type = "Linear"; else if (Math.abs(Math.abs(phaseDelta)-90) < 5 && Math.abs(ex-ey) < 5) type = "Circular";
+             const equations = [ { label: 'Net Vector', math: '\\vec{E}(z,t) = E_x \\hat{x} + E_y \\hat{y}', color: 'text-purple-600' }, { label: 'x-Comp', math: `E_x = ${ex} \\cos(kz - \\omega t)` }, { label: 'y-Comp', math: `E_y = ${ey} \\cos(kz - \\omega t + ${phaseDelta}^\\circ)` }, { label: 'State', math: `\\text{${type}}`, color: 'font-bold' } ];
+             if (type === 'Circular') { equations.push({ label: 'Condition', math: '|E_x| = |E_y|, \\delta = \\pm 90^\\circ', color: 'text-emerald-600' }); } else if (type === 'Linear') { equations.push({ label: 'Condition', math: `\\delta = n\\pi, \\text{Slope} = ${(ey/(ex||1)).toFixed(2)}` }); }
+             return (
+                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+                     <div className="lg:col-span-2 flex flex-col gap-4">
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex-grow min-h-[400px]"><canvas ref={canvasRef} className="w-full h-full block" /><div className="absolute top-4 left-4 flex gap-4 pointer-events-none"><div className="bg-white/90 p-2 rounded border border-slate-200"><span className="text-xs font-bold text-slate-500 block">Head-On View</span><span className="text-lg font-bold text-purple-600">{type} Polarization</span></div></div><div className="absolute top-4 right-4 bg-white/90 p-3 rounded border border-slate-200 shadow-sm text-xs pointer-events-none"><h5 className="font-bold text-slate-700 mb-2 border-b border-slate-200 pb-1">Legend</h5><div className="space-y-1.5"><div className="flex items-center gap-2"><div className="w-6 h-0 border-b-2 border-red-600 border-dashed"></div><span className="text-slate-600">Ex</span></div><div className="flex items-center gap-2"><div className="w-6 h-0 border-b-2 border-blue-600 border-dashed"></div><span className="text-slate-600">Ey</span></div><div className="flex items-center gap-2"><div className="w-6 h-1 bg-purple-600 rounded-full"></div><span className="text-slate-600">Net E-Field</span></div></div></div></div>
+                        <EquationBox title="Instantaneous Field Equations" equations={equations} />
+                     </div>
+                     <ControlPanel title="Polarization Controls">
+                         <div className="mb-6 border-b border-slate-100 pb-6"><Slider label="Horizontal Amp (Ex)" value={ex} min={0} max={100} step={1} onChange={setEx} color="bg-red-600" /><Slider label="Vertical Amp (Ey)" value={ey} min={0} max={100} step={1} onChange={setEy} color="bg-blue-600" /></div>
+                         <div className="mb-6"><div className="flex items-center gap-2 mb-4 text-slate-400"><Layers size={16} /><span className="text-xs font-bold uppercase tracking-wider">Phase Relationship</span></div><Slider label="Phase Difference (δ)" value={phaseDelta} min={-180} max={180} step={15} unit="°" onChange={setPhaseDelta} color="bg-purple-600" /><div className="flex justify-between text-xs text-slate-400 px-1 -mt-2"><span className="cursor-pointer hover:text-purple-600" onClick={() => setPhaseDelta(0)}>Linear (0°)</span><span className="cursor-pointer hover:text-purple-600" onClick={() => {setPhaseDelta(90); setEx(50); setEy(50);}}>Circular (90°)</span><span className="cursor-pointer hover:text-purple-600" onClick={() => setPhaseDelta(180)}>Linear (180°)</span></div></div>
+                         <PlayControls isPlaying={isPlaying} onToggle={() => setIsPlaying(!isPlaying)} onReset={() => { timeRef.current = 0; setPhaseDelta(90); setEx(50); setEy(50); }} />
+                         <HintBox>For Circular polarization, magnitudes must be equal (Ex = Ey) and phase difference must be ±90°.</HintBox>
+                         <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm space-y-3">
+                            <div className="flex items-center gap-2 text-slate-600 border-b border-slate-200 pb-2"><Info size={16} /><h4 className="font-bold">Theory Guide</h4></div>
+                            <div className="space-y-2 text-xs text-slate-600">
+                                <p><strong>Linear Polarization:</strong> Fields oscillate in a single plane (<LatexRenderer latex="\delta = 0^\circ" />).</p>
+                                <p><strong>Circular Polarization:</strong> Field vector rotates. Occurs when <LatexRenderer latex="E_x = E_y" /> and phase shift is <LatexRenderer latex="90^\circ" />.</p>
+                            </div>
+                        </div>
+                     </ControlPanel>
+                 </div>
+             );
+        };
+
+        const App = () => {
+            const [activeTab, setActiveTab] = useState(Tab.OVERVIEW);
+            const renderContent = () => {
+                switch (activeTab) {
+                    case Tab.OVERVIEW: return <OverviewTab onNavigate={setActiveTab} />;
+                    case Tab.MAXWELL: return <MaxwellsTab />;
+                    case Tab.GAUSS: return <GaussTab />;
+                    case Tab.COULOMB: return <CoulombsTab />;
+                    case Tab.AMPERE: return <AmperesTab />;
+                    case Tab.LORENTZ: return <LorentzTab />;
+                    case Tab.FARADAY: return <FaradaysTab />;
+                    case Tab.LENZ: return <LenzTab />;
+                    case Tab.EM_WAVE: return <EMWaveTab />;
+                    case Tab.POLARIZATION: return <PolarizationTab />;
+                    default: return <OverviewTab onNavigate={setActiveTab} />;
+                }
+            };
+            const TabButton = ({ id, label, icon }) => ( <button onClick={() => setActiveTab(id)} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap ${activeTab === id ? 'bg-white text-indigo-600 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200/50'}`}>{icon}{label}</button> );
+            return (
+                <div className="min-h-screen flex flex-col font-sans">
+                    <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+                        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 p-4">
+                            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab(Tab.OVERVIEW)}><div className="p-2 bg-indigo-600 rounded-lg"><Activity size={20} className="text-white" /></div><h1 className="text-xl font-bold tracking-tight text-slate-800">EM&AC Lab</h1></div>
+                            <nav className="flex bg-slate-100 rounded-lg p-1 overflow-x-auto max-w-full border border-slate-200 scrollbar-hide">
+                                <TabButton id={Tab.OVERVIEW} label="Overview" icon={<Home size={16} />} />
+                                <TabButton id={Tab.MAXWELL} label="Maxwell" icon={<BookOpen size={16} />} />
+                                <TabButton id={Tab.GAUSS} label="Gauss" icon={<Orbit size={16} />} /> 
+                                <TabButton id={Tab.COULOMB} label="Coulomb" icon={<CircleDot size={16} />} />
+                                <TabButton id={Tab.AMPERE} label="Ampère" icon={<Activity size={16} />} />
+                                <TabButton id={Tab.LORENTZ} label="Lorentz" icon={<Move size={16} />} />
+                                <TabButton id={Tab.FARADAY} label="Faraday" icon={<Zap size={16} />} />
+                                <TabButton id={Tab.LENZ} label="Lenz" icon={<Magnet size={16} />} />
+                                <TabButton id={Tab.EM_WAVE} label="EM Wave" icon={<Radio size={16} />} />
+                                <TabButton id={Tab.POLARIZATION} label="Polarization" icon={<Layers size={16} />} />
+                            </nav>
+                        </div>
+                    </header>
+                    <main className="flex-grow p-4 md:p-6 overflow-hidden flex flex-col"><div className="max-w-7xl mx-auto w-full h-full flex flex-col">{renderContent()}</div></main>
+                    <footer className="text-center p-4 text-xs text-slate-400 border-t border-slate-200 bg-white">Designed for Engineering Students</footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
