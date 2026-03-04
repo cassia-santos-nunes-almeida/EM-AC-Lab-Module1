@@ -69,12 +69,15 @@ export default function FaradayPage() {
       }
       ctx.globalAlpha = 1;
 
-      // Induced current arrows
+      // Induced current arrows — speed proportional to |EMF|
       const emf = -dBdt * loops;
       const isCW = emf < 0;
+      const emfNorm = Math.abs(emf) / (loops || 1); // normalized to [0, 1]
+      const arrowSpeed = emfNorm * 2; // proportional rotation speed
       ctx.fillStyle = c.CURRENT;
+      ctx.globalAlpha = 0.3 + 0.7 * emfNorm; // fade arrows when EMF is small
       for (let i = 0; i < 8; i++) {
-        const angle = (i / 8) * Math.PI * 2 + t * 2 * (isCW ? 1 : -1);
+        const angle = (i / 8) * Math.PI * 2 + t * arrowSpeed * (isCW ? 1 : -1);
         const ax = cx + 150 * Math.cos(angle), ay = cy + 150 * Math.sin(angle);
         ctx.save();
         ctx.translate(ax, ay);
@@ -86,6 +89,7 @@ export default function FaradayPage() {
         ctx.fill();
         ctx.restore();
       }
+      ctx.globalAlpha = 1;
 
       // Status labels
       ctx.textAlign = 'left';
