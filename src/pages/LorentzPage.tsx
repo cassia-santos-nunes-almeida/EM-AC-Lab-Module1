@@ -111,13 +111,34 @@ export default function LorentzPage() {
           30
         );
 
+        // Boris integrator — symplectic, conserves energy exactly for B-only fields
+        // Reference: Birdsall & Langdon, "Plasma Physics via Computer Simulation"
         const p = physicsRef.current;
-        const ax = (charge * p.vy * (bField / 20)) / mass;
-        const ay = (charge * -p.vx * (bField / 20)) / mass;
-        p.vx += ax * 0.016;
-        p.vy += ay * 0.016;
-        p.x += p.vx * 0.016;
-        p.y += p.vy * 0.016;
+        const dt = 0.016;
+        const Bz = bField / 20; // effective B-field (z-component, into screen when positive)
+        const qOverM = charge / mass;
+
+        // t-vector: t = (q*B*dt) / (2*m), only z-component for uniform B along z
+        const t = qOverM * Bz * dt * 0.5;
+        const s = (2 * t) / (1 + t * t);
+
+        // v⁻ = v^n (no E-field, so no half-acceleration step)
+        const vmx = p.vx;
+        const vmy = p.vy;
+
+        // v' = v⁻ + (v⁻ × t̂)  where t̂ = (0,0,t)
+        // (vx, vy, 0) × (0, 0, t) = (vy*t, -vx*t, 0)
+        const vpx = vmx + vmy * t;
+        const vpy = vmy - vmx * t;
+
+        // v⁺ = v⁻ + (v' × ŝ)  where ŝ = (0,0,s)
+        // (vpx, vpy, 0) × (0, 0, s) = (vpy*s, -vpx*s, 0)
+        p.vx = vmx + vpy * s;
+        p.vy = vmy - vpx * s;
+
+        // Position update
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
 
         if (Math.random() > 0.5) {
           p.trail.push({ x: p.x, y: p.y });
