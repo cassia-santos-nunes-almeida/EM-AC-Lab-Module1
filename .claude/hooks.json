@@ -1,0 +1,9 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "command": "npm install --silent"
+      }
+    ]
+  }
+}
