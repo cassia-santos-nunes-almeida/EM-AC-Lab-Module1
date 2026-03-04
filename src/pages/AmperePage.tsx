@@ -7,8 +7,7 @@ import { EquationBox } from '@/components/common/EquationBox';
 import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
-import { ModuleNavigation } from '@/components/common/ModuleNavigation';
-import { ModuleAssessment } from '@/components/common/ModuleAssessment';
+import { ModuleLayout } from '@/components/common/ModuleLayout';
 
 export default function AmperePage() {
   const { isDarkMode } = useProgressStore();
@@ -121,28 +120,42 @@ export default function AmperePage() {
   }, [current, isDarkMode, col]);
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 flex flex-col gap-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
-            <canvas ref={canvasRef} className="w-full h-full" />
-            <div className="absolute bottom-4 right-4 bg-white/90 dark:bg-slate-800/90 p-3 rounded border border-slate-200 dark:border-slate-700 text-xs max-w-[250px] shadow-sm">
-              <h5 className="font-bold text-slate-800 dark:text-slate-200 mb-1">Rule of Thumb</h5>
-              <p className="text-slate-600 dark:text-slate-400">
-                {current >= 0 ? (
-                  <span>
-                    Current <strong className="text-amber-600">IN</strong> → Field{' '}
-                    <strong className="text-blue-600">CW</strong>
-                  </span>
-                ) : (
-                  <span>
-                    Current <strong className="text-amber-600">OUT</strong> → Field{' '}
-                    <strong className="text-blue-600">CCW</strong>
-                  </span>
-                )}
-              </p>
+    <ModuleLayout
+      moduleId="ampere"
+      simulation={
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 flex flex-col gap-4">
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
+              <canvas ref={canvasRef} className="w-full h-full" />
+              <div className="absolute bottom-4 right-4 bg-white/90 dark:bg-slate-800/90 p-3 rounded border border-slate-200 dark:border-slate-700 text-xs max-w-[250px] shadow-sm">
+                <h5 className="font-bold text-slate-800 dark:text-slate-200 mb-1">Rule of Thumb</h5>
+                <p className="text-slate-600 dark:text-slate-400">
+                  {current >= 0 ? (
+                    <span>
+                      Current <strong className="text-amber-600">IN</strong> → Field{' '}
+                      <strong className="text-blue-600">CW</strong>
+                    </span>
+                  ) : (
+                    <span>
+                      Current <strong className="text-amber-600">OUT</strong> → Field{' '}
+                      <strong className="text-blue-600">CCW</strong>
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
           </div>
+          <ControlPanel title="Ampère's Law">
+            <Slider label="Current I (Amperes)" value={current} min={-100} max={100} onChange={setCurrent} color={current >= 0 ? 'bg-amber-600' : 'bg-red-600'} />
+            <HintBox>
+              Reverse the current direction to see the field lines switch between Clockwise and Counter-Clockwise
+              (Right-Hand Grip Rule).
+            </HintBox>
+          </ControlPanel>
+        </div>
+      }
+      theory={
+        <div className="space-y-6">
           <EquationBox
             title="Ampère's Law"
             equations={[
@@ -150,14 +163,6 @@ export default function AmperePage() {
               { label: 'Field at r', math: 'B = \\frac{\\mu_0 I}{2\\pi r}' },
             ]}
           />
-        </div>
-
-        <ControlPanel title="Ampère's Law">
-          <Slider label="Current I (Amperes)" value={current} min={-100} max={100} onChange={setCurrent} color={current >= 0 ? 'bg-amber-600' : 'bg-red-600'} />
-          <HintBox>
-            Reverse the current direction to see the field lines switch between Clockwise and Counter-Clockwise
-            (Right-Hand Grip Rule).
-          </HintBox>
           <TheoryGuide>
             <ul className="list-disc pl-4 space-y-1">
               <li>
@@ -170,10 +175,8 @@ export default function AmperePage() {
               </li>
             </ul>
           </TheoryGuide>
-        </ControlPanel>
-      </div>
-      <ModuleAssessment moduleId="ampere" />
-      <ModuleNavigation currentModuleId="ampere" />
-    </div>
+        </div>
+      }
+    />
   );
 }

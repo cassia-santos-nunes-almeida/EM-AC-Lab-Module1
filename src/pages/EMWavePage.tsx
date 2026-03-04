@@ -8,8 +8,7 @@ import { PlayControls } from '@/components/common/PlayControls';
 import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
-import { ModuleNavigation } from '@/components/common/ModuleNavigation';
-import { ModuleAssessment } from '@/components/common/ModuleAssessment';
+import { ModuleLayout } from '@/components/common/ModuleLayout';
 import type { EMWaveState } from '@/types';
 
 const POINTS = 200;
@@ -566,34 +565,135 @@ export default function EMWavePage() {
   const pAvg = (0.5 * state.vAmplitude * state.iAmplitude * Math.cos(phaseDiff * Math.PI / 180)).toFixed(0);
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 flex flex-col gap-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 flex-grow relative min-h-[350px]">
-            <div className="absolute top-4 left-4 z-10 flex gap-2">
-              {[WaveViewMode.VIEW_2D, WaveViewMode.VIEW_3D, WaveViewMode.VIEW_VI].map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setViewMode(m)}
-                  className={`px-3 py-1 rounded text-xs font-bold border ${
-                    viewMode === m
-                      ? 'bg-indigo-600 text-white border-indigo-600'
-                      : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600'
-                  }`}
-                >
-                  {m}
-                </button>
-              ))}
+    <ModuleLayout
+      moduleId="em-wave"
+      simulation={
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 flex flex-col gap-4">
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 flex-grow relative min-h-[350px]">
+              <div className="absolute top-4 left-4 z-10 flex gap-2">
+                {[WaveViewMode.VIEW_2D, WaveViewMode.VIEW_3D, WaveViewMode.VIEW_VI].map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setViewMode(m)}
+                    className={`px-3 py-1 rounded text-xs font-bold border ${
+                      viewMode === m
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600'
+                    }`}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+              <canvas ref={canvasRef} className="w-full h-full" />
             </div>
-            <canvas ref={canvasRef} className="w-full h-full" />
+            {viewMode === WaveViewMode.VIEW_VI && (
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-2 text-xs text-amber-800 dark:text-amber-300">
+                <strong>AC Circuits &amp; EM Waves:</strong> Maxwell&apos;s equations predict that time-varying fields propagate as waves.
+                In circuits, the same sinusoidal solutions appear as voltage/current phasors. The power factor
+                <MathWrapper latex="\cos(\Delta\phi)" /> determines energy transfer efficiency.
+              </div>
+            )}
           </div>
-          {viewMode === WaveViewMode.VIEW_VI && (
-            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-2 text-xs text-amber-800 dark:text-amber-300">
-              <strong>AC Circuits &amp; EM Waves:</strong> Maxwell&apos;s equations predict that time-varying fields propagate as waves.
-              In circuits, the same sinusoidal solutions appear as voltage/current phasors. The power factor
-              <MathWrapper latex="\cos(\Delta\phi)" /> determines energy transfer efficiency.
-            </div>
-          )}
+          <div className="lg:col-span-1 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-140px)]">
+            <ControlPanel title="Configuration">
+              {viewMode !== WaveViewMode.VIEW_VI && (
+                <div className="mb-4">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block">
+                    Propagation Medium (n)
+                  </label>
+                  <select
+                    value={state.refractiveIndex}
+                    onChange={(e) => setState((s) => ({ ...s, refractiveIndex: parseFloat(e.target.value) }))}
+                    className="w-full bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg p-2 text-sm"
+                  >
+                    <option value="1.0">Vacuum (n=1.00)</option>
+                    <option value="1.33">Water (n=1.33)</option>
+                    <option value="1.5">Glass (n=1.50)</option>
+                  </select>
+                </div>
+              )}
+              <Slider
+                label="Frequency"
+                value={state.frequency}
+                min={0.5}
+                max={3.0}
+                step={0.1}
+                onChange={(v) => setState((s) => ({ ...s, frequency: v }))}
+                color="bg-purple-600"
+              />
+              {viewMode !== WaveViewMode.VIEW_VI && (
+                <Slider
+                  label="Amplitude"
+                  value={state.amplitude}
+                  min={10}
+                  max={100}
+                  onChange={(v) => setState((s) => ({ ...s, amplitude: v }))}
+                  color="bg-pink-600"
+                />
+              )}
+              {viewMode === WaveViewMode.VIEW_VI && (
+                <>
+                  <Slider
+                    label="V Peak"
+                    value={state.vAmplitude}
+                    min={10}
+                    max={100}
+                    onChange={(v) => setState((s) => ({ ...s, vAmplitude: v }))}
+                    color="bg-red-600"
+                  />
+                  <Slider
+                    label="V Phase"
+                    value={state.vPhase}
+                    min={-180}
+                    max={180}
+                    onChange={(v) => setState((s) => ({ ...s, vPhase: v }))}
+                    color="bg-red-600"
+                  />
+                  <Slider
+                    label="I Peak"
+                    value={state.iAmplitude}
+                    min={10}
+                    max={100}
+                    onChange={(v) => setState((s) => ({ ...s, iAmplitude: v }))}
+                    color="bg-amber-600"
+                  />
+                  <Slider
+                    label="I Phase"
+                    value={state.iPhase}
+                    min={-180}
+                    max={180}
+                    onChange={(v) => setState((s) => ({ ...s, iPhase: v }))}
+                    color="bg-amber-600"
+                  />
+                </>
+              )}
+              <Slider
+                label="Speed"
+                value={state.speed}
+                min={0}
+                max={3}
+                step={0.1}
+                onChange={(v) => setState((s) => ({ ...s, speed: v }))}
+                color="bg-emerald-600"
+              />
+              <PlayControls
+                isPlaying={state.isPlaying}
+                onToggle={() => setState((s) => ({ ...s, isPlaying: !s.isPlaying }))}
+                onReset={() => setState((s) => ({ ...s, vPhase: 0, iPhase: 0, speed: 1 }))}
+              />
+              <HintBox>
+                {viewMode === WaveViewMode.VIEW_VI
+                  ? 'Set V and I phase difference to 90\u00B0 to see power drop to zero (Pure Inductive/Capacitive Load).'
+                  : 'Increase the Refractive Index (n) to see the wave slow down and the wavelength shorten.'}
+              </HintBox>
+            </ControlPanel>
+          </div>
+        </div>
+      }
+      theory={
+        <div className="space-y-6">
           <EquationBox
             title={viewMode === WaveViewMode.VIEW_VI ? 'AC Circuit Analysis' : 'Wave Function'}
             equations={
@@ -615,134 +715,38 @@ export default function EMWavePage() {
                   ]
             }
           />
-        </div>
-        <div className="lg:col-span-1 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-140px)]">
-          <ControlPanel title="Configuration">
-            {viewMode !== WaveViewMode.VIEW_VI && (
-              <div className="mb-4">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block">
-                  Propagation Medium (n)
-                </label>
-                <select
-                  value={state.refractiveIndex}
-                  onChange={(e) => setState((s) => ({ ...s, refractiveIndex: parseFloat(e.target.value) }))}
-                  className="w-full bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg p-2 text-sm"
-                >
-                  <option value="1.0">Vacuum (n=1.00)</option>
-                  <option value="1.33">Water (n=1.33)</option>
-                  <option value="1.5">Glass (n=1.50)</option>
-                </select>
-              </div>
-            )}
-            <Slider
-              label="Frequency"
-              value={state.frequency}
-              min={0.5}
-              max={3.0}
-              step={0.1}
-              onChange={(v) => setState((s) => ({ ...s, frequency: v }))}
-              color="bg-purple-600"
-            />
-            {viewMode !== WaveViewMode.VIEW_VI && (
-              <Slider
-                label="Amplitude"
-                value={state.amplitude}
-                min={10}
-                max={100}
-                onChange={(v) => setState((s) => ({ ...s, amplitude: v }))}
-                color="bg-pink-600"
-              />
-            )}
-            {viewMode === WaveViewMode.VIEW_VI && (
+          <TheoryGuide>
+            {viewMode === WaveViewMode.VIEW_VI ? (
               <>
-                <Slider
-                  label="V Peak"
-                  value={state.vAmplitude}
-                  min={10}
-                  max={100}
-                  onChange={(v) => setState((s) => ({ ...s, vAmplitude: v }))}
-                  color="bg-red-600"
-                />
-                <Slider
-                  label="V Phase"
-                  value={state.vPhase}
-                  min={-180}
-                  max={180}
-                  onChange={(v) => setState((s) => ({ ...s, vPhase: v }))}
-                  color="bg-red-600"
-                />
-                <Slider
-                  label="I Peak"
-                  value={state.iAmplitude}
-                  min={10}
-                  max={100}
-                  onChange={(v) => setState((s) => ({ ...s, iAmplitude: v }))}
-                  color="bg-amber-600"
-                />
-                <Slider
-                  label="I Phase"
-                  value={state.iPhase}
-                  min={-180}
-                  max={180}
-                  onChange={(v) => setState((s) => ({ ...s, iPhase: v }))}
-                  color="bg-amber-600"
-                />
+                <p>
+                  <strong>Instantaneous Power:</strong>{' '}
+                  <MathWrapper latex="p(t) = v(t) \cdot i(t)" />. It oscillates at{' '}
+                  <MathWrapper latex="2\omega" />.
+                </p>
+                <p>
+                  <strong>Average Power:</strong> Depends on phase difference{' '}
+                  <MathWrapper latex="\Delta\phi" />. Max when in phase (
+                  <MathWrapper latex="\Delta\phi=0" />), zero when{' '}
+                  <MathWrapper latex="90^\circ" /> out of phase.
+                </p>
+              </>
+            ) : (
+              <>
+                <p>
+                  An EM wave consists of oscillating{' '}
+                  <strong className="text-red-600 dark:text-red-400">Electric (E)</strong> and{' '}
+                  <strong className="text-blue-600 dark:text-blue-400">Magnetic (B)</strong> fields.
+                  They are perpendicular to each other and to the direction of propagation.
+                </p>
+                <p>
+                  In a vacuum, velocity <MathWrapper latex="v = c" />. In a medium with refractive
+                  index <MathWrapper latex="n" />, velocity becomes <MathWrapper latex="v = c/n" />.
+                </p>
               </>
             )}
-            <Slider
-              label="Speed"
-              value={state.speed}
-              min={0}
-              max={3}
-              step={0.1}
-              onChange={(v) => setState((s) => ({ ...s, speed: v }))}
-              color="bg-emerald-600"
-            />
-            <PlayControls
-              isPlaying={state.isPlaying}
-              onToggle={() => setState((s) => ({ ...s, isPlaying: !s.isPlaying }))}
-              onReset={() => setState((s) => ({ ...s, vPhase: 0, iPhase: 0, speed: 1 }))}
-            />
-            <HintBox>
-              {viewMode === WaveViewMode.VIEW_VI
-                ? 'Set V and I phase difference to 90\u00B0 to see power drop to zero (Pure Inductive/Capacitive Load).'
-                : 'Increase the Refractive Index (n) to see the wave slow down and the wavelength shorten.'}
-            </HintBox>
-            <TheoryGuide>
-              {viewMode === WaveViewMode.VIEW_VI ? (
-                <>
-                  <p>
-                    <strong>Instantaneous Power:</strong>{' '}
-                    <MathWrapper latex="p(t) = v(t) \cdot i(t)" />. It oscillates at{' '}
-                    <MathWrapper latex="2\omega" />.
-                  </p>
-                  <p>
-                    <strong>Average Power:</strong> Depends on phase difference{' '}
-                    <MathWrapper latex="\Delta\phi" />. Max when in phase (
-                    <MathWrapper latex="\Delta\phi=0" />), zero when{' '}
-                    <MathWrapper latex="90^\circ" /> out of phase.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p>
-                    An EM wave consists of oscillating{' '}
-                    <strong className="text-red-600 dark:text-red-400">Electric (E)</strong> and{' '}
-                    <strong className="text-blue-600 dark:text-blue-400">Magnetic (B)</strong> fields.
-                    They are perpendicular to each other and to the direction of propagation.
-                  </p>
-                  <p>
-                    In a vacuum, velocity <MathWrapper latex="v = c" />. In a medium with refractive
-                    index <MathWrapper latex="n" />, velocity becomes <MathWrapper latex="v = c/n" />.
-                  </p>
-                </>
-              )}
-            </TheoryGuide>
-          </ControlPanel>
+          </TheoryGuide>
         </div>
-      </div>
-      <ModuleAssessment moduleId="em-wave" />
-      <ModuleNavigation currentModuleId="em-wave" />
-    </div>
+      }
+    />
   );
 }

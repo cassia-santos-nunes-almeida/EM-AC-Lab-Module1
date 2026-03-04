@@ -7,8 +7,7 @@ import { EquationBox } from '@/components/common/EquationBox';
 import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
-import { ModuleNavigation } from '@/components/common/ModuleNavigation';
-import { ModuleAssessment } from '@/components/common/ModuleAssessment';
+import { ModuleLayout } from '@/components/common/ModuleLayout';
 import type { Charge } from '@/types';
 
 export default function CoulombPage() {
@@ -283,23 +282,96 @@ export default function CoulombPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 flex flex-col gap-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px] cursor-crosshair">
-            <canvas
-              ref={canvasRef}
-              className="w-full h-full block"
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={() => setDraggingId(null)}
-              onMouseLeave={() => setDraggingId(null)}
-            />
-            <div className="absolute bottom-4 left-4 bg-white/90 dark:bg-slate-800/90 p-2 rounded backdrop-blur text-xs border border-slate-200 dark:border-slate-700 shadow-sm pointer-events-none flex items-center gap-2">
-              <MousePointer2 size={14} className="text-slate-500" />
-              <span className="text-slate-700 dark:text-slate-300 font-medium">Drag charges</span>
+    <ModuleLayout
+      moduleId="coulomb"
+      simulation={
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 flex flex-col gap-4">
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px] cursor-crosshair">
+              <canvas
+                ref={canvasRef}
+                className="w-full h-full block"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={() => setDraggingId(null)}
+                onMouseLeave={() => setDraggingId(null)}
+              />
+              <div className="absolute bottom-4 left-4 bg-white/90 dark:bg-slate-800/90 p-2 rounded backdrop-blur text-xs border border-slate-200 dark:border-slate-700 shadow-sm pointer-events-none flex items-center gap-2">
+                <MousePointer2 size={14} className="text-slate-500" />
+                <span className="text-slate-700 dark:text-slate-300 font-medium">Drag charges</span>
+              </div>
             </div>
           </div>
+          <ControlPanel title="Charge Configuration">
+            {charges.map((charge, i) => (
+              <div key={charge.id} className="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-600 mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">
+                    Charge {i + 1}
+                  </span>
+                  <button
+                    onClick={() => setCharges((p) => p.filter((c) => c.id !== charge.id))}
+                    className="text-slate-400 hover:text-red-500 transition-colors"
+                    disabled={charges.length <= 1}
+                    aria-label={`Remove charge ${i + 1}`}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+                <input
+                  type="range"
+                  min={-10}
+                  max={10}
+                  value={charge.q}
+                  onChange={(e) =>
+                    setCharges((p) =>
+                      p.map((c) => (c.id === charge.id ? { ...c, q: parseFloat(e.target.value) } : c))
+                    )
+                  }
+                  className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-200 dark:bg-slate-600"
+                  style={{
+                    accentColor: charge.q > 0 ? col.E_FIELD : charge.q < 0 ? col.B_FIELD : '#94a3b8',
+                  }}
+                  aria-label={`Charge ${i + 1} value`}
+                />
+                <div className="text-center text-xs font-mono mt-1 text-slate-500 dark:text-slate-400">
+                  q = {charge.q > 0 ? '+' : ''}
+                  {charge.q} &mu;C
+                </div>
+              </div>
+            ))}
+            {charges.length < 4 && (
+              <button
+                onClick={() =>
+                  setCharges([
+                    ...charges,
+                    { id: Math.max(0, ...charges.map((c) => c.id)) + 1, x: 0.5, y: 0.5, q: 2 },
+                  ])
+                }
+                className="w-full py-2 bg-engineering-blue-50 dark:bg-engineering-blue-900/20 text-engineering-blue-700 dark:text-engineering-blue-400 border border-engineering-blue-200 dark:border-engineering-blue-800 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 mb-4"
+              >
+                <Plus size={16} /> Add Charge
+              </button>
+            )}
+            <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+              <input
+                type="checkbox"
+                checked={showGrid}
+                onChange={(e) => setShowGrid(e.target.checked)}
+                className="rounded text-engineering-blue-600"
+              />{' '}
+              Show Grid
+            </label>
+            <HintBox>
+              Drag charges close to each other. Notice how the Force vector (F) grows rapidly (
+              <MathWrapper latex="1/r^2" />
+              )!
+            </HintBox>
+          </ControlPanel>
+        </div>
+      }
+      theory={
+        <div className="space-y-6">
           <EquationBox
             title="Superposition Principle"
             equations={[
@@ -311,73 +383,6 @@ export default function CoulombPage() {
               { label: 'Force', math: '\\vec{F}_{net} \\text{ on } q = q \\vec{E}_{other}' },
             ]}
           />
-        </div>
-
-        <ControlPanel title="Charge Configuration">
-          {charges.map((charge, i) => (
-            <div key={charge.id} className="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-slate-600 mb-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">
-                  Charge {i + 1}
-                </span>
-                <button
-                  onClick={() => setCharges((p) => p.filter((c) => c.id !== charge.id))}
-                  className="text-slate-400 hover:text-red-500 transition-colors"
-                  disabled={charges.length <= 1}
-                  aria-label={`Remove charge ${i + 1}`}
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-              <input
-                type="range"
-                min={-10}
-                max={10}
-                value={charge.q}
-                onChange={(e) =>
-                  setCharges((p) =>
-                    p.map((c) => (c.id === charge.id ? { ...c, q: parseFloat(e.target.value) } : c))
-                  )
-                }
-                className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-200 dark:bg-slate-600"
-                style={{
-                  accentColor: charge.q > 0 ? col.E_FIELD : charge.q < 0 ? col.B_FIELD : '#94a3b8',
-                }}
-                aria-label={`Charge ${i + 1} value`}
-              />
-              <div className="text-center text-xs font-mono mt-1 text-slate-500 dark:text-slate-400">
-                q = {charge.q > 0 ? '+' : ''}
-                {charge.q} &mu;C
-              </div>
-            </div>
-          ))}
-          {charges.length < 4 && (
-            <button
-              onClick={() =>
-                setCharges([
-                  ...charges,
-                  { id: Math.max(0, ...charges.map((c) => c.id)) + 1, x: 0.5, y: 0.5, q: 2 },
-                ])
-              }
-              className="w-full py-2 bg-engineering-blue-50 dark:bg-engineering-blue-900/20 text-engineering-blue-700 dark:text-engineering-blue-400 border border-engineering-blue-200 dark:border-engineering-blue-800 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 mb-4"
-            >
-              <Plus size={16} /> Add Charge
-            </button>
-          )}
-          <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
-            <input
-              type="checkbox"
-              checked={showGrid}
-              onChange={(e) => setShowGrid(e.target.checked)}
-              className="rounded text-engineering-blue-600"
-            />{' '}
-            Show Grid
-          </label>
-          <HintBox>
-            Drag charges close to each other. Notice how the Force vector (F) grows rapidly (
-            <MathWrapper latex="1/r^2" />
-            )!
-          </HintBox>
           <TheoryGuide>
             <p>
               <strong>Coulomb's Law:</strong> Force between charges is proportional to magnitude product,
@@ -389,10 +394,8 @@ export default function CoulombPage() {
               field strength.
             </p>
           </TheoryGuide>
-        </ControlPanel>
-      </div>
-      <ModuleAssessment moduleId="coulomb" />
-      <ModuleNavigation currentModuleId="coulomb" />
-    </div>
+        </div>
+      }
+    />
   );
 }
