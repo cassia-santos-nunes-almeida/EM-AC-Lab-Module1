@@ -31,3 +31,28 @@
 ## ADR-008: Canvas rendering preserved as-is
 **Decision**: Keep all canvas drawing logic from the original app, converted to TypeScript but functionally identical.
 **Rationale**: The physics simulations are the core value of the app. Rewriting them risks introducing errors. The canvas code works correctly and performs well.
+
+## ADR-009: Boris integrator for Lorentz force simulation
+**Decision**: Replace forward Euler with Boris (leapfrog) integrator for charged particle trajectories.
+**Rationale**: Forward Euler is non-symplectic — particles spiral outward (gain energy) in B-only fields. Boris exactly conserves energy for magnetic-only fields, giving physically correct circular orbits.
+**Date**: 2026-03-04
+
+## ADR-010: Axial dipole flux model for Lenz's Law
+**Decision**: Replace empirical Gaussian proximity `exp(-d²/200)` with physics-based axial dipole flux: Φ ∝ a²/(a²+d²)^(3/2).
+**Rationale**: The Gaussian had no physical basis. The dipole model correctly captures how flux varies with magnet-coil distance and produces EMF via chain rule (dΦ/dt = dΦ/dd · dd/dt).
+**Date**: 2026-03-04
+
+## ADR-011: Tabbed ModuleLayout for all module pages
+**Decision**: Create a shared `ModuleLayout` component with 3 tabs: Simulation | Theory | Practice.
+**Rationale**: All 9 module pages were showing everything at once (canvas, controls, equations, theory, quizzes) — overwhelming for students. Tabs organize content into a natural learning flow: explore → understand → verify. Each page provides `simulation` and `theory` as props; `Practice` tab auto-loads from `moduleId`. Uses existing ARIA-compliant `Tabs` component.
+**Date**: 2026-03-04
+
+## ADR-012: CSS @import order fix
+**Decision**: Move all `@import` statements before `@theme` in `index.css`.
+**Rationale**: CSS spec requires `@import` to precede all other statements (except `@charset`). Having `@import "katex/..."` after `@theme` caused PostCSS warnings and could produce broken CSS chunks in production builds.
+**Date**: 2026-03-04
+
+## ADR-013: PWA service worker stale cache mitigation
+**Decision**: Add `skipWaiting`, `clientsClaim`, `cleanupOutdatedCaches` to VitePWA config + `lazyRetry` wrapper for dynamic imports.
+**Rationale**: After deploys with new chunk hashes, users with cached old `index.html` got "Failed to fetch dynamically imported module" errors. `skipWaiting` forces immediate SW activation; `lazyRetry` auto-reloads the page once if a chunk fails to load.
+**Date**: 2026-03-04
