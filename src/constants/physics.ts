@@ -40,9 +40,9 @@ export type ColorKey = keyof typeof COLORS;
 
 /** EM Wave view modes */
 export const WaveViewMode = {
-  VIEW_2D: '2D View',
-  VIEW_3D: '3D View',
-  VIEW_VI: 'V-I Phasor',
+  VIEW_2D: 'EM Wave 2D',
+  VIEW_3D: 'EM Wave 3D',
+  VIEW_VI: 'AC Phasors',
 } as const;
 
 export type WaveViewModeType = (typeof WaveViewMode)[keyof typeof WaveViewMode];

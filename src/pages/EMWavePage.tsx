@@ -549,6 +549,13 @@ export default function EMWavePage() {
             </div>
             <canvas ref={canvasRef} className="w-full h-full" />
           </div>
+          {viewMode === WaveViewMode.VIEW_VI && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-2 text-xs text-amber-800 dark:text-amber-300">
+              <strong>AC Circuits &amp; EM Waves:</strong> Maxwell&apos;s equations predict that time-varying fields propagate as waves.
+              In circuits, the same sinusoidal solutions appear as voltage/current phasors. The power factor
+              <MathWrapper latex="\cos(\Delta\phi)" /> determines energy transfer efficiency.
+            </div>
+          )}
           <EquationBox
             title={viewMode === WaveViewMode.VIEW_VI ? 'AC Circuit Analysis' : 'Wave Function'}
             equations={
