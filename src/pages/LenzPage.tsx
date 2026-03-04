@@ -6,8 +6,7 @@ import { Slider } from '@/components/common/Slider';
 import { EquationBox } from '@/components/common/EquationBox';
 import { HintBox } from '@/components/common/HintBox';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
-import { ModuleNavigation } from '@/components/common/ModuleNavigation';
-import { ModuleAssessment } from '@/components/common/ModuleAssessment';
+import { ModuleLayout } from '@/components/common/ModuleLayout';
 
 export default function LenzPage() {
   const { isDarkMode } = useProgressStore();
@@ -223,12 +222,55 @@ export default function LenzPage() {
   }, [magnetPos, prevPos, autoPlay, showField, numTurns, c, isDarkMode]);
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 flex flex-col gap-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
-            <canvas ref={canvasRef} className="w-full h-full block" />
+    <ModuleLayout
+      moduleId="lenz"
+      simulation={
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 flex flex-col gap-4">
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
+              <canvas ref={canvasRef} className="w-full h-full block" />
+            </div>
           </div>
+          <ControlPanel title="Lenz's Law">
+            <div className="flex items-center gap-2 mb-4">
+              <input
+                type="checkbox"
+                checked={autoPlay}
+                onChange={(e) => setAutoPlay(e.target.checked)}
+                className="rounded"
+              />
+              <span className="text-sm text-slate-700 dark:text-slate-300">Auto-Oscillate</span>
+            </div>
+            <div className="flex items-center gap-2 mb-4">
+              <input
+                type="checkbox"
+                checked={showField}
+                onChange={(e) => setShowField(e.target.checked)}
+                className="rounded"
+              />
+              <span className="text-sm text-slate-700 dark:text-slate-300">Show Field Lines</span>
+            </div>
+            {!autoPlay && (
+              <Slider
+                label="Magnet Position"
+                value={magnetPos}
+                min={0}
+                max={100}
+                step={0.5}
+                onChange={(v) => {
+                  setPrevPos(magnetPos);
+                  setMagnetPos(v);
+                }}
+                color="bg-slate-600"
+              />
+            )}
+            <Slider label="Turns (N)" value={numTurns} min={1} max={20} onChange={setNumTurns} color="bg-slate-600" />
+            <HintBox>Nature hates change! Move magnet closer -&gt; Coil repels. Move away -&gt; Coil attracts.</HintBox>
+          </ControlPanel>
+        </div>
+      }
+      theory={
+        <div className="space-y-6">
           <EquationBox
             title="Lenz's Law"
             equations={[
@@ -237,50 +279,12 @@ export default function LenzPage() {
               { label: 'Response', math: liveResponse, color: 'text-orange-600 dark:text-orange-400' },
             ]}
           />
-        </div>
-        <ControlPanel title="Lenz's Law">
-          <div className="flex items-center gap-2 mb-4">
-            <input
-              type="checkbox"
-              checked={autoPlay}
-              onChange={(e) => setAutoPlay(e.target.checked)}
-              className="rounded"
-            />
-            <span className="text-sm text-slate-700 dark:text-slate-300">Auto-Oscillate</span>
-          </div>
-          <div className="flex items-center gap-2 mb-4">
-            <input
-              type="checkbox"
-              checked={showField}
-              onChange={(e) => setShowField(e.target.checked)}
-              className="rounded"
-            />
-            <span className="text-sm text-slate-700 dark:text-slate-300">Show Field Lines</span>
-          </div>
-          {!autoPlay && (
-            <Slider
-              label="Magnet Position"
-              value={magnetPos}
-              min={0}
-              max={100}
-              step={0.5}
-              onChange={(v) => {
-                setPrevPos(magnetPos);
-                setMagnetPos(v);
-              }}
-              color="bg-slate-600"
-            />
-          )}
-          <Slider label="Turns (N)" value={numTurns} min={1} max={20} onChange={setNumTurns} color="bg-slate-600" />
-          <HintBox>Nature hates change! Move magnet closer -&gt; Coil repels. Move away -&gt; Coil attracts.</HintBox>
           <TheoryGuide>
             <p><strong>Lenz&apos;s Law:</strong> Nature hates change. If you try to increase flux, the coil creates a field to oppose you (Repulsion).</p>
             <p>If you try to remove flux, it tries to keep it (Attraction).</p>
           </TheoryGuide>
-        </ControlPanel>
-      </div>
-      <ModuleAssessment moduleId="lenz" />
-      <ModuleNavigation currentModuleId="lenz" />
-    </div>
+        </div>
+      }
+    />
   );
 }

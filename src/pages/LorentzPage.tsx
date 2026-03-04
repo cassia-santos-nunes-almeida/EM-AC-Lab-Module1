@@ -8,8 +8,7 @@ import { EquationBox } from '@/components/common/EquationBox';
 import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
-import { ModuleNavigation } from '@/components/common/ModuleNavigation';
-import { ModuleAssessment } from '@/components/common/ModuleAssessment';
+import { ModuleLayout } from '@/components/common/ModuleLayout';
 
 interface ParticleState {
   x: number;
@@ -175,12 +174,35 @@ export default function LorentzPage() {
   }, [velocity, bField, charge, mass, isDarkMode, col]);
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 flex flex-col gap-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
-            <canvas ref={canvasRef} className="w-full h-full block" />
+    <ModuleLayout
+      moduleId="lorentz"
+      simulation={
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 flex flex-col gap-4">
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
+              <canvas ref={canvasRef} className="w-full h-full block" />
+            </div>
           </div>
+          <ControlPanel title="Particle Controls">
+            <Slider label={`Charge q = ${charge} (arb. units)`} value={charge} min={-5} max={5} onChange={setCharge} color="bg-red-600" />
+            <Slider label={`Mass m = ${mass} (arb. units)`} value={mass} min={0.5} max={5} step={0.5} onChange={setMass} color="bg-slate-500" />
+            <Slider label={`Velocity v = ${velocity} (arb.)`} value={velocity} min={-100} max={100} onChange={setVelocity} color="bg-emerald-600" />
+            <Slider label={`B-field = ${(bField / 20).toFixed(1)} (arb.)`} value={bField} min={-100} max={100} onChange={setBField} color="bg-blue-600" />
+            <button
+              onClick={handleReset}
+              className="w-full mt-4 py-3 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg font-bold text-slate-700 dark:text-slate-200 flex justify-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+            >
+              <Move size={16} /> Respawn
+            </button>
+            <HintBox>
+              Increase the Mass (<MathWrapper latex="m" />) to see the radius expand. Heavier particles are
+              harder to deflect!
+            </HintBox>
+          </ControlPanel>
+        </div>
+      }
+      theory={
+        <div className="space-y-6">
           <EquationBox
             title="Lorentz Force"
             equations={[
@@ -191,23 +213,6 @@ export default function LorentzPage() {
                 : '\\text{—}' },
             ]}
           />
-        </div>
-
-        <ControlPanel title="Particle Controls">
-          <Slider label={`Charge q = ${charge} (arb. units)`} value={charge} min={-5} max={5} onChange={setCharge} color="bg-red-600" />
-          <Slider label={`Mass m = ${mass} (arb. units)`} value={mass} min={0.5} max={5} step={0.5} onChange={setMass} color="bg-slate-500" />
-          <Slider label={`Velocity v = ${velocity} (arb.)`} value={velocity} min={-100} max={100} onChange={setVelocity} color="bg-emerald-600" />
-          <Slider label={`B-field = ${(bField / 20).toFixed(1)} (arb.)`} value={bField} min={-100} max={100} onChange={setBField} color="bg-blue-600" />
-          <button
-            onClick={handleReset}
-            className="w-full mt-4 py-3 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg font-bold text-slate-700 dark:text-slate-200 flex justify-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
-          >
-            <Move size={16} /> Respawn
-          </button>
-          <HintBox>
-            Increase the Mass (<MathWrapper latex="m" />) to see the radius expand. Heavier particles are
-            harder to deflect!
-          </HintBox>
           <TheoryGuide>
             <p>
               <strong>Right Hand Rule:</strong> Force is perpendicular to both velocity and B-field.
@@ -217,10 +222,8 @@ export default function LorentzPage() {
               orbit wider. Stronger fields tighten the orbit.
             </p>
           </TheoryGuide>
-        </ControlPanel>
-      </div>
-      <ModuleAssessment moduleId="lorentz" />
-      <ModuleNavigation currentModuleId="lorentz" />
-    </div>
+        </div>
+      }
+    />
   );
 }

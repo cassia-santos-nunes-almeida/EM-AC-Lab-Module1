@@ -8,8 +8,7 @@ import { PlayControls } from '@/components/common/PlayControls';
 import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
-import { ModuleNavigation } from '@/components/common/ModuleNavigation';
-import { ModuleAssessment } from '@/components/common/ModuleAssessment';
+import { ModuleLayout } from '@/components/common/ModuleLayout';
 
 export default function FaradayPage() {
   const { isDarkMode } = useProgressStore();
@@ -106,12 +105,33 @@ export default function FaradayPage() {
   }, [isPlaying, rate, loops, c, isDarkMode]);
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 flex flex-col gap-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
-            <canvas ref={canvasRef} className="w-full h-full block" />
+    <ModuleLayout
+      moduleId="faraday"
+      simulation={
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 flex flex-col gap-4">
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
+              <canvas ref={canvasRef} className="w-full h-full block" />
+            </div>
           </div>
+          <ControlPanel title="Experiment Controls">
+            <Slider label="Rate (\u03C9)" value={rate} min={0.1} max={3.0} step={0.1} onChange={setRate} />
+            <Slider label="Loops (N)" value={loops} min={1} max={10} onChange={setLoops} color="bg-indigo-600" />
+            <PlayControls
+              isPlaying={isPlaying}
+              onToggle={() => setIsPlaying(!isPlaying)}
+              onReset={() => { timeRef.current = 0; }}
+            />
+            <HintBox>
+              <span>
+                Increase the Rate (<MathWrapper latex="\omega" />) or Loops (<MathWrapper latex="N" />) to generate a stronger induced voltage/current!
+              </span>
+            </HintBox>
+          </ControlPanel>
+        </div>
+      }
+      theory={
+        <div className="space-y-6">
           <EquationBox
             title="Faraday's Law"
             equations={[
@@ -121,20 +141,6 @@ export default function FaradayPage() {
               { label: 'EMF(t)', math: `\\mathcal{E} \\approx ${liveEmf.toFixed(2)}\\text{ (arb.)}`, color: Math.abs(liveEmf) > 0.5 ? 'text-amber-600 dark:text-amber-400 font-bold' : '' },
             ]}
           />
-        </div>
-        <ControlPanel title="Experiment Controls">
-          <Slider label="Rate (\u03C9)" value={rate} min={0.1} max={3.0} step={0.1} onChange={setRate} />
-          <Slider label="Loops (N)" value={loops} min={1} max={10} onChange={setLoops} color="bg-indigo-600" />
-          <PlayControls
-            isPlaying={isPlaying}
-            onToggle={() => setIsPlaying(!isPlaying)}
-            onReset={() => { timeRef.current = 0; }}
-          />
-          <HintBox>
-            <span>
-              Increase the Rate (<MathWrapper latex="\omega" />) or Loops (<MathWrapper latex="N" />) to generate a stronger induced voltage/current!
-            </span>
-          </HintBox>
           <TheoryGuide>
             <p><strong>Induction:</strong> A changing magnetic field generates an Electric Field (EMF).</p>
             <p>
@@ -145,10 +151,8 @@ export default function FaradayPage() {
               4. RHR: Thumb In -&gt; Fingers <span className="font-bold text-amber-600">CW &#x21bb;</span>
             </p>
           </TheoryGuide>
-        </ControlPanel>
-      </div>
-      <ModuleAssessment moduleId="faraday" />
-      <ModuleNavigation currentModuleId="faraday" />
-    </div>
+        </div>
+      }
+    />
   );
 }

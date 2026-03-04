@@ -7,8 +7,7 @@ import { EquationBox } from '@/components/common/EquationBox';
 import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
-import { ModuleNavigation } from '@/components/common/ModuleNavigation';
-import { ModuleAssessment } from '@/components/common/ModuleAssessment';
+import { ModuleLayout } from '@/components/common/ModuleLayout';
 
 export default function GaussPage() {
   const { isDarkMode } = useProgressStore();
@@ -141,45 +140,51 @@ export default function GaussPage() {
         ];
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 flex flex-col gap-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
-            <canvas ref={canvasRef} className="w-full h-full block" />
-            <div className="absolute top-4 left-4 pointer-events-none bg-white/90 dark:bg-slate-800/90 p-2 rounded border border-slate-200 dark:border-slate-700 shadow-sm">
-              <h5 className="font-bold text-xs text-slate-500 dark:text-slate-400 uppercase mb-1">Visualization</h5>
-              <div className="text-lg font-bold text-slate-800 dark:text-slate-200">
-                {mode === 'ELECTRIC' ? 'Electric Monopole' : 'Magnetic Dipole'}
+    <ModuleLayout
+      moduleId="gauss"
+      simulation={
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 flex flex-col gap-4">
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
+              <canvas ref={canvasRef} className="w-full h-full block" />
+              <div className="absolute top-4 left-4 pointer-events-none bg-white/90 dark:bg-slate-800/90 p-2 rounded border border-slate-200 dark:border-slate-700 shadow-sm">
+                <h5 className="font-bold text-xs text-slate-500 dark:text-slate-400 uppercase mb-1">Visualization</h5>
+                <div className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                  {mode === 'ELECTRIC' ? 'Electric Monopole' : 'Magnetic Dipole'}
+                </div>
               </div>
             </div>
           </div>
-          <EquationBox title={`Gauss's Law for ${mode === 'ELECTRIC' ? 'Electric Fields' : 'Magnetism'}`} equations={equations} />
+          <ControlPanel title="Gauss's Law Controls">
+            <div className="flex gap-2 mb-6 p-1 bg-slate-100 dark:bg-slate-700 rounded-lg">
+              <button
+                onClick={() => setMode('ELECTRIC')}
+                className={`flex-1 py-2 text-xs font-bold rounded-md transition-colors ${mode === 'ELECTRIC' ? 'bg-white dark:bg-slate-600 shadow text-red-600 dark:text-red-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+              >
+                Electric (E)
+              </button>
+              <button
+                onClick={() => setMode('MAGNETIC')}
+                className={`flex-1 py-2 text-xs font-bold rounded-md transition-colors ${mode === 'MAGNETIC' ? 'bg-white dark:bg-slate-600 shadow text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+              >
+                Magnetic (B)
+              </button>
+            </div>
+            <Slider label={`Surface Radius r = ${(radius * 0.01).toFixed(2)} m`} value={radius} min={50} max={200} onChange={setRadius} color="bg-purple-600" />
+            {mode === 'ELECTRIC' && (
+              <Slider label={`Enclosed Charge Q = ${charge} μC`} value={charge} min={-10} max={10} onChange={setCharge} color={charge > 0 ? 'bg-red-600' : 'bg-blue-600'} />
+            )}
+            <HintBox>
+              {mode === 'ELECTRIC'
+                ? 'Try changing the radius. Notice the number of field lines crossing the surface stays constant!'
+                : 'No matter how big the surface, flux is zero because magnetic lines always loop back.'}
+            </HintBox>
+          </ControlPanel>
         </div>
-
-        <ControlPanel title="Gauss's Law Controls">
-          <div className="flex gap-2 mb-6 p-1 bg-slate-100 dark:bg-slate-700 rounded-lg">
-            <button
-              onClick={() => setMode('ELECTRIC')}
-              className={`flex-1 py-2 text-xs font-bold rounded-md transition-colors ${mode === 'ELECTRIC' ? 'bg-white dark:bg-slate-600 shadow text-red-600 dark:text-red-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
-            >
-              Electric (E)
-            </button>
-            <button
-              onClick={() => setMode('MAGNETIC')}
-              className={`flex-1 py-2 text-xs font-bold rounded-md transition-colors ${mode === 'MAGNETIC' ? 'bg-white dark:bg-slate-600 shadow text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
-            >
-              Magnetic (B)
-            </button>
-          </div>
-          <Slider label={`Surface Radius r = ${(radius * 0.01).toFixed(2)} m`} value={radius} min={50} max={200} onChange={setRadius} color="bg-purple-600" />
-          {mode === 'ELECTRIC' && (
-            <Slider label={`Enclosed Charge Q = ${charge} μC`} value={charge} min={-10} max={10} onChange={setCharge} color={charge > 0 ? 'bg-red-600' : 'bg-blue-600'} />
-          )}
-          <HintBox>
-            {mode === 'ELECTRIC'
-              ? 'Try changing the radius. Notice the number of field lines crossing the surface stays constant!'
-              : 'No matter how big the surface, flux is zero because magnetic lines always loop back.'}
-          </HintBox>
+      }
+      theory={
+        <div className="space-y-6">
+          <EquationBox title={`Gauss's Law for ${mode === 'ELECTRIC' ? 'Electric Fields' : 'Magnetism'}`} equations={equations} />
           <TheoryGuide>
             {mode === 'ELECTRIC' ? (
               <p>
@@ -194,10 +199,8 @@ export default function GaussPage() {
               </p>
             )}
           </TheoryGuide>
-        </ControlPanel>
-      </div>
-      <ModuleAssessment moduleId="gauss" />
-      <ModuleNavigation currentModuleId="gauss" />
-    </div>
+        </div>
+      }
+    />
   );
 }

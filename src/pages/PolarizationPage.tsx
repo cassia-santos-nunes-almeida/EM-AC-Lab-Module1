@@ -8,8 +8,7 @@ import { PlayControls } from '@/components/common/PlayControls';
 import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
-import { ModuleNavigation } from '@/components/common/ModuleNavigation';
-import { ModuleAssessment } from '@/components/common/ModuleAssessment';
+import { ModuleLayout } from '@/components/common/ModuleLayout';
 import { Layers } from 'lucide-react';
 import type { Equation } from '@/types';
 
@@ -233,91 +232,96 @@ export default function PolarizationPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 flex flex-col gap-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
-            <canvas ref={canvasRef} className="w-full h-full block" />
-            {/* Type label overlay */}
-            <div className="absolute top-4 left-4 flex gap-4 pointer-events-none">
-              <div className="bg-white/90 dark:bg-slate-800/90 p-2 rounded border border-slate-200 dark:border-slate-700">
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block">Head-On View</span>
-                <span className="text-lg font-bold text-purple-600 dark:text-purple-400">{type} Polarization</span>
+    <ModuleLayout
+      moduleId="polarization"
+      simulation={
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 flex flex-col gap-4">
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
+              <canvas ref={canvasRef} className="w-full h-full block" />
+              <div className="absolute top-4 left-4 flex gap-4 pointer-events-none">
+                <div className="bg-white/90 dark:bg-slate-800/90 p-2 rounded border border-slate-200 dark:border-slate-700">
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block">Head-On View</span>
+                  <span className="text-lg font-bold text-purple-600 dark:text-purple-400">{type} Polarization</span>
+                </div>
               </div>
-            </div>
-            {/* Legend overlay */}
-            <div className="absolute top-4 right-4 bg-white/90 dark:bg-slate-800/90 p-3 rounded border border-slate-200 dark:border-slate-700 shadow-sm text-xs pointer-events-none">
-              <h5 className="font-bold text-slate-700 dark:text-slate-300 mb-2 border-b border-slate-200 dark:border-slate-700 pb-1">Legend</h5>
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-0 border-b-2 border-red-600 border-dashed"></div>
-                  <span className="text-slate-600 dark:text-slate-400">Ex</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-0 border-b-2 border-blue-600 border-dashed"></div>
-                  <span className="text-slate-600 dark:text-slate-400">Ey</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-1 bg-purple-600 rounded-full"></div>
-                  <span className="text-slate-600 dark:text-slate-400">Net E-Field</span>
+              <div className="absolute top-4 right-4 bg-white/90 dark:bg-slate-800/90 p-3 rounded border border-slate-200 dark:border-slate-700 shadow-sm text-xs pointer-events-none">
+                <h5 className="font-bold text-slate-700 dark:text-slate-300 mb-2 border-b border-slate-200 dark:border-slate-700 pb-1">Legend</h5>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-0 border-b-2 border-red-600 border-dashed"></div>
+                    <span className="text-slate-600 dark:text-slate-400">Ex</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-0 border-b-2 border-blue-600 border-dashed"></div>
+                    <span className="text-slate-600 dark:text-slate-400">Ey</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-1 bg-purple-600 rounded-full"></div>
+                    <span className="text-slate-600 dark:text-slate-400">Net E-Field</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          <EquationBox title="Instantaneous Field Equations" equations={equations} />
-        </div>
-        <ControlPanel title="Polarization Controls">
-          <div className="mb-6 border-b border-slate-100 dark:border-slate-700 pb-6">
-            <Slider label="Horizontal Amp (Ex)" value={ex} min={0} max={100} step={1} onChange={setEx} color="bg-red-600" />
-            <Slider label="Vertical Amp (Ey)" value={ey} min={0} max={100} step={1} onChange={setEy} color="bg-blue-600" />
-          </div>
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-4 text-slate-400 dark:text-slate-500">
-              <Layers size={16} />
-              <span className="text-xs font-bold uppercase tracking-wider">Phase Relationship</span>
+          <ControlPanel title="Polarization Controls">
+            <div className="mb-6 border-b border-slate-100 dark:border-slate-700 pb-6">
+              <Slider label="Horizontal Amp (Ex)" value={ex} min={0} max={100} step={1} onChange={setEx} color="bg-red-600" />
+              <Slider label="Vertical Amp (Ey)" value={ey} min={0} max={100} step={1} onChange={setEy} color="bg-blue-600" />
             </div>
-            <Slider
-              label="Phase Difference (\u03B4)"
-              value={phaseDelta}
-              min={-180}
-              max={180}
-              step={15}
-              unit="\u00B0"
-              onChange={setPhaseDelta}
-              color="bg-purple-600"
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-4 text-slate-400 dark:text-slate-500">
+                <Layers size={16} />
+                <span className="text-xs font-bold uppercase tracking-wider">Phase Relationship</span>
+              </div>
+              <Slider
+                label="Phase Difference (\u03B4)"
+                value={phaseDelta}
+                min={-180}
+                max={180}
+                step={15}
+                unit="\u00B0"
+                onChange={setPhaseDelta}
+                color="bg-purple-600"
+              />
+              <div className="flex justify-between text-xs text-slate-400 dark:text-slate-500 px-1 -mt-2">
+                <span
+                  className="cursor-pointer hover:text-purple-600 dark:hover:text-purple-400"
+                  onClick={() => setPhaseDelta(0)}
+                >
+                  Linear (0\u00B0)
+                </span>
+                <span
+                  className="cursor-pointer hover:text-purple-600 dark:hover:text-purple-400"
+                  onClick={() => { setPhaseDelta(90); setEx(50); setEy(50); }}
+                >
+                  Circular (90\u00B0)
+                </span>
+                <span
+                  className="cursor-pointer hover:text-purple-600 dark:hover:text-purple-400"
+                  onClick={() => setPhaseDelta(180)}
+                >
+                  Linear (180\u00B0)
+                </span>
+              </div>
+            </div>
+            <PlayControls
+              isPlaying={isPlaying}
+              onToggle={() => setIsPlaying(!isPlaying)}
+              onReset={() => {
+                timeRef.current = 0;
+                setPhaseDelta(90);
+                setEx(50);
+                setEy(50);
+              }}
             />
-            <div className="flex justify-between text-xs text-slate-400 dark:text-slate-500 px-1 -mt-2">
-              <span
-                className="cursor-pointer hover:text-purple-600 dark:hover:text-purple-400"
-                onClick={() => setPhaseDelta(0)}
-              >
-                Linear (0\u00B0)
-              </span>
-              <span
-                className="cursor-pointer hover:text-purple-600 dark:hover:text-purple-400"
-                onClick={() => { setPhaseDelta(90); setEx(50); setEy(50); }}
-              >
-                Circular (90\u00B0)
-              </span>
-              <span
-                className="cursor-pointer hover:text-purple-600 dark:hover:text-purple-400"
-                onClick={() => setPhaseDelta(180)}
-              >
-                Linear (180\u00B0)
-              </span>
-            </div>
-          </div>
-          <PlayControls
-            isPlaying={isPlaying}
-            onToggle={() => setIsPlaying(!isPlaying)}
-            onReset={() => {
-              timeRef.current = 0;
-              setPhaseDelta(90);
-              setEx(50);
-              setEy(50);
-            }}
-          />
-          <HintBox>For Circular polarization, magnitudes must be equal (Ex = Ey) and phase difference must be \u00B190\u00B0.</HintBox>
+            <HintBox>For Circular polarization, magnitudes must be equal (Ex = Ey) and phase difference must be \u00B190\u00B0.</HintBox>
+          </ControlPanel>
+        </div>
+      }
+      theory={
+        <div className="space-y-6">
+          <EquationBox title="Instantaneous Field Equations" equations={equations} />
           <TheoryGuide>
             <p>
               <strong>Linear Polarization:</strong> Fields oscillate in a single plane (
@@ -329,10 +333,8 @@ export default function PolarizationPage() {
               <MathWrapper latex="90^\circ" />.
             </p>
           </TheoryGuide>
-        </ControlPanel>
-      </div>
-      <ModuleAssessment moduleId="polarization" />
-      <ModuleNavigation currentModuleId="polarization" />
-    </div>
+        </div>
+      }
+    />
   );
 }
