@@ -23,7 +23,7 @@ export function EquationBox({ title, equations, className }: EquationBoxProps) {
             key={i}
             className="flex items-center gap-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg px-3 py-2"
           >
-            <span className="text-xs font-bold text-slate-400 dark:text-slate-500 w-20 shrink-0">
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-500 min-w-[5rem] max-w-[7rem] shrink-0">
               {eq.label}
             </span>
             <div className={cn('text-lg', eq.color || 'text-indigo-700 dark:text-indigo-400')}>

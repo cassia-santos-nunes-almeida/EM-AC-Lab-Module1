@@ -553,11 +553,10 @@ export default function EMWavePage() {
             equations={
               viewMode !== WaveViewMode.VIEW_VI
                 ? [
-                    { label: 'E(x,t)', math: `${state.amplitude}\\sin(${kVal}x - ${omega}t)`, color: 'text-red-600' },
-                    { label: 'B(x,t)', math: `${(state.amplitude * state.refractiveIndex).toFixed(0)}\\sin(${kVal}x - ${omega}t)`, color: 'text-blue-600' },
-                    { label: 'Relation', math: 'B_0 = \\frac{E_0}{v} = \\frac{n E_0}{c}' },
-                    { label: 'Velocity', math: 'v = \\frac{c}{n}' },
-                    { label: 'Wavelength', math: '\\lambda = \\frac{\\lambda_0}{n}' },
+                    { label: 'E(x,t)', math: `E_0 \\sin(kx - \\omega t),\\quad k=${kVal},\\; \\omega=${omega}`, color: 'text-red-600' },
+                    { label: 'B(x,t)', math: `\\frac{E_0}{v} \\sin(kx - \\omega t) = \\frac{n E_0}{c} \\sin(kx - \\omega t)`, color: 'text-blue-600' },
+                    { label: 'Velocity', math: `v = \\frac{c}{n} = \\frac{c}{${state.refractiveIndex}}` },
+                    { label: 'Wavelength', math: `\\lambda = \\frac{\\lambda_0}{n} \\approx ${lambda} \\text{ (arb.)}` },
                   ]
                 : [
                     { label: 'v(t)', math: `${state.vAmplitude}\\sin(\\omega t ${formatPhase(state.vPhase)})`, color: 'text-red-600' },

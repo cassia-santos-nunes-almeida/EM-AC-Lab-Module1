@@ -18,6 +18,8 @@ export default function LenzPage() {
   const [speed] = useState(1);
   const [showField, setShowField] = useState(true);
   const [numTurns, setNumTurns] = useState(6);
+  const [liveFluxDir, setLiveFluxDir] = useState('');
+  const [liveResponse, setLiveResponse] = useState('');
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const timeRef = useRef(0);
@@ -149,6 +151,16 @@ export default function LenzPage() {
       const currentDir = intensity > 0 ? 1 : -1;
       const alpha = Math.min(Math.abs(intensity) / 5, 1);
 
+      // Update live equation feedback
+      if (Math.abs(v) > 0.1 && Math.abs(interactionStrength) > 0.1) {
+        const approaching = (v * dist) < 0;
+        setLiveFluxDir(approaching ? '\\nearrow \\text{ Increasing}' : '\\searrow \\text{ Decreasing}');
+        setLiveResponse(approaching ? '\\text{Repulsion (opposes approach)}' : '\\text{Attraction (opposes removal)}');
+      } else {
+        setLiveFluxDir('\\text{Steady}');
+        setLiveResponse('\\text{No induced EMF}');
+      }
+
       for (let i = 0; i < numTurns; i++) {
         const x = coilX - coilWidth / 2 + i * turnSpacing + turnSpacing / 2;
         ctx.beginPath();
@@ -204,7 +216,11 @@ export default function LenzPage() {
           </div>
           <EquationBox
             title="Lenz's Law"
-            equations={[{ label: 'Effect', math: '\\mathcal{E} = -N \\frac{d\\Phi_B}{dt}' }]}
+            equations={[
+              { label: 'Lenz\'s Law', math: '\\mathcal{E} = -N \\frac{d\\Phi_B}{dt}', color: 'text-indigo-600' },
+              { label: 'Flux', math: `\\Phi_B: ${liveFluxDir}` },
+              { label: 'Response', math: liveResponse, color: 'text-orange-600 dark:text-orange-400' },
+            ]}
           />
         </div>
         <ControlPanel title="Lenz's Law">

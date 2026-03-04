@@ -17,6 +17,8 @@ export default function FaradayPage() {
   const [rate, setRate] = useState(1);
   const [loops, setLoops] = useState(1);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [liveB, setLiveB] = useState(0);
+  const [liveEmf, setLiveEmf] = useState(0);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const timeRef = useRef(0);
@@ -38,6 +40,8 @@ export default function FaradayPage() {
       if (isPlaying) timeRef.current += 0.02 * rate;
       const t = timeRef.current;
       const B = Math.sin(t), dBdt = Math.cos(t);
+      setLiveB(B);
+      setLiveEmf(-dBdt * loops);
 
       // Draw conducting loops
       ctx.beginPath();
@@ -107,6 +111,9 @@ export default function FaradayPage() {
             title="Faraday's Law"
             equations={[
               { label: 'General', math: '\\mathcal{E} = -N \\frac{d\\Phi_B}{dt}', color: 'text-indigo-600' },
+              { label: 'Parameters', math: `N = ${loops},\\quad \\omega = ${rate.toFixed(1)}` },
+              { label: 'B(t)', math: `B = \\sin(\\omega t) \\approx ${liveB.toFixed(2)}` },
+              { label: 'EMF(t)', math: `\\mathcal{E} \\approx ${liveEmf.toFixed(2)}\\text{ (arb.)}`, color: Math.abs(liveEmf) > 0.5 ? 'text-amber-600 dark:text-amber-400 font-bold' : '' },
             ]}
           />
         </div>
