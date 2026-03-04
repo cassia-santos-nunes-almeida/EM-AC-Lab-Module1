@@ -7,6 +7,7 @@ import { EquationBox } from '@/components/common/EquationBox';
 import { HintBox } from '@/components/common/HintBox';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleNavigation } from '@/components/common/ModuleNavigation';
+import { ModuleAssessment } from '@/components/common/ModuleAssessment';
 
 export default function LenzPage() {
   const { isDarkMode } = useProgressStore();
@@ -264,6 +265,7 @@ export default function LenzPage() {
           </TheoryGuide>
         </ControlPanel>
       </div>
+      <ModuleAssessment moduleId="lenz" />
       <ModuleNavigation currentModuleId="lenz" />
     </div>
   );

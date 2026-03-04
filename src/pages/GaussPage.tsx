@@ -8,6 +8,7 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleNavigation } from '@/components/common/ModuleNavigation';
+import { ModuleAssessment } from '@/components/common/ModuleAssessment';
 
 export default function GaussPage() {
   const { isDarkMode } = useProgressStore();
@@ -195,6 +196,7 @@ export default function GaussPage() {
           </TheoryGuide>
         </ControlPanel>
       </div>
+      <ModuleAssessment moduleId="gauss" />
       <ModuleNavigation currentModuleId="gauss" />
     </div>
   );

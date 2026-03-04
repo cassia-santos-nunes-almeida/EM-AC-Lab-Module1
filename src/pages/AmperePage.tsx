@@ -8,6 +8,7 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleNavigation } from '@/components/common/ModuleNavigation';
+import { ModuleAssessment } from '@/components/common/ModuleAssessment';
 
 export default function AmperePage() {
   const { isDarkMode } = useProgressStore();
@@ -150,6 +151,7 @@ export default function AmperePage() {
           </TheoryGuide>
         </ControlPanel>
       </div>
+      <ModuleAssessment moduleId="ampere" />
       <ModuleNavigation currentModuleId="ampere" />
     </div>
   );

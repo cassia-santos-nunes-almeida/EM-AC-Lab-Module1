@@ -8,6 +8,7 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleNavigation } from '@/components/common/ModuleNavigation';
+import { ModuleAssessment } from '@/components/common/ModuleAssessment';
 import type { Charge } from '@/types';
 
 export default function CoulombPage() {
@@ -363,6 +364,7 @@ export default function CoulombPage() {
           </TheoryGuide>
         </ControlPanel>
       </div>
+      <ModuleAssessment moduleId="coulomb" />
       <ModuleNavigation currentModuleId="coulomb" />
     </div>
   );

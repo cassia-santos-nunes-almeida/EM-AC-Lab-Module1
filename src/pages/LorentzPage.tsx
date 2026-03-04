@@ -9,6 +9,7 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleNavigation } from '@/components/common/ModuleNavigation';
+import { ModuleAssessment } from '@/components/common/ModuleAssessment';
 
 interface ParticleState {
   x: number;
@@ -194,6 +195,7 @@ export default function LorentzPage() {
           </TheoryGuide>
         </ControlPanel>
       </div>
+      <ModuleAssessment moduleId="lorentz" />
       <ModuleNavigation currentModuleId="lorentz" />
     </div>
   );

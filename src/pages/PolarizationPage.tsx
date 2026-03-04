@@ -9,6 +9,7 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleNavigation } from '@/components/common/ModuleNavigation';
+import { ModuleAssessment } from '@/components/common/ModuleAssessment';
 import { Layers } from 'lucide-react';
 import type { Equation } from '@/types';
 
@@ -304,6 +305,7 @@ export default function PolarizationPage() {
           </TheoryGuide>
         </ControlPanel>
       </div>
+      <ModuleAssessment moduleId="polarization" />
       <ModuleNavigation currentModuleId="polarization" />
     </div>
   );
