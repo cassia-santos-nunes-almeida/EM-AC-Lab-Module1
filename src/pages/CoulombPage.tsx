@@ -121,14 +121,16 @@ export default function CoulombPage() {
       label: string
     ) => {
       const mag = Math.hypot(vx, vy);
-      const maxLen = 100;
-      let scale = 1;
-      if (mag > maxLen) scale = maxLen / mag;
+      // Log-scale arrow length to faithfully show 1/r² without clipping at large forces
+      const maxLen = 150;
+      const logMag = mag > 1 ? Math.min(maxLen, 30 * Math.log10(mag) + 20) : mag;
+      const scale = mag > 0 ? logMag / mag : 0;
       const dx = vx * scale,
         dy = vy * scale;
       ctx.beginPath();
       ctx.strokeStyle = color;
-      ctx.lineWidth = 3;
+      // Thicker arrows for stronger forces
+      ctx.lineWidth = Math.min(6, 2 + logMag / 50);
       ctx.moveTo(x, y);
       ctx.lineTo(x + dx, y + dy);
       ctx.stroke();

@@ -75,17 +75,23 @@ export default function AmperePage() {
       const SCALE_M_PER_PX = 0.01 / 40;
       const MU_0 = 4 * Math.PI * 1e-7; // T·m/A
 
-      // B-field circles with arrows
+      // B-field circles with arrows — line width ∝ 1/r to show field decay
       if (Math.abs(current) > 2) {
-        for (let i = 1; i <= 4; i++) {
-          const r = 40 + (i * (Math.min(canvas.width, canvas.height) / 2 - 60)) / 4;
+        const maxR = Math.min(canvas.width, canvas.height) / 2 - 20;
+        const radii = [40, 70, 110, 160, 220].filter(r => r < maxR);
+
+        for (const r of radii) {
+          // Line opacity and width proportional to 1/r (B ∝ 1/r)
+          const relStrength = 40 / r; // relative to closest ring
           ctx.beginPath();
-          ctx.strokeStyle = `${col.B_FIELD}50`;
-          ctx.lineWidth = 2;
+          ctx.strokeStyle = col.B_FIELD;
+          ctx.globalAlpha = 0.15 + 0.45 * relStrength;
+          ctx.lineWidth = 1 + 2 * relStrength;
           ctx.setLineDash([5, 5]);
           ctx.arc(cx, cy, r, 0, Math.PI * 2);
           ctx.stroke();
           ctx.setLineDash([]);
+          ctx.globalAlpha = 1;
 
           // Show B-field magnitude at this radius
           const rMetres = r * SCALE_M_PER_PX;
@@ -96,8 +102,10 @@ export default function AmperePage() {
           const BLabel = Btesla >= 1e-3 ? `${(Btesla * 1e3).toFixed(1)} mT` : `${(Btesla * 1e6).toFixed(0)} μT`;
           ctx.fillText(`r=${(rMetres * 100).toFixed(1)}cm  B=${BLabel}`, cx + r + 5, cy + 4);
 
-          for (let j = 0; j < 3 + i * 2; j++) {
-            const angle = ((j / (3 + i * 2)) * Math.PI * 2 + timeRef.current * (60 / r)) * 0.1;
+          // More arrows on inner rings (stronger field)
+          const arrowCount = Math.max(3, Math.round(8 * relStrength));
+          for (let j = 0; j < arrowCount; j++) {
+            const angle = ((j / arrowCount) * Math.PI * 2 + timeRef.current * (60 / r)) * 0.1;
             const ax = cx + r * Math.cos(angle),
               ay = cy + r * Math.sin(angle);
             const tan = angle + Math.PI / 2 + (current < 0 ? Math.PI : 0);
