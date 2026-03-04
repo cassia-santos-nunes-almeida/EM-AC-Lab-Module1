@@ -14,7 +14,7 @@ export default function AmperePage() {
   const { isDarkMode } = useProgressStore();
   const col = isDarkMode ? COLORS_DARK : COLORS;
 
-  const [current, setCurrent] = useState(50);
+  const [current, setCurrent] = useState(50); // Amperes
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const timeRef = useRef(0);
   const animationRef = useRef(0);
@@ -69,7 +69,11 @@ export default function AmperePage() {
       ctx.fillText(current > 0 ? '⊗' : current < 0 ? '⊙' : '○', cx, cy + 2);
       ctx.font = '14px sans-serif';
       ctx.fillStyle = col.TEXT_MAIN;
-      ctx.fillText(`I (${label})`, cx, cy - 35);
+      ctx.fillText(`I = ${current} A (${label})`, cx, cy - 35);
+
+      // Scale: 1 cm per 40px
+      const SCALE_M_PER_PX = 0.01 / 40;
+      const MU_0 = 4 * Math.PI * 1e-7; // T·m/A
 
       // B-field circles with arrows
       if (Math.abs(current) > 2) {
@@ -82,6 +86,15 @@ export default function AmperePage() {
           ctx.arc(cx, cy, r, 0, Math.PI * 2);
           ctx.stroke();
           ctx.setLineDash([]);
+
+          // Show B-field magnitude at this radius
+          const rMetres = r * SCALE_M_PER_PX;
+          const Btesla = (MU_0 * Math.abs(current)) / (2 * Math.PI * rMetres);
+          ctx.fillStyle = isDarkMode ? '#94a3b8' : '#64748b';
+          ctx.font = '10px monospace';
+          ctx.textAlign = 'left';
+          const BLabel = Btesla >= 1e-3 ? `${(Btesla * 1e3).toFixed(1)} mT` : `${(Btesla * 1e6).toFixed(0)} μT`;
+          ctx.fillText(`r=${(rMetres * 100).toFixed(1)}cm  B=${BLabel}`, cx + r + 5, cy + 4);
 
           for (let j = 0; j < 3 + i * 2; j++) {
             const angle = ((j / (3 + i * 2)) * Math.PI * 2 + timeRef.current * (60 / r)) * 0.1;
@@ -132,7 +145,7 @@ export default function AmperePage() {
         </div>
 
         <ControlPanel title="Ampère's Law">
-          <Slider label="Current Intensity (I)" value={current} min={-100} max={100} onChange={setCurrent} color={current >= 0 ? 'bg-amber-600' : 'bg-red-600'} />
+          <Slider label="Current I (Amperes)" value={current} min={-100} max={100} onChange={setCurrent} color={current >= 0 ? 'bg-amber-600' : 'bg-red-600'} />
           <HintBox>
             Reverse the current direction to see the field lines switch between Clockwise and Counter-Clockwise
             (Right-Hand Grip Rule).

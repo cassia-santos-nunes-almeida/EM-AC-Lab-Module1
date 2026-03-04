@@ -165,15 +165,18 @@ export default function LorentzPage() {
             equations={[
               { label: 'Force', math: '\\vec{F} = q(\\vec{v} \\times \\vec{B})', color: 'text-amber-600 dark:text-amber-400' },
               { label: 'Radius', math: 'r = \\frac{mv}{|q|B}', color: 'text-emerald-600 dark:text-emerald-400' },
+              { label: 'Computed r', math: charge !== 0 && bField !== 0
+                ? `r = \\frac{${mass} \\times ${Math.abs(velocity)}}{${Math.abs(charge)} \\times ${Math.abs(bField / 20).toFixed(1)}} = ${(mass * Math.abs(velocity) / (Math.abs(charge) * Math.abs(bField / 20 || 1))).toFixed(1)} \\text{ (arb.)}`
+                : '\\text{—}' },
             ]}
           />
         </div>
 
         <ControlPanel title="Particle Controls">
-          <Slider label={`Charge (q): ${charge}`} value={charge} min={-5} max={5} onChange={setCharge} color="bg-red-600" />
-          <Slider label="Mass (m)" value={mass} min={0.5} max={5} step={0.5} onChange={setMass} color="bg-slate-500" />
-          <Slider label="Velocity (v)" value={velocity} min={-100} max={100} onChange={setVelocity} color="bg-emerald-600" />
-          <Slider label="Magnetic Field (B)" value={bField} min={-100} max={100} onChange={setBField} color="bg-blue-600" />
+          <Slider label={`Charge q = ${charge} (arb. units)`} value={charge} min={-5} max={5} onChange={setCharge} color="bg-red-600" />
+          <Slider label={`Mass m = ${mass} (arb. units)`} value={mass} min={0.5} max={5} step={0.5} onChange={setMass} color="bg-slate-500" />
+          <Slider label={`Velocity v = ${velocity} (arb.)`} value={velocity} min={-100} max={100} onChange={setVelocity} color="bg-emerald-600" />
+          <Slider label={`B-field = ${(bField / 20).toFixed(1)} (arb.)`} value={bField} min={-100} max={100} onChange={setBField} color="bg-blue-600" />
           <button
             onClick={handleReset}
             className="w-full mt-4 py-3 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg font-bold text-slate-700 dark:text-slate-200 flex justify-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"

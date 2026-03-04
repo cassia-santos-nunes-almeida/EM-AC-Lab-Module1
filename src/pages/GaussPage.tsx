@@ -47,7 +47,7 @@ export default function GaussPage() {
       ctx.setLineDash([]);
       ctx.fillStyle = col.TEXT_MAIN;
       ctx.font = '12px sans-serif';
-      ctx.fillText(`Surface A (r=${radius})`, cx + radius + 5, cy);
+      ctx.fillText(`Gaussian Surface (r = ${(radius * 0.01).toFixed(2)} m)`, cx + radius + 5, cy);
 
       if (mode === 'ELECTRIC') {
         ctx.fillStyle = charge > 0 ? col.E_FIELD : col.B_FIELD;
@@ -58,7 +58,7 @@ export default function GaussPage() {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.font = 'bold 12px sans-serif';
-        ctx.fillText(charge > 0 ? `+${charge}` : `${charge}`, cx, cy);
+        ctx.fillText(charge > 0 ? `+${charge}μC` : `${charge}μC`, cx, cy);
 
         const lines = Math.abs(charge) * 4;
         ctx.strokeStyle = charge > 0 ? `${col.E_FIELD}60` : `${col.B_FIELD}60`;
@@ -133,7 +133,7 @@ export default function GaussPage() {
     mode === 'ELECTRIC'
       ? [
           { label: 'Gauss Law (E)', math: '\\Phi_E = \\oint \\vec{E} \\cdot d\\vec{A} = \\frac{Q_{enc}}{\\epsilon_0}', color: 'text-red-600 dark:text-red-400' },
-          { label: 'Result', math: `\\Phi_E \\propto ${charge} \\text{ (Independent of } r\\text{)}` },
+          { label: 'Result', math: `\\Phi_E = \\frac{${charge}\\,\\mu\\text{C}}{\\epsilon_0} = ${(charge * 1e-6 / 8.854e-12).toFixed(0)} \\text{ N}\\!\\cdot\\!\\text{m}^2\\text{/C (indep. of } r\\text{)}` },
         ]
       : [
           { label: 'Gauss Law (B)', math: '\\Phi_B = \\oint \\vec{B} \\cdot d\\vec{A} = 0', color: 'text-blue-600 dark:text-blue-400' },
@@ -171,9 +171,9 @@ export default function GaussPage() {
               Magnetic (B)
             </button>
           </div>
-          <Slider label="Gaussian Surface Radius (r)" value={radius} min={50} max={200} onChange={setRadius} color="bg-purple-600" />
+          <Slider label={`Surface Radius r = ${(radius * 0.01).toFixed(2)} m`} value={radius} min={50} max={200} onChange={setRadius} color="bg-purple-600" />
           {mode === 'ELECTRIC' && (
-            <Slider label="Enclosed Charge (Q)" value={charge} min={-10} max={10} onChange={setCharge} color={charge > 0 ? 'bg-red-600' : 'bg-blue-600'} />
+            <Slider label={`Enclosed Charge Q = ${charge} μC`} value={charge} min={-10} max={10} onChange={setCharge} color={charge > 0 ? 'bg-red-600' : 'bg-blue-600'} />
           )}
           <HintBox>
             {mode === 'ELECTRIC'
