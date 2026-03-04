@@ -9,6 +9,7 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleNavigation } from '@/components/common/ModuleNavigation';
+import { ModuleAssessment } from '@/components/common/ModuleAssessment';
 import { Layers } from 'lucide-react';
 import type { Equation } from '@/types';
 
@@ -192,18 +193,44 @@ export default function PolarizationPage() {
   if (Math.abs(phaseDelta) % 180 === 0) type = 'Linear';
   else if (Math.abs(Math.abs(phaseDelta) - 90) < 5 && Math.abs(ex - ey) < 5) type = 'Circular';
 
+  // Compute ellipticity parameters
+  const deltaRad = phaseDelta * Math.PI / 180;
+  // Orientation angle ψ: tan(2ψ) = (2·Ex·Ey)/(Ex²-Ey²) · cos(δ)
+  const psi = ex === ey
+    ? 45
+    : (0.5 * Math.atan2(2 * ex * ey * Math.cos(deltaRad), ex * ex - ey * ey)) * 180 / Math.PI;
+  // Ellipticity angle χ: sin(2χ) = (2·Ex·Ey)/(Ex²+Ey²) · sin(δ)
+  const sin2chi = (2 * ex * ey * Math.sin(deltaRad)) / (ex * ex + ey * ey || 1);
+  const chi = 0.5 * Math.asin(Math.max(-1, Math.min(1, sin2chi))) * 180 / Math.PI;
+  // Axial ratio: AR = |tan(χ)|, ∞ for linear
+  const axialRatio = type === 'Linear' ? Infinity : Math.abs(Math.tan(chi * Math.PI / 180));
+  // Stokes parameters (normalized)
+  const S0 = ex * ex + ey * ey;
+  const S1 = ex * ex - ey * ey;
+  const S2 = 2 * ex * ey * Math.cos(deltaRad);
+  const S3 = 2 * ex * ey * Math.sin(deltaRad);
+  // Handedness
+  const handedness = Math.abs(phaseDelta) < 1 || Math.abs(Math.abs(phaseDelta) - 180) < 1
+    ? '' : (phaseDelta > 0 ? 'Right' : 'Left');
+
   // Equations
   const equations: Equation[] = [
     { label: 'Net Vector', math: '\\vec{E}(z,t) = E_x \\hat{x} + E_y \\hat{y}', color: 'text-purple-600' },
     { label: 'x-Comp', math: `E_x = ${ex} \\cos(kz - \\omega t)` },
     { label: 'y-Comp', math: `E_y = ${ey} \\cos(kz - \\omega t + ${phaseDelta}^\\circ)` },
-    { label: 'State', math: `\\text{${type}}`, color: 'font-bold' },
+    { label: 'State', math: `\\text{${handedness ? handedness + '-' : ''}${type}}`, color: 'font-bold' },
   ];
   if (type === 'Circular') {
     equations.push({ label: 'Condition', math: '|E_x| = |E_y|, \\delta = \\pm 90^\\circ', color: 'text-emerald-600' });
   } else if (type === 'Linear') {
     equations.push({ label: 'Condition', math: `\\delta = n\\pi, \\text{Slope} = ${(ey / (ex || 1)).toFixed(2)}` });
   }
+  // Always show ellipticity parameters
+  equations.push(
+    { label: 'Orientation', math: `\\psi = ${psi.toFixed(1)}^\\circ` },
+    { label: 'Ellipticity', math: `\\chi = ${chi.toFixed(1)}^\\circ,\\quad \\text{AR} = ${axialRatio === Infinity ? '\\infty' : axialRatio.toFixed(2)}` },
+    { label: 'Stokes', math: `[S_0,S_1,S_2,S_3] = [${S0},\\,${S1},\\,${S2.toFixed(0)},\\,${S3.toFixed(0)}]` },
+  );
 
   return (
     <div className="space-y-6">
@@ -304,6 +331,7 @@ export default function PolarizationPage() {
           </TheoryGuide>
         </ControlPanel>
       </div>
+      <ModuleAssessment moduleId="polarization" />
       <ModuleNavigation currentModuleId="polarization" />
     </div>
   );

@@ -9,6 +9,7 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleNavigation } from '@/components/common/ModuleNavigation';
+import { ModuleAssessment } from '@/components/common/ModuleAssessment';
 import type { EMWaveState } from '@/types';
 
 const POINTS = 200;
@@ -431,6 +432,44 @@ export default function EMWavePage() {
           ctx.fillText(symbol, x, cyB + (val > 0 ? 15 : -15));
         }
       }
+
+      // Energy density bar: u ∝ E² + B² ∝ sin²(kx - ωt) at midpoint
+      const midPh = k * (drawWidth / 2) - omega * t * 0.02 * state.speed;
+      const sinVal = Math.sin(midPh);
+      const uNorm = sinVal * sinVal; // u ∝ sin²
+      const barY = height / 2 - 8;
+      const barW = 120;
+      ctx.fillStyle = isDarkMode ? '#1e293b' : '#f1f5f9';
+      ctx.fillRect(endX - barW - 10, barY - 4, barW + 8, 24);
+      ctx.fillStyle = '#9333ea';
+      ctx.globalAlpha = 0.7;
+      ctx.fillRect(endX - barW - 6, barY, barW * uNorm, 8);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = c.TEXT_MUTED;
+      ctx.font = '9px sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(`u(x₀) ∝ E²+B² = ${uNorm.toFixed(2)}`, endX - 6, barY + 20);
+
+      // Poynting vector arrow: S = (1/μ₀)(E×B), always in +x for forward wave
+      ctx.fillStyle = '#9333ea';
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'left';
+      const sArrowY = barY - 14;
+      const sLen = 40 * uNorm;
+      ctx.strokeStyle = '#9333ea';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(endX - barW - 6, sArrowY);
+      ctx.lineTo(endX - barW - 6 + sLen, sArrowY);
+      ctx.stroke();
+      if (sLen > 5) {
+        ctx.beginPath();
+        ctx.moveTo(endX - barW - 6 + sLen, sArrowY);
+        ctx.lineTo(endX - barW - 6 + sLen - 5, sArrowY - 3);
+        ctx.lineTo(endX - barW - 6 + sLen - 5, sArrowY + 3);
+        ctx.fill();
+      }
+      ctx.fillText('S (Poynting)', endX - barW - 6 + sLen + 4, sArrowY + 3);
     } else {
       // 3D View
       const centerY = height / 2;
@@ -548,16 +587,24 @@ export default function EMWavePage() {
             </div>
             <canvas ref={canvasRef} className="w-full h-full" />
           </div>
+          {viewMode === WaveViewMode.VIEW_VI && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-2 text-xs text-amber-800 dark:text-amber-300">
+              <strong>AC Circuits &amp; EM Waves:</strong> Maxwell&apos;s equations predict that time-varying fields propagate as waves.
+              In circuits, the same sinusoidal solutions appear as voltage/current phasors. The power factor
+              <MathWrapper latex="\cos(\Delta\phi)" /> determines energy transfer efficiency.
+            </div>
+          )}
           <EquationBox
             title={viewMode === WaveViewMode.VIEW_VI ? 'AC Circuit Analysis' : 'Wave Function'}
             equations={
               viewMode !== WaveViewMode.VIEW_VI
                 ? [
-                    { label: 'E(x,t)', math: `${state.amplitude}\\sin(${kVal}x - ${omega}t)`, color: 'text-red-600' },
-                    { label: 'B(x,t)', math: `${(state.amplitude * state.refractiveIndex).toFixed(0)}\\sin(${kVal}x - ${omega}t)`, color: 'text-blue-600' },
-                    { label: 'Relation', math: 'B_0 = \\frac{E_0}{v} = \\frac{n E_0}{c}' },
-                    { label: 'Velocity', math: 'v = \\frac{c}{n}' },
-                    { label: 'Wavelength', math: '\\lambda = \\frac{\\lambda_0}{n}' },
+                    { label: 'E(x,t)', math: `E_0 \\sin(kx - \\omega t),\\quad k=${kVal},\\; \\omega=${omega}`, color: 'text-red-600' },
+                    { label: 'B(x,t)', math: `\\frac{E_0}{v} \\sin(kx - \\omega t) = \\frac{n E_0}{c} \\sin(kx - \\omega t)`, color: 'text-blue-600' },
+                    { label: 'Velocity', math: `v = \\frac{c}{n} = \\frac{c}{${state.refractiveIndex}}` },
+                    { label: 'Wavelength', math: `\\lambda = \\frac{\\lambda_0}{n} \\approx ${lambda} \\text{ (arb.)}` },
+                    { label: 'Energy', math: 'u = \\frac{1}{2}\\epsilon_0 E^2 + \\frac{1}{2\\mu_0} B^2', color: 'text-purple-600 dark:text-purple-400' },
+                    { label: 'Poynting', math: '\\vec{S} = \\frac{1}{\\mu_0}(\\vec{E} \\times \\vec{B})', color: 'text-purple-600 dark:text-purple-400' },
                   ]
                 : [
                     { label: 'v(t)', math: `${state.vAmplitude}\\sin(\\omega t ${formatPhase(state.vPhase)})`, color: 'text-red-600' },
@@ -694,6 +741,7 @@ export default function EMWavePage() {
           </ControlPanel>
         </div>
       </div>
+      <ModuleAssessment moduleId="em-wave" />
       <ModuleNavigation currentModuleId="em-wave" />
     </div>
   );

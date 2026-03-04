@@ -8,12 +8,13 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleNavigation } from '@/components/common/ModuleNavigation';
+import { ModuleAssessment } from '@/components/common/ModuleAssessment';
 
 export default function AmperePage() {
   const { isDarkMode } = useProgressStore();
   const col = isDarkMode ? COLORS_DARK : COLORS;
 
-  const [current, setCurrent] = useState(50);
+  const [current, setCurrent] = useState(50); // Amperes
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const timeRef = useRef(0);
   const animationRef = useRef(0);
@@ -68,22 +69,43 @@ export default function AmperePage() {
       ctx.fillText(current > 0 ? '⊗' : current < 0 ? '⊙' : '○', cx, cy + 2);
       ctx.font = '14px sans-serif';
       ctx.fillStyle = col.TEXT_MAIN;
-      ctx.fillText(`I (${label})`, cx, cy - 35);
+      ctx.fillText(`I = ${current} A (${label})`, cx, cy - 35);
 
-      // B-field circles with arrows
+      // Scale: 1 cm per 40px
+      const SCALE_M_PER_PX = 0.01 / 40;
+      const MU_0 = 4 * Math.PI * 1e-7; // T·m/A
+
+      // B-field circles with arrows — line width ∝ 1/r to show field decay
       if (Math.abs(current) > 2) {
-        for (let i = 1; i <= 4; i++) {
-          const r = 40 + (i * (Math.min(canvas.width, canvas.height) / 2 - 60)) / 4;
+        const maxR = Math.min(canvas.width, canvas.height) / 2 - 20;
+        const radii = [40, 70, 110, 160, 220].filter(r => r < maxR);
+
+        for (const r of radii) {
+          // Line opacity and width proportional to 1/r (B ∝ 1/r)
+          const relStrength = 40 / r; // relative to closest ring
           ctx.beginPath();
-          ctx.strokeStyle = `${col.B_FIELD}50`;
-          ctx.lineWidth = 2;
+          ctx.strokeStyle = col.B_FIELD;
+          ctx.globalAlpha = 0.15 + 0.45 * relStrength;
+          ctx.lineWidth = 1 + 2 * relStrength;
           ctx.setLineDash([5, 5]);
           ctx.arc(cx, cy, r, 0, Math.PI * 2);
           ctx.stroke();
           ctx.setLineDash([]);
+          ctx.globalAlpha = 1;
 
-          for (let j = 0; j < 3 + i * 2; j++) {
-            const angle = ((j / (3 + i * 2)) * Math.PI * 2 + timeRef.current * (60 / r)) * 0.1;
+          // Show B-field magnitude at this radius
+          const rMetres = r * SCALE_M_PER_PX;
+          const Btesla = (MU_0 * Math.abs(current)) / (2 * Math.PI * rMetres);
+          ctx.fillStyle = isDarkMode ? '#94a3b8' : '#64748b';
+          ctx.font = '10px monospace';
+          ctx.textAlign = 'left';
+          const BLabel = Btesla >= 1e-3 ? `${(Btesla * 1e3).toFixed(1)} mT` : `${(Btesla * 1e6).toFixed(0)} μT`;
+          ctx.fillText(`r=${(rMetres * 100).toFixed(1)}cm  B=${BLabel}`, cx + r + 5, cy + 4);
+
+          // More arrows on inner rings (stronger field)
+          const arrowCount = Math.max(3, Math.round(8 * relStrength));
+          for (let j = 0; j < arrowCount; j++) {
+            const angle = ((j / arrowCount) * Math.PI * 2 + timeRef.current * (60 / r)) * 0.1;
             const ax = cx + r * Math.cos(angle),
               ay = cy + r * Math.sin(angle);
             const tan = angle + Math.PI / 2 + (current < 0 ? Math.PI : 0);
@@ -131,7 +153,7 @@ export default function AmperePage() {
         </div>
 
         <ControlPanel title="Ampère's Law">
-          <Slider label="Current Intensity (I)" value={current} min={-100} max={100} onChange={setCurrent} color={current >= 0 ? 'bg-amber-600' : 'bg-red-600'} />
+          <Slider label="Current I (Amperes)" value={current} min={-100} max={100} onChange={setCurrent} color={current >= 0 ? 'bg-amber-600' : 'bg-red-600'} />
           <HintBox>
             Reverse the current direction to see the field lines switch between Clockwise and Counter-Clockwise
             (Right-Hand Grip Rule).
@@ -150,6 +172,7 @@ export default function AmperePage() {
           </TheoryGuide>
         </ControlPanel>
       </div>
+      <ModuleAssessment moduleId="ampere" />
       <ModuleNavigation currentModuleId="ampere" />
     </div>
   );

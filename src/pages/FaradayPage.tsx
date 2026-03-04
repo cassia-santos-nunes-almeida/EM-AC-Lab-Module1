@@ -9,6 +9,7 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleNavigation } from '@/components/common/ModuleNavigation';
+import { ModuleAssessment } from '@/components/common/ModuleAssessment';
 
 export default function FaradayPage() {
   const { isDarkMode } = useProgressStore();
@@ -17,6 +18,8 @@ export default function FaradayPage() {
   const [rate, setRate] = useState(1);
   const [loops, setLoops] = useState(1);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [liveB, setLiveB] = useState(0);
+  const [liveEmf, setLiveEmf] = useState(0);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const timeRef = useRef(0);
@@ -38,6 +41,8 @@ export default function FaradayPage() {
       if (isPlaying) timeRef.current += 0.02 * rate;
       const t = timeRef.current;
       const B = Math.sin(t), dBdt = Math.cos(t);
+      setLiveB(B);
+      setLiveEmf(-dBdt * loops);
 
       // Draw conducting loops
       ctx.beginPath();
@@ -64,12 +69,15 @@ export default function FaradayPage() {
       }
       ctx.globalAlpha = 1;
 
-      // Induced current arrows
+      // Induced current arrows — speed proportional to |EMF|
       const emf = -dBdt * loops;
       const isCW = emf < 0;
+      const emfNorm = Math.abs(emf) / (loops || 1); // normalized to [0, 1]
+      const arrowSpeed = emfNorm * 2; // proportional rotation speed
       ctx.fillStyle = c.CURRENT;
+      ctx.globalAlpha = 0.3 + 0.7 * emfNorm; // fade arrows when EMF is small
       for (let i = 0; i < 8; i++) {
-        const angle = (i / 8) * Math.PI * 2 + t * 2 * (isCW ? 1 : -1);
+        const angle = (i / 8) * Math.PI * 2 + t * arrowSpeed * (isCW ? 1 : -1);
         const ax = cx + 150 * Math.cos(angle), ay = cy + 150 * Math.sin(angle);
         ctx.save();
         ctx.translate(ax, ay);
@@ -81,6 +89,7 @@ export default function FaradayPage() {
         ctx.fill();
         ctx.restore();
       }
+      ctx.globalAlpha = 1;
 
       // Status labels
       ctx.textAlign = 'left';
@@ -107,6 +116,9 @@ export default function FaradayPage() {
             title="Faraday's Law"
             equations={[
               { label: 'General', math: '\\mathcal{E} = -N \\frac{d\\Phi_B}{dt}', color: 'text-indigo-600' },
+              { label: 'Parameters', math: `N = ${loops},\\quad \\omega = ${rate.toFixed(1)}` },
+              { label: 'B(t)', math: `B = \\sin(\\omega t) \\approx ${liveB.toFixed(2)}` },
+              { label: 'EMF(t)', math: `\\mathcal{E} \\approx ${liveEmf.toFixed(2)}\\text{ (arb.)}`, color: Math.abs(liveEmf) > 0.5 ? 'text-amber-600 dark:text-amber-400 font-bold' : '' },
             ]}
           />
         </div>
@@ -135,6 +147,7 @@ export default function FaradayPage() {
           </TheoryGuide>
         </ControlPanel>
       </div>
+      <ModuleAssessment moduleId="faraday" />
       <ModuleNavigation currentModuleId="faraday" />
     </div>
   );

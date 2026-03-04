@@ -56,6 +56,21 @@ html.dark body {
   display: none;
 }
 
+/* KaTeX dark mode — ensure math symbols inherit text color */
+html.dark .katex,
+html.dark .katex .mord,
+html.dark .katex .mbin,
+html.dark .katex .mrel,
+html.dark .katex .mopen,
+html.dark .katex .mclose,
+html.dark .katex .mpunct,
+html.dark .katex .minner,
+html.dark .katex .mop,
+html.dark .katex .mathnormal,
+html.dark .katex .mathit {
+  color: inherit;
+}
+
 /* Canvas crisp rendering */
 canvas {
   image-rendering: auto;

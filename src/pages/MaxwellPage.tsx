@@ -3,6 +3,7 @@ import { COLORS, COLORS_DARK } from '@/constants/physics';
 import { useProgressStore } from '@/store/progressStore';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { ModuleNavigation } from '@/components/common/ModuleNavigation';
+import { ModuleAssessment } from '@/components/common/ModuleAssessment';
 
 interface MaxwellCardProps {
   title: string;
@@ -213,6 +214,7 @@ export default function MaxwellPage() {
           draw={drawAmpere}
         />
       </div>
+      <ModuleAssessment moduleId="maxwell" />
       <ModuleNavigation currentModuleId="maxwell" />
     </div>
   );

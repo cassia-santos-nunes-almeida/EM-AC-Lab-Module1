@@ -8,6 +8,7 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleNavigation } from '@/components/common/ModuleNavigation';
+import { ModuleAssessment } from '@/components/common/ModuleAssessment';
 import type { Charge } from '@/types';
 
 export default function CoulombPage() {
@@ -120,14 +121,16 @@ export default function CoulombPage() {
       label: string
     ) => {
       const mag = Math.hypot(vx, vy);
-      const maxLen = 100;
-      let scale = 1;
-      if (mag > maxLen) scale = maxLen / mag;
+      // Log-scale arrow length to faithfully show 1/r² without clipping at large forces
+      const maxLen = 150;
+      const logMag = mag > 1 ? Math.min(maxLen, 30 * Math.log10(mag) + 20) : mag;
+      const scale = mag > 0 ? logMag / mag : 0;
       const dx = vx * scale,
         dy = vy * scale;
       ctx.beginPath();
       ctx.strokeStyle = color;
-      ctx.lineWidth = 3;
+      // Thicker arrows for stronger forces
+      ctx.lineWidth = Math.min(6, 2 + logMag / 50);
       ctx.moveTo(x, y);
       ctx.lineTo(x + dx, y + dy);
       ctx.stroke();
@@ -190,13 +193,38 @@ export default function CoulombPage() {
         }
       });
 
+      // Scale: 1 grid square (40px) = 0.1 m
+      const SCALE_M_PER_PX = 0.1 / 40; // metres per pixel
+      const K_COULOMB = 8.99e9; // N·m²/C²
+
+      // Scale reference label
+      ctx.fillStyle = isDarkMode ? '#94a3b8' : '#64748b';
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('1 square = 0.1 m  |  Charges in μC', 8, height - 8);
+
       charges.forEach((charge) => {
         const cx = charge.x * width,
           cy = charge.y * height;
         const { Ex, Ey } = getNetField(cx, cy, charge.id, width, height);
         const forceX = Ex * charge.q * 5000,
           forceY = Ey * charge.q * 5000;
-        if (Math.hypot(forceX, forceY) > 5) drawArrow(ctx, cx, cy, forceX, forceY, '#ea580c', 'F');
+
+        // Compute physical force magnitude for display
+        let forceLabel = 'F';
+        const otherCharges = charges.filter((c) => c.id !== charge.id);
+        if (otherCharges.length === 1) {
+          const other = otherCharges[0];
+          const distPx = Math.hypot((charge.x - other.x) * width, (charge.y - other.y) * height);
+          const distM = distPx * SCALE_M_PER_PX;
+          const q1 = Math.abs(charge.q * 1e-6); // convert μC to C
+          const q2 = Math.abs(other.q * 1e-6);
+          if (distM > 0.001) {
+            const Fphys = K_COULOMB * q1 * q2 / (distM * distM);
+            forceLabel = Fphys >= 1 ? `F=${Fphys.toFixed(1)} N` : `F=${(Fphys * 1e3).toFixed(1)} mN`;
+          }
+        }
+        if (Math.hypot(forceX, forceY) > 5) drawArrow(ctx, cx, cy, forceX, forceY, '#ea580c', forceLabel);
 
         ctx.beginPath();
         ctx.shadowBlur = 10;
@@ -210,7 +238,7 @@ export default function CoulombPage() {
         ctx.font = 'bold 12px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(`${charge.q > 0 ? '+' : ''}${charge.q}`, cx, cy);
+        ctx.fillText(`${charge.q > 0 ? '+' : ''}${charge.q}μC`, cx, cy);
 
         if (draggingId === charge.id) {
           ctx.beginPath();
@@ -319,7 +347,7 @@ export default function CoulombPage() {
               />
               <div className="text-center text-xs font-mono mt-1 text-slate-500 dark:text-slate-400">
                 q = {charge.q > 0 ? '+' : ''}
-                {charge.q}
+                {charge.q} &mu;C
               </div>
             </div>
           ))}
@@ -363,6 +391,7 @@ export default function CoulombPage() {
           </TheoryGuide>
         </ControlPanel>
       </div>
+      <ModuleAssessment moduleId="coulomb" />
       <ModuleNavigation currentModuleId="coulomb" />
     </div>
   );
