@@ -144,17 +144,31 @@ export default function LenzPage() {
         }
       }
 
-      // Induced current indicators
-      const v = magnetPos - prevPos;
-      const dist = magnetPos - 50;
-      const interactionStrength = Math.exp(-(dist * dist) / 200);
-      const intensity = v * interactionStrength * (numTurns * 0.8 + 2);
+      // Physical flux model: dipole on axis of circular coil
+      // Φ ∝ a² / (a² + d²)^(3/2), so dΦ/dd ∝ -3ad² / (a² + d²)^(5/2) * v
+      // We use normalized units with coil radius a = 60px as reference
+      const v = magnetPos - prevPos; // velocity (slider units/frame)
+      const coilCenterNorm = 50; // coil is at 50% of width
+      const dNorm = (magnetPos - coilCenterNorm) / 100 * w; // distance in pixels
+      const a = 60; // coil radius in pixels
+      const a2 = a * a;
+      const d2 = dNorm * dNorm;
+      const denom = Math.pow(a2 + d2, 2.5); // (a² + d²)^(5/2)
+      // dΦ/dd = -3 * a² * d / (a² + d²)^(5/2)  (derivative of dipole flux)
+      const dPhiDd = denom > 0 ? -3 * a2 * dNorm / denom : 0;
+      // EMF = -N * dΦ/dt = -N * (dΦ/dd) * (dd/dt)
+      // velocity in slider units → pixel velocity
+      const vPx = (v / 100) * w;
+      const emfNorm = -numTurns * dPhiDd * vPx * 1e6; // scale for visibility
+
+      const intensity = emfNorm;
       const currentDir = intensity > 0 ? 1 : -1;
       const alpha = Math.min(Math.abs(intensity) / 5, 1);
 
       // Update live equation feedback
-      if (Math.abs(v) > 0.1 && Math.abs(interactionStrength) > 0.1) {
-        const approaching = (v * dist) < 0;
+      const fluxVal = a2 / Math.pow(a2 + d2, 1.5); // Φ ∝ this
+      if (Math.abs(v) > 0.1 && Math.abs(fluxVal) > 0.001) {
+        const approaching = (v * dNorm) < 0;
         setLiveFluxDir(approaching ? '\\nearrow \\text{ Increasing}' : '\\searrow \\text{ Decreasing}');
         setLiveResponse(approaching ? '\\text{Repulsion (opposes approach)}' : '\\text{Attraction (opposes removal)}');
       } else {
@@ -191,9 +205,9 @@ export default function LenzPage() {
       // Velocity/force arrows and REPULSION/ATTRACTION text
       if (Math.abs(v) > 0.1) {
         drawArrow(ctx, mx, cy - 40, v * 20, 0, '#10b981', 'v');
-        if (Math.abs(interactionStrength) > 0.1) {
-          const isRepulsion = (v * dist) < 0;
-          const fLen = -v * Math.abs(interactionStrength) * numTurns * 3;
+        if (Math.abs(intensity) > 0.3) {
+          const isRepulsion = (v * dNorm) < 0;
+          const fLen = Math.sign(-intensity) * Math.min(Math.abs(intensity) * 10, 150);
           drawArrow(ctx, mx, cy + 40, fLen, 0, '#ea580c', 'F_mag');
           ctx.font = 'bold 18px sans-serif';
           ctx.fillStyle = '#ea580c';
