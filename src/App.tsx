@@ -3,17 +3,34 @@ import { Layout } from '@/components/layout/Layout';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { lazy, Suspense } from 'react';
 
-// Lazy-load all pages for code splitting
-const OverviewPage = lazy(() => import('@/pages/OverviewPage'));
-const MaxwellPage = lazy(() => import('@/pages/MaxwellPage'));
-const GaussPage = lazy(() => import('@/pages/GaussPage'));
-const CoulombPage = lazy(() => import('@/pages/CoulombPage'));
-const AmperePage = lazy(() => import('@/pages/AmperePage'));
-const LorentzPage = lazy(() => import('@/pages/LorentzPage'));
-const FaradayPage = lazy(() => import('@/pages/FaradayPage'));
-const LenzPage = lazy(() => import('@/pages/LenzPage'));
-const EMWavePage = lazy(() => import('@/pages/EMWavePage'));
-const PolarizationPage = lazy(() => import('@/pages/PolarizationPage'));
+// Retry dynamic imports once on failure (handles stale service worker cache)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function lazyRetry(importFn: () => Promise<any>) {
+  return lazy(() =>
+    importFn().catch(() => {
+      const reloaded = sessionStorage.getItem('chunk-reload');
+      if (!reloaded) {
+        sessionStorage.setItem('chunk-reload', '1');
+        window.location.reload();
+        return new Promise(() => {}); // never resolves — page is reloading
+      }
+      sessionStorage.removeItem('chunk-reload');
+      return importFn();
+    }),
+  );
+}
+
+// Lazy-load all pages for code splitting (with stale-cache recovery)
+const OverviewPage = lazyRetry(() => import('@/pages/OverviewPage'));
+const MaxwellPage = lazyRetry(() => import('@/pages/MaxwellPage'));
+const GaussPage = lazyRetry(() => import('@/pages/GaussPage'));
+const CoulombPage = lazyRetry(() => import('@/pages/CoulombPage'));
+const AmperePage = lazyRetry(() => import('@/pages/AmperePage'));
+const LorentzPage = lazyRetry(() => import('@/pages/LorentzPage'));
+const FaradayPage = lazyRetry(() => import('@/pages/FaradayPage'));
+const LenzPage = lazyRetry(() => import('@/pages/LenzPage'));
+const EMWavePage = lazyRetry(() => import('@/pages/EMWavePage'));
+const PolarizationPage = lazyRetry(() => import('@/pages/PolarizationPage'));
 
 function PageLoader() {
   return (
