@@ -26,6 +26,7 @@ export default function LorentzPage() {
   const [bField, setBField] = useState(50);
   const [charge, setCharge] = useState(1);
   const [mass, setMass] = useState(2);
+  const [dragMode, setDragMode] = useState<'none' | 'particle' | 'velocity'>('none');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const physicsRef = useRef<ParticleState | null>(null);
   const animationRef = useRef(0);
@@ -41,6 +42,54 @@ export default function LorentzPage() {
       };
     }
   }, [velocity]);
+
+  const getCanvasPoint = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+    };
+  }, []);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const pt = getCanvasPoint(e);
+    const p = physicsRef.current;
+    if (!pt || !p) return;
+    const particleRadius = 6 + mass * 1.5;
+    // Velocity arrow tip position (same scale as drawVec: *0.3)
+    const vTipX = p.x + p.vx * 0.3;
+    const vTipY = p.y + p.vy * 0.3;
+    const distToVTip = Math.hypot(pt.x - vTipX, pt.y - vTipY);
+    const distToParticle = Math.hypot(pt.x - p.x, pt.y - p.y);
+    // Prioritize velocity arrow if close to its tip
+    if (distToVTip < 15 && Math.hypot(p.vx, p.vy) > 10) {
+      setDragMode('velocity');
+    } else if (distToParticle < particleRadius + 10) {
+      setDragMode('particle');
+    }
+  }, [getCanvasPoint, mass]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (dragMode === 'none') return;
+    const pt = getCanvasPoint(e);
+    const p = physicsRef.current;
+    if (!pt || !p) return;
+    if (dragMode === 'particle') {
+      p.x = pt.x;
+      p.y = pt.y;
+      p.trail = [];
+    } else if (dragMode === 'velocity') {
+      // New velocity = (mouse - particle) / 0.3 scale factor
+      p.vx = (pt.x - p.x) / 0.3;
+      p.vy = (pt.y - p.y) / 0.3;
+    }
+  }, [dragMode, getCanvasPoint]);
+
+  const handleMouseUp = useCallback(() => setDragMode('none'), []);
 
   useEffect(() => {
     if (!physicsRef.current) handleReset();
@@ -117,27 +166,30 @@ export default function LorentzPage() {
         const Bz = bField / 20; // effective B-field (z-component, into screen when positive)
         const qOverM = charge / mass;
 
-        // t-vector: t = (q*B*dt) / (2*m), only z-component for uniform B along z
-        const t = qOverM * Bz * dt * 0.5;
-        const s = (2 * t) / (1 + t * t);
+        // Skip physics when dragging the particle
+        if (dragMode !== 'particle') {
+          // t-vector: t = (q*B*dt) / (2*m), only z-component for uniform B along z
+          const t = qOverM * Bz * dt * 0.5;
+          const s = (2 * t) / (1 + t * t);
 
-        // v⁻ = v^n (no E-field, so no half-acceleration step)
-        const vmx = p.vx;
-        const vmy = p.vy;
+          // v⁻ = v^n (no E-field, so no half-acceleration step)
+          const vmx = p.vx;
+          const vmy = p.vy;
 
-        // v' = v⁻ + (v⁻ × t̂)  where t̂ = (0,0,t)
-        // (vx, vy, 0) × (0, 0, t) = (vy*t, -vx*t, 0)
-        const vpx = vmx + vmy * t;
-        const vpy = vmy - vmx * t;
+          // v' = v⁻ + (v⁻ × t̂)  where t̂ = (0,0,t)
+          // (vx, vy, 0) × (0, 0, t) = (vy*t, -vx*t, 0)
+          const vpx = vmx + vmy * t;
+          const vpy = vmy - vmx * t;
 
-        // v⁺ = v⁻ + (v' × ŝ)  where ŝ = (0,0,s)
-        // (vpx, vpy, 0) × (0, 0, s) = (vpy*s, -vpx*s, 0)
-        p.vx = vmx + vpy * s;
-        p.vy = vmy - vpx * s;
+          // v⁺ = v⁻ + (v' × ŝ)  where ŝ = (0,0,s)
+          // (vpx, vpy, 0) × (0, 0, s) = (vpy*s, -vpx*s, 0)
+          p.vx = vmx + vpy * s;
+          p.vy = vmy - vpx * s;
 
-        // Position update
-        p.x += p.vx * dt;
-        p.y += p.vy * dt;
+          // Position update
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+        }
 
         if (Math.random() > 0.5) {
           p.trail.push({ x: p.x, y: p.y });
@@ -166,12 +218,28 @@ export default function LorentzPage() {
         const Fx = charge * p.vy * (bField / 20);
         const Fy = charge * -p.vx * (bField / 20);
         drawVec(ctx, p.x, p.y, Fx * 0.4, Fy * 0.4, col.CURRENT, 'F');
+
+        // Velocity arrow handle (draggable dot at tip)
+        const vTipX = p.x + p.vx * 0.3;
+        const vTipY = p.y + p.vy * 0.3;
+        if (Math.hypot(p.vx, p.vy) > 10) {
+          ctx.beginPath();
+          ctx.fillStyle = dragMode === 'velocity' ? '#10b981' : '#10b98180';
+          ctx.arc(vTipX, vTipY, 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Drag hints
+        ctx.fillStyle = col.TEXT_MUTED;
+        ctx.font = '11px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('Drag particle to move · Drag arrow tip to aim', 10, cvs.height - 10);
       }
       animationRef.current = requestAnimationFrame(loop);
     };
     loop();
     return () => cancelAnimationFrame(animationRef.current);
-  }, [velocity, bField, charge, mass, isDarkMode, col]);
+  }, [velocity, bField, charge, mass, isDarkMode, col, dragMode]);
 
   return (
     <ModuleLayout
@@ -180,7 +248,17 @@ export default function LorentzPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
-              <canvas ref={canvasRef} className="w-full h-full block" role="img" aria-label="Lorentz force simulation showing charged particle trajectory in magnetic field" />
+              <canvas
+                ref={canvasRef}
+                className="w-full h-full block"
+                style={{ cursor: dragMode !== 'none' ? 'grabbing' : 'default' }}
+                role="img"
+                aria-label="Lorentz force simulation showing charged particle trajectory in magnetic field"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+              />
             </div>
           </div>
           <ControlPanel title="Particle Controls">

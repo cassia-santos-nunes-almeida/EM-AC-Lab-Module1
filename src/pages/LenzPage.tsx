@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
 import { useProgressStore } from '@/store/progressStore';
 import { ControlPanel } from '@/components/common/ControlPanel';
@@ -21,9 +21,48 @@ export default function LenzPage() {
   const [liveFluxDir, setLiveFluxDir] = useState('');
   const [liveResponse, setLiveResponse] = useState('');
 
+  const [draggingMagnet, setDraggingMagnet] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const timeRef = useRef(0);
   const animationRef = useRef(0);
+
+  const getCanvasPoint = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+    };
+  }, []);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (autoPlay) return;
+    const pt = getCanvasPoint(e);
+    const canvas = canvasRef.current;
+    if (!pt || !canvas) return;
+    const w = canvas.width, h = canvas.height, cy = h / 2;
+    const mx = (magnetPos / 100) * w;
+    // Hit test on magnet rectangle (mx-50 to mx+50, cy-20 to cy+20)
+    if (pt.x >= mx - 50 && pt.x <= mx + 50 && pt.y >= cy - 20 && pt.y <= cy + 20) {
+      setDraggingMagnet(true);
+    }
+  }, [autoPlay, getCanvasPoint, magnetPos]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!draggingMagnet) return;
+    const pt = getCanvasPoint(e);
+    const canvas = canvasRef.current;
+    if (!pt || !canvas) return;
+    const newPos = Math.max(0, Math.min(100, (pt.x / canvas.width) * 100));
+    setPrevPos(magnetPos);
+    setMagnetPos(newPos);
+  }, [draggingMagnet, getCanvasPoint, magnetPos]);
+
+  const handleMouseUp = useCallback(() => setDraggingMagnet(false), []);
+
 
   // Auto-oscillation effect
   useEffect(() => {
@@ -123,6 +162,13 @@ export default function LenzPage() {
       ctx.textAlign = 'center';
       ctx.fillText('S', mx - 25, cy + 5);
       ctx.fillText('N', mx + 25, cy + 5);
+      // Drag hint
+      if (!autoPlay) {
+        ctx.fillStyle = isDarkMode ? '#64748b' : '#94a3b8';
+        ctx.font = '11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('↔ Drag magnet', mx, cy + 35);
+      }
 
       // Draw field lines
       if (showField) {
@@ -228,7 +274,17 @@ export default function LenzPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
-              <canvas ref={canvasRef} className="w-full h-full block" role="img" aria-label="Lenz's law simulation showing magnet and coil interaction" />
+              <canvas
+                ref={canvasRef}
+                className="w-full h-full block"
+                style={{ cursor: draggingMagnet ? 'grabbing' : autoPlay ? 'default' : 'grab' }}
+                role="img"
+                aria-label="Lenz's law simulation showing magnet and coil interaction"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+              />
             </div>
           </div>
           <ControlPanel title="Lenz's Law">
