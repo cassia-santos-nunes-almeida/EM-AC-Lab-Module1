@@ -55,6 +55,7 @@ export interface ModuleDefinition {
   shortLabel: string;
   icon: LucideIcon;
   description: string;
+  track?: 'electrostatics' | 'magnetostatics' | 'induction' | 'capstone';
 }
 
 export const MODULES: ModuleDefinition[] = [
@@ -66,13 +67,15 @@ export const MODULES: ModuleDefinition[] = [
     icon: Home,
     description: 'Introduction to Electromagnetics & AC Circuit Analysis',
   },
+  // ── Electrostatics ────────────────────────────────────────────────
   {
-    id: 'maxwell',
-    path: '/maxwell',
-    label: "Maxwell's Equations",
-    shortLabel: 'Maxwell',
-    icon: BookOpen,
-    description: "The four fundamental laws unifying electricity and magnetism",
+    id: 'coulomb',
+    path: '/coulomb',
+    label: "Coulomb's Law",
+    shortLabel: 'Coulomb',
+    icon: CircleDot,
+    description: 'Electrostatic force between point charges',
+    track: 'electrostatics',
   },
   {
     id: 'gauss',
@@ -81,15 +84,9 @@ export const MODULES: ModuleDefinition[] = [
     shortLabel: 'Gauss',
     icon: Orbit,
     description: 'Electric flux and closed surface integrals',
+    track: 'electrostatics',
   },
-  {
-    id: 'coulomb',
-    path: '/coulomb',
-    label: "Coulomb's Law",
-    shortLabel: 'Coulomb',
-    icon: CircleDot,
-    description: 'Electrostatic force between point charges',
-  },
+  // ── Magnetostatics ────────────────────────────────────────────────
   {
     id: 'ampere',
     path: '/ampere',
@@ -97,6 +94,7 @@ export const MODULES: ModuleDefinition[] = [
     shortLabel: 'Ampère',
     icon: Activity,
     description: 'Magnetic fields from steady currents',
+    track: 'magnetostatics',
   },
   {
     id: 'lorentz',
@@ -105,7 +103,9 @@ export const MODULES: ModuleDefinition[] = [
     shortLabel: 'Lorentz',
     icon: Move,
     description: 'Force on charged particles in EM fields',
+    track: 'magnetostatics',
   },
+  // ── Induction & Waves ─────────────────────────────────────────────
   {
     id: 'faraday',
     path: '/faraday',
@@ -113,6 +113,7 @@ export const MODULES: ModuleDefinition[] = [
     shortLabel: 'Faraday',
     icon: Zap,
     description: 'Electromagnetic induction and changing flux',
+    track: 'induction',
   },
   {
     id: 'lenz',
@@ -121,6 +122,7 @@ export const MODULES: ModuleDefinition[] = [
     shortLabel: 'Lenz',
     icon: Magnet,
     description: 'Direction of induced EMF opposes change',
+    track: 'induction',
   },
   {
     id: 'em-wave',
@@ -129,6 +131,7 @@ export const MODULES: ModuleDefinition[] = [
     shortLabel: 'EM Wave',
     icon: Radio,
     description: 'Electromagnetic wave propagation and AC phasors',
+    track: 'induction',
   },
   {
     id: 'polarization',
@@ -137,6 +140,48 @@ export const MODULES: ModuleDefinition[] = [
     shortLabel: 'Polarization',
     icon: Layers,
     description: 'Linear, circular, and elliptical polarization states',
+    track: 'induction',
+  },
+  // ── Capstone ──────────────────────────────────────────────────────
+  {
+    id: 'maxwell',
+    path: '/maxwell',
+    label: "Maxwell's Equations",
+    shortLabel: 'Maxwell',
+    icon: BookOpen,
+    description: "The four fundamental laws unifying electricity and magnetism",
+    track: 'capstone',
+  },
+];
+
+/** Learning track metadata for the overview flowchart */
+export const LEARNING_TRACKS = [
+  {
+    id: 'electrostatics',
+    label: 'Electrostatics',
+    color: 'text-red-600 dark:text-red-400',
+    bgColor: 'bg-red-50 dark:bg-red-900/20',
+    borderColor: 'border-red-200 dark:border-red-800',
+    accentColor: '#dc2626',
+    modules: ['coulomb', 'gauss'],
+  },
+  {
+    id: 'magnetostatics',
+    label: 'Magnetostatics',
+    color: 'text-blue-600 dark:text-blue-400',
+    bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+    borderColor: 'border-blue-200 dark:border-blue-800',
+    accentColor: '#2563eb',
+    modules: ['ampere', 'lorentz'],
+  },
+  {
+    id: 'induction',
+    label: 'Induction & Waves',
+    color: 'text-amber-600 dark:text-amber-400',
+    bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+    borderColor: 'border-amber-200 dark:border-amber-800',
+    accentColor: '#d97706',
+    modules: ['faraday', 'lenz', 'em-wave', 'polarization'],
   },
 ];
 
