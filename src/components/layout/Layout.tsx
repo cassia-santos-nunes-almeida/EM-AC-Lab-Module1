@@ -53,8 +53,8 @@ export function Layout() {
 
         {/* Offline banner */}
         {!isOnline && (
-          <div className="bg-amber-500 text-white text-center text-sm py-2 px-4 flex items-center justify-center gap-2">
-            <WifiOff size={14} />
+          <div className="bg-amber-500 text-white text-center text-sm py-2 px-4 flex items-center justify-center gap-2" role="alert" aria-live="polite">
+            <WifiOff size={14} aria-hidden="true" />
             You are offline. Some features may be unavailable.
           </div>
         )}

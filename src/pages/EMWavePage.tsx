@@ -586,7 +586,7 @@ export default function EMWavePage() {
                   </button>
                 ))}
               </div>
-              <canvas ref={canvasRef} className="w-full h-full" />
+              <canvas ref={canvasRef} className="w-full h-full" role="img" aria-label="Electromagnetic wave simulation showing E and B field oscillations" />
             </div>
             {viewMode === WaveViewMode.VIEW_VI && (
               <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-2 text-xs text-amber-800 dark:text-amber-300">

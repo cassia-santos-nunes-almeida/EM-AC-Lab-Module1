@@ -36,7 +36,7 @@ function PageLoader() {
   return (
     <div className="flex items-center justify-center min-h-[400px]">
       <div className="text-center space-y-3">
-        <div className="w-8 h-8 border-3 border-engineering-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
+        <div className="w-8 h-8 border-3 border-engineering-blue-500 border-t-transparent rounded-full animate-spin mx-auto" role="status" aria-label="Loading" />
         <p className="text-sm text-slate-500 dark:text-slate-400">Loading module...</p>
       </div>
     </div>

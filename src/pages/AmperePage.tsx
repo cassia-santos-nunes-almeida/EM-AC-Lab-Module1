@@ -126,7 +126,7 @@ export default function AmperePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
-              <canvas ref={canvasRef} className="w-full h-full" />
+              <canvas ref={canvasRef} className="w-full h-full" role="img" aria-label="Ampere's law simulation showing magnetic field around current-carrying conductor" />
               <div className="absolute bottom-4 right-4 bg-white/90 dark:bg-slate-800/90 p-3 rounded border border-slate-200 dark:border-slate-700 text-xs max-w-[250px] shadow-sm">
                 <h5 className="font-bold text-slate-800 dark:text-slate-200 mb-1">Rule of Thumb</h5>
                 <p className="text-slate-600 dark:text-slate-400">

@@ -291,6 +291,8 @@ export default function CoulombPage() {
               <canvas
                 ref={canvasRef}
                 className="w-full h-full block"
+                role="img"
+                aria-label="Coulomb's law simulation with draggable charges showing electric field lines and force vectors"
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={() => setDraggingId(null)}

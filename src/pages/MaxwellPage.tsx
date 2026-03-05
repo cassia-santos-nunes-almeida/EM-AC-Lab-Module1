@@ -40,7 +40,7 @@ function MaxwellCard({ title, latex, description, draw }: MaxwellCardProps) {
         <MathWrapper latex={latex} />
       </div>
       <div className="flex-grow relative bg-white dark:bg-slate-900 rounded-lg overflow-hidden min-h-[160px] mb-2 border border-slate-100 dark:border-slate-700">
-        <canvas ref={cvsRef} className="w-full h-full absolute inset-0" />
+        <canvas ref={cvsRef} className="w-full h-full absolute inset-0" role="img" aria-label="Maxwell's equation animated visualization" />
       </div>
       <p className="text-xs text-slate-500 dark:text-slate-400 text-center">{description}</p>
     </div>

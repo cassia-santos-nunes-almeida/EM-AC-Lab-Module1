@@ -111,7 +111,7 @@ export default function FaradayPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
-              <canvas ref={canvasRef} className="w-full h-full block" />
+              <canvas ref={canvasRef} className="w-full h-full block" role="img" aria-label="Faraday's law simulation showing electromagnetic induction" />
             </div>
           </div>
           <ControlPanel title="Experiment Controls">

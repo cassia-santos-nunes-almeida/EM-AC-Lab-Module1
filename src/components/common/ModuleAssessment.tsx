@@ -44,6 +44,8 @@ export function ModuleAssessment({ moduleId }: ModuleAssessmentProps) {
                 <button
                   key={i}
                   onClick={() => setQuizIndex(i)}
+                  aria-label={`Question ${i + 1}`}
+                  aria-current={i === quizIndex ? 'true' : undefined}
                   className={cn(
                     'w-7 h-7 rounded-full text-xs font-bold transition-colors',
                     i === quizIndex

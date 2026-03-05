@@ -146,7 +146,7 @@ export default function GaussPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
-              <canvas ref={canvasRef} className="w-full h-full block" />
+              <canvas ref={canvasRef} className="w-full h-full block" role="img" aria-label="Gauss's law simulation showing electric or magnetic flux through a surface" />
               <div className="absolute top-4 left-4 pointer-events-none bg-white/90 dark:bg-slate-800/90 p-2 rounded border border-slate-200 dark:border-slate-700 shadow-sm">
                 <h5 className="font-bold text-xs text-slate-500 dark:text-slate-400 uppercase mb-1">Visualization</h5>
                 <div className="text-lg font-bold text-slate-800 dark:text-slate-200">
