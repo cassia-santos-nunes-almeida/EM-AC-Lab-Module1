@@ -46,6 +46,7 @@ HTMLCanvasElement.prototype.getContext = (() => {
     bezierCurveTo: noop,
     clip: noop,
     isPointInPath: () => false,
+    roundRect: noop,
   };
   return () => ctx;
 })() as unknown as typeof HTMLCanvasElement.prototype.getContext;

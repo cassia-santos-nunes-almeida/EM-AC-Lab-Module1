@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useCanvasTouch } from '@/hooks/useCanvasTouch';
 import { COLORS, COLORS_DARK, WaveViewMode, type WaveViewModeType } from '@/constants/physics';
 import { useProgressStore } from '@/store/progressStore';
 import { ControlPanel } from '@/components/common/ControlPanel';
@@ -34,6 +35,13 @@ export default function EMWavePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const timeRef = useRef(0);
   const animationRef = useRef(0);
+
+  useCanvasTouch(canvasRef);
+
+  // Phasor drag state
+  const draggingPhasor = useRef<'v' | 'i' | null>(null);
+  const phasorCenter = useRef({ x: 120, y: 0 });
+  const phasorTimeAngle = useRef(0);
 
   const formatPhase = (phase: number): string => {
     if (Math.abs(phase) < 0.1) return '';
@@ -123,6 +131,7 @@ export default function EMWavePage() {
 
     // Phasor diagram
     const phasorCX = 120, phasorCY = centerY, phasorRadius = 70;
+    phasorCenter.current = { x: phasorCX, y: phasorCY };
     ctx.beginPath();
     ctx.strokeStyle = c.GRID;
     ctx.arc(phasorCX, phasorCY, phasorRadius, 0, Math.PI * 2);
@@ -135,6 +144,29 @@ export default function EMWavePage() {
     const radV = (state.vPhase * Math.PI) / 180;
     const radI = (state.iPhase * Math.PI) / 180;
     const timeAngle = omega * t * 0.02 * state.speed;
+    phasorTimeAngle.current = timeAngle;
+
+    // Helper: draw arrowhead at tip of phasor
+    const drawPhasorArrow = (tipX: number, tipY: number, angle: number, color: string) => {
+      const headLen = 10;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(tipX, tipY);
+      ctx.lineTo(tipX - headLen * Math.cos(angle - 0.4), tipY + headLen * Math.sin(angle - 0.4));
+      ctx.lineTo(tipX - headLen * Math.cos(angle + 0.4), tipY + headLen * Math.sin(angle + 0.4));
+      ctx.closePath();
+      ctx.fill();
+    };
+
+    // Helper: draw draggable handle circle at phasor tip
+    const drawHandle = (tipX: number, tipY: number, active: boolean, color: string) => {
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, active ? 8 : 6, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.globalAlpha = active ? 0.5 : 0.25;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    };
 
     // V phasor arrow
     const vAngle = timeAngle + radV;
@@ -146,6 +178,8 @@ export default function EMWavePage() {
     ctx.moveTo(phasorCX, phasorCY);
     ctx.lineTo(vPx, vPy);
     ctx.stroke();
+    drawPhasorArrow(vPx, vPy, vAngle, c.E_FIELD);
+    drawHandle(vPx, vPy, draggingPhasor.current === 'v', c.E_FIELD);
 
     // I phasor arrow
     const iAngle = timeAngle + radI;
@@ -157,6 +191,16 @@ export default function EMWavePage() {
     ctx.moveTo(phasorCX, phasorCY);
     ctx.lineTo(iPx, iPy);
     ctx.stroke();
+    drawPhasorArrow(iPx, iPy, iAngle, c.CURRENT);
+    drawHandle(iPx, iPy, draggingPhasor.current === 'i', c.CURRENT);
+
+    // Drag hint (only when not dragging)
+    if (!draggingPhasor.current) {
+      ctx.fillStyle = c.TEXT_MUTED;
+      ctx.font = '9px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Drag phasor tips', phasorCX, phasorCY + phasorRadius + 50);
+    }
 
     ctx.lineWidth = 2;
 
@@ -558,6 +602,73 @@ export default function EMWavePage() {
     return () => cancelAnimationFrame(animationRef.current);
   }, [drawWave, state.isPlaying]);
 
+  // Phasor drag handlers
+  const getCanvasPos = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height),
+    };
+  }, []);
+
+  const handlePhasorMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (viewMode !== WaveViewMode.VIEW_VI) return;
+    const { x, y } = getCanvasPos(e);
+    const cx = phasorCenter.current.x;
+    const cy = phasorCenter.current.y;
+    const ta = phasorTimeAngle.current;
+
+    // Compute current phasor tip positions
+    const radV = (state.vPhase * Math.PI) / 180;
+    const radI = (state.iPhase * Math.PI) / 180;
+    const vAngle = ta + radV;
+    const iAngle = ta + radI;
+    const vTipX = cx + state.vAmplitude * Math.cos(vAngle);
+    const vTipY = cy - state.vAmplitude * Math.sin(vAngle);
+    const iTipX = cx + state.iAmplitude * Math.cos(iAngle);
+    const iTipY = cy - state.iAmplitude * Math.sin(iAngle);
+
+    const distV = Math.hypot(x - vTipX, y - vTipY);
+    const distI = Math.hypot(x - iTipX, y - iTipY);
+    const threshold = 20;
+
+    if (distV < threshold && distV <= distI) {
+      draggingPhasor.current = 'v';
+    } else if (distI < threshold) {
+      draggingPhasor.current = 'i';
+    }
+  }, [viewMode, state.vPhase, state.iPhase, state.vAmplitude, state.iAmplitude, getCanvasPos]);
+
+  const handlePhasorMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!draggingPhasor.current) return;
+    const { x, y } = getCanvasPos(e);
+    const cx = phasorCenter.current.x;
+    const cy = phasorCenter.current.y;
+
+    // Angle from center to mouse (canvas y-axis is inverted)
+    const mouseAngle = Math.atan2(-(y - cy), x - cx);
+    // Subtract the rotating timeAngle to get the static phase
+    const staticPhase = mouseAngle - phasorTimeAngle.current;
+    const phaseDeg = Math.round(((staticPhase * 180) / Math.PI + 360) % 360);
+    const normalizedPhase = phaseDeg > 180 ? phaseDeg - 360 : phaseDeg;
+
+    // Distance from center = amplitude
+    const dist = Math.hypot(x - cx, y - cy);
+    const amplitude = Math.round(Math.max(10, Math.min(100, dist)));
+
+    if (draggingPhasor.current === 'v') {
+      setState(s => ({ ...s, vPhase: normalizedPhase, vAmplitude: amplitude }));
+    } else {
+      setState(s => ({ ...s, iPhase: normalizedPhase, iAmplitude: amplitude }));
+    }
+  }, [getCanvasPos]);
+
+  const handlePhasorMouseUp = useCallback(() => {
+    draggingPhasor.current = null;
+  }, []);
+
   // Computed values for equations
   const omega = (2 * Math.PI * state.frequency).toFixed(2);
   const lambda = (300 / (state.frequency * state.refractiveIndex)).toFixed(0);
@@ -587,7 +698,17 @@ export default function EMWavePage() {
                   </button>
                 ))}
               </div>
-              <canvas ref={canvasRef} className="w-full h-full" role="img" aria-label="Electromagnetic wave simulation showing E and B field oscillations" />
+              <canvas
+                ref={canvasRef}
+                className="w-full h-full"
+                role="img"
+                aria-label="Electromagnetic wave simulation showing E and B field oscillations"
+                onMouseDown={handlePhasorMouseDown}
+                onMouseMove={handlePhasorMouseMove}
+                onMouseUp={handlePhasorMouseUp}
+                onMouseLeave={handlePhasorMouseUp}
+                style={{ cursor: viewMode === WaveViewMode.VIEW_VI ? 'crosshair' : undefined }}
+              />
             </div>
             {viewMode === WaveViewMode.VIEW_VI && (
               <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-2 text-xs text-amber-800 dark:text-amber-300">

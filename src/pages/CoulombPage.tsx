@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useCanvasTouch } from '@/hooks/useCanvasTouch';
 import { Plus, Trash2, MousePointer2 } from 'lucide-react';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
 import { useProgressStore } from '@/store/progressStore';
@@ -24,7 +25,9 @@ export default function CoulombPage() {
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [showGrid, setShowGrid] = useState(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  useCanvasTouch(canvasRef);
   const animationRef = useRef(0);
+  const hoverPos = useRef<{ x: number; y: number } | null>(null);
 
   const getNetField = useCallback(
     (x: number, y: number, excludeId: number | null, width: number, height: number) => {
@@ -251,6 +254,62 @@ export default function CoulombPage() {
         }
       });
 
+      // Hover tooltip: show E-field magnitude at mouse position
+      if (hoverPos.current && draggingId === null) {
+        const hx = hoverPos.current.x;
+        const hy = hoverPos.current.y;
+        // Check if mouse is far enough from any charge
+        const nearCharge = charges.some(ch => {
+          const cpx = ch.x * width, cpy = ch.y * height;
+          return Math.hypot(hx - cpx, hy - cpy) < 25;
+        });
+        if (!nearCharge) {
+          const { Ex: hEx, Ey: hEy } = getNetField(hx, hy, null, width, height);
+          const hMag = Math.hypot(hEx, hEy);
+          if (hMag > 0.0001) {
+            // Convert to physical units: field in canvas units → approximate real units
+            // Scale: 1 px = SCALE_M_PER_PX metres, field ~ kq/r² in canvas px units
+            // Physical E = K_COULOMB * q(C) / r(m)². Our getNetField returns q(μC-number)/px².
+            // So physical E = K_COULOMB * hMag * 1e-6 / (SCALE_M_PER_PX)²
+            const physE = K_COULOMB * hMag * 1e-6 / (SCALE_M_PER_PX * SCALE_M_PER_PX);
+            const eStr = physE >= 1e6
+              ? `${(physE / 1e6).toFixed(1)} MV/m`
+              : physE >= 1e3
+                ? `${(physE / 1e3).toFixed(1)} kV/m`
+                : `${physE.toFixed(1)} V/m`;
+
+            // Draw small crosshair
+            ctx.strokeStyle = isDarkMode ? '#94a3b8' : '#475569';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(hx - 6, hy);
+            ctx.lineTo(hx + 6, hy);
+            ctx.moveTo(hx, hy - 6);
+            ctx.lineTo(hx, hy + 6);
+            ctx.stroke();
+
+            // Tooltip box
+            const tooltipText = `|E| = ${eStr}`;
+            ctx.font = '11px sans-serif';
+            const tw = ctx.measureText(tooltipText).width + 12;
+            const th = 22;
+            const tx = Math.min(hx + 12, width - tw - 4);
+            const ty = Math.max(hy - 28, 4);
+            ctx.fillStyle = isDarkMode ? 'rgba(30, 41, 59, 0.92)' : 'rgba(255, 255, 255, 0.92)';
+            ctx.beginPath();
+            ctx.roundRect(tx, ty, tw, th, 4);
+            ctx.fill();
+            ctx.strokeStyle = isDarkMode ? '#475569' : '#cbd5e1';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.fillStyle = isDarkMode ? '#e2e8f0' : '#1e293b';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(tooltipText, tx + 6, ty + th / 2);
+          }
+        }
+      }
+
       animationRef.current = requestAnimationFrame(render);
     };
     render();
@@ -269,10 +328,13 @@ export default function CoulombPage() {
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (draggingId === null) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
+    const px = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const py = (e.clientY - rect.top) * (canvas.height / rect.height);
+    hoverPos.current = { x: px, y: py };
+    if (draggingId === null) return;
     const newX = (e.clientX - rect.left) / canvas.width;
     const newY = (e.clientY - rect.top) / canvas.height;
     setCharges((prev) =>
@@ -284,13 +346,46 @@ export default function CoulombPage() {
     );
   };
 
+  const handleMouseLeaveCoulomb = () => {
+    setDraggingId(null);
+    hoverPos.current = null;
+  };
+
+  // Keyboard: arrow keys nudge the first charge (or last selected)
+  const selectedChargeRef = useRef(charges[0]?.id ?? null);
+  useEffect(() => {
+    if (draggingId !== null) selectedChargeRef.current = draggingId;
+  }, [draggingId]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const id = selectedChargeRef.current;
+    if (!id) return;
+    const step = 0.015;
+    const delta = { x: 0, y: 0 };
+    if (e.key === 'ArrowLeft') delta.x = -step;
+    else if (e.key === 'ArrowRight') delta.x = step;
+    else if (e.key === 'ArrowUp') delta.y = -step;
+    else if (e.key === 'ArrowDown') delta.y = step;
+    else return;
+    e.preventDefault();
+    setCharges(prev => prev.map(c =>
+      c.id === id
+        ? { ...c, x: Math.max(0.05, Math.min(0.95, c.x + delta.x)), y: Math.max(0.05, Math.min(0.95, c.y + delta.y)) }
+        : c
+    ));
+  }, []);
+
   return (
     <ModuleLayout
       moduleId="coulomb"
       simulation={
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px] cursor-crosshair">
+            <div
+              className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px] cursor-crosshair outline-none"
+              tabIndex={0}
+              onKeyDown={handleKeyDown}
+            >
               <canvas
                 ref={canvasRef}
                 className="w-full h-full block"
@@ -299,7 +394,7 @@ export default function CoulombPage() {
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={() => setDraggingId(null)}
-                onMouseLeave={() => setDraggingId(null)}
+                onMouseLeave={handleMouseLeaveCoulomb}
               />
               <div className="absolute bottom-4 left-4 bg-white/90 dark:bg-slate-800/90 p-2 rounded backdrop-blur text-xs border border-slate-200 dark:border-slate-700 shadow-sm pointer-events-none flex items-center gap-2">
                 <MousePointer2 size={14} className="text-slate-500" />

@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useCanvasTouch } from '@/hooks/useCanvasTouch';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
 import { useProgressStore } from '@/store/progressStore';
 import { ControlPanel } from '@/components/common/ControlPanel';
@@ -17,6 +18,14 @@ export default function AmperePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const timeRef = useRef(0);
   const animationRef = useRef(0);
+
+  useCanvasTouch(canvasRef);
+
+  // Draggable radius marker state
+  const [markerRadius, setMarkerRadius] = useState(100); // px from center
+  const [markerAngle, setMarkerAngle] = useState(-Math.PI / 4); // angle from center
+  const draggingMarker = useRef(false);
+  const canvasCenterRef = useRef({ x: 0, y: 0 });
 
   const drawArrow = (ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, color: string) => {
     ctx.save();
@@ -41,6 +50,7 @@ export default function AmperePage() {
       canvas.height = canvas.parentElement!.clientHeight;
       const cx = canvas.width / 2,
         cy = canvas.height / 2;
+      canvasCenterRef.current = { x: cx, y: cy };
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       if (isDarkMode) {
@@ -113,11 +123,129 @@ export default function AmperePage() {
         }
       }
 
+      // Draggable radius marker
+      const mR = Math.max(30, markerRadius);
+      const mX = cx + mR * Math.cos(markerAngle);
+      const mY = cy + mR * Math.sin(markerAngle);
+
+      // Dashed line from center to marker
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(mX, mY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Marker dot
+      ctx.beginPath();
+      ctx.arc(mX, mY, draggingMarker.current ? 9 : 7, 0, Math.PI * 2);
+      ctx.fillStyle = '#f59e0b';
+      ctx.globalAlpha = draggingMarker.current ? 0.7 : 0.4;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.arc(mX, mY, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fill();
+
+      // B-field value at marker
+      if (Math.abs(current) > 0 && mR > 25) {
+        const rMetres = mR * SCALE_M_PER_PX;
+        const Bval = (MU_0 * Math.abs(current)) / (2 * Math.PI * rMetres);
+        const BStr = Bval >= 1e-3
+          ? `${(Bval * 1e3).toFixed(2)} mT`
+          : Bval >= 1e-6
+            ? `${(Bval * 1e6).toFixed(1)} \u03BCT`
+            : `${(Bval * 1e9).toFixed(0)} nT`;
+        const rStr = `r = ${(rMetres * 100).toFixed(2)} cm`;
+
+        // Tooltip
+        ctx.font = 'bold 12px sans-serif';
+        const line1 = `B = ${BStr}`;
+        const line2 = rStr;
+        const tw = Math.max(ctx.measureText(line1).width, ctx.measureText(line2).width) + 16;
+        const th = 38;
+        const tx = mX + 14;
+        const ty = mY - th / 2;
+        ctx.fillStyle = isDarkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+        ctx.beginPath();
+        ctx.roundRect(tx, ty, tw, th, 6);
+        ctx.fill();
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.fillStyle = '#f59e0b';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText(line1, tx + 8, ty + 5);
+        ctx.fillStyle = isDarkMode ? '#94a3b8' : '#64748b';
+        ctx.font = '11px sans-serif';
+        ctx.fillText(line2, tx + 8, ty + 22);
+      }
+
+      // Drag hint
+      if (!draggingMarker.current) {
+        ctx.fillStyle = isDarkMode ? '#64748b' : '#94a3b8';
+        ctx.font = '9px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('Drag marker to measure B', cx, cy + Math.min(canvas.width, canvas.height) / 2 - 15);
+      }
+
       animationRef.current = requestAnimationFrame(render);
     };
     render();
     return () => cancelAnimationFrame(animationRef.current);
-  }, [current, isDarkMode, col]);
+  }, [current, isDarkMode, col, markerRadius, markerAngle]);
+
+  // Marker drag handlers
+  const getCanvasPos = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height),
+    };
+  }, []);
+
+  const handleMarkerMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const { x, y } = getCanvasPos(e);
+    const { x: cx, y: cy } = canvasCenterRef.current;
+    const mX = cx + markerRadius * Math.cos(markerAngle);
+    const mY = cy + markerRadius * Math.sin(markerAngle);
+    if (Math.hypot(x - mX, y - mY) < 20) {
+      draggingMarker.current = true;
+    }
+  }, [markerRadius, markerAngle, getCanvasPos]);
+
+  const handleMarkerMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!draggingMarker.current) return;
+    const { x, y } = getCanvasPos(e);
+    const { x: cx, y: cy } = canvasCenterRef.current;
+    const dx = x - cx, dy = y - cy;
+    const newR = Math.hypot(dx, dy);
+    const newAngle = Math.atan2(dy, dx);
+    setMarkerRadius(Math.max(30, Math.min(250, newR)));
+    setMarkerAngle(newAngle);
+  }, [getCanvasPos]);
+
+  const handleMarkerMouseUp = useCallback(() => {
+    draggingMarker.current = false;
+  }, []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const step = 5;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      setMarkerRadius(r => Math.min(250, r + step));
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      setMarkerRadius(r => Math.max(30, r - step));
+    }
+  }, []);
 
   return (
     <ModuleLayout
@@ -125,8 +253,22 @@ export default function AmperePage() {
       simulation={
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
-              <canvas ref={canvasRef} className="w-full h-full" role="img" aria-label="Ampere's law simulation showing magnetic field around current-carrying conductor" />
+            <div
+              className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px] outline-none"
+              tabIndex={0}
+              onKeyDown={handleKeyDown}
+            >
+              <canvas
+                ref={canvasRef}
+                className="w-full h-full"
+                role="img"
+                aria-label="Ampere's law simulation showing magnetic field around current-carrying conductor"
+                onMouseDown={handleMarkerMouseDown}
+                onMouseMove={handleMarkerMouseMove}
+                onMouseUp={handleMarkerMouseUp}
+                onMouseLeave={handleMarkerMouseUp}
+                style={{ cursor: 'crosshair' }}
+              />
               <div className="absolute bottom-4 right-4 bg-white/90 dark:bg-slate-800/90 p-3 rounded border border-slate-200 dark:border-slate-700 text-xs max-w-[250px] shadow-sm">
                 <h5 className="font-bold text-slate-800 dark:text-slate-200 mb-1">Rule of Thumb</h5>
                 <p className="text-slate-600 dark:text-slate-400">

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useCanvasTouch } from '@/hooks/useCanvasTouch';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
 import { useProgressStore } from '@/store/progressStore';
 import { ControlPanel } from '@/components/common/ControlPanel';
@@ -23,6 +24,7 @@ export default function LenzPage() {
 
   const [draggingMagnet, setDraggingMagnet] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  useCanvasTouch(canvasRef);
   const timeRef = useRef(0);
   const animationRef = useRef(0);
 
@@ -62,6 +64,20 @@ export default function LenzPage() {
   }, [draggingMagnet, getCanvasPoint, magnetPos]);
 
   const handleMouseUp = useCallback(() => setDraggingMagnet(false), []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (autoPlay) return;
+    const step = 1.5;
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      setPrevPos(magnetPos);
+      setMagnetPos(p => Math.max(0, p - step));
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      setPrevPos(magnetPos);
+      setMagnetPos(p => Math.min(100, p + step));
+    }
+  }, [autoPlay, magnetPos]);
 
 
   // Auto-oscillation effect
@@ -273,7 +289,11 @@ export default function LenzPage() {
       simulation={
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
+            <div
+              className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px] outline-none"
+              tabIndex={0}
+              onKeyDown={handleKeyDown}
+            >
               <canvas
                 ref={canvasRef}
                 className="w-full h-full block"

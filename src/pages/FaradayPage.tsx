@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useCanvasTouch } from '@/hooks/useCanvasTouch';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
 import { useProgressStore } from '@/store/progressStore';
 import { ControlPanel } from '@/components/common/ControlPanel';
@@ -21,8 +22,11 @@ export default function FaradayPage() {
   const [liveEmf, setLiveEmf] = useState(0);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  useCanvasTouch(canvasRef);
   const timeRef = useRef(0);
   const animationRef = useRef(0);
+  const dragStartX = useRef<number | null>(null);
+  const dragStartRate = useRef(1);
 
   useEffect(() => {
     const render = () => {
@@ -98,11 +102,81 @@ export default function FaradayPage() {
       ctx.fillStyle = c.E_FIELD;
       ctx.fillText(`Induced EMF: ${Math.abs(emf) < 0.1 ? 'None' : (isCW ? 'CW \u21bb' : 'CCW \u21ba')}`, 20, 50);
 
+      // Rate drag indicator at bottom
+      const barW = 200, barH = 6;
+      const barX = cx - barW / 2, barY = canvas.height - 30;
+      ctx.fillStyle = isDarkMode ? '#1e293b' : '#f1f5f9';
+      ctx.beginPath();
+      ctx.roundRect(barX - 4, barY - 4, barW + 8, barH + 8, 4);
+      ctx.fill();
+      ctx.fillStyle = isDarkMode ? '#334155' : '#e2e8f0';
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, barW, barH, 3);
+      ctx.fill();
+      // Filled portion representing rate
+      const fillW = ((rate - 0.1) / 2.9) * barW;
+      ctx.fillStyle = '#8b5cf6';
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, fillW, barH, 3);
+      ctx.fill();
+      // Handle
+      ctx.beginPath();
+      ctx.arc(barX + fillW, barY + barH / 2, dragStartX.current !== null ? 8 : 6, 0, Math.PI * 2);
+      ctx.fillStyle = '#8b5cf6';
+      ctx.globalAlpha = dragStartX.current !== null ? 0.8 : 0.5;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      // Label
+      ctx.fillStyle = isDarkMode ? '#94a3b8' : '#64748b';
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`Drag to set \u03C9 = ${rate.toFixed(1)}`, cx, barY + 20);
+
       animationRef.current = requestAnimationFrame(render);
     };
     render();
     return () => cancelAnimationFrame(animationRef.current);
   }, [isPlaying, rate, loops, c, isDarkMode]);
+
+  // Canvas drag handlers for rate control
+  const getCanvasPos = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height),
+    };
+  }, []);
+
+  const handleRateDragDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const { x, y } = getCanvasPos(e);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    // Check if click is near the rate bar area (bottom 60px)
+    if (y > canvas.height - 50) {
+      dragStartX.current = x;
+      dragStartRate.current = rate;
+    }
+  }, [rate, getCanvasPos]);
+
+  const handleRateDragMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (dragStartX.current === null) return;
+    const { x } = getCanvasPos(e);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const cx = canvas.width / 2;
+    const barW = 200;
+    const barX = cx - barW / 2;
+    // Map mouse x to rate value
+    const frac = Math.max(0, Math.min(1, (x - barX) / barW));
+    const newRate = Math.round((0.1 + frac * 2.9) * 10) / 10;
+    setRate(newRate);
+  }, [getCanvasPos]);
+
+  const handleRateDragUp = useCallback(() => {
+    dragStartX.current = null;
+  }, []);
 
   return (
     <ModuleLayout
@@ -111,7 +185,17 @@ export default function FaradayPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
-              <canvas ref={canvasRef} className="w-full h-full block" role="img" aria-label="Faraday's law simulation showing electromagnetic induction" />
+              <canvas
+                ref={canvasRef}
+                className="w-full h-full block"
+                role="img"
+                aria-label="Faraday's law simulation showing electromagnetic induction"
+                onMouseDown={handleRateDragDown}
+                onMouseMove={handleRateDragMove}
+                onMouseUp={handleRateDragUp}
+                onMouseLeave={handleRateDragUp}
+                style={{ cursor: 'crosshair' }}
+              />
             </div>
           </div>
           <ControlPanel title="Experiment Controls">

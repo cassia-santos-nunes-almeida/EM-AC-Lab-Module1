@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
 import { useProgressStore } from '@/store/progressStore';
 import { MathWrapper } from '@/components/common/MathWrapper';
@@ -9,9 +9,11 @@ interface MaxwellCardProps {
   latex: string;
   description: string;
   draw: (ctx: CanvasRenderingContext2D, w: number, h: number, t: number) => void;
+  expanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
-function MaxwellCard({ title, latex, description, draw }: MaxwellCardProps) {
+function MaxwellCard({ title, latex, description, draw, expanded, onToggleExpand }: MaxwellCardProps) {
   const cvsRef = useRef<HTMLCanvasElement>(null);
   const tRef = useRef(0);
 
@@ -33,8 +35,47 @@ function MaxwellCard({ title, latex, description, draw }: MaxwellCardProps) {
     return () => cancelAnimationFrame(req);
   }, [draw]);
 
+  if (expanded) {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        onClick={onToggleExpand}
+      >
+        <div
+          className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 flex flex-col shadow-xl w-[90vw] max-w-[700px] max-h-[90vh]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">{title}</h3>
+            <button
+              onClick={onToggleExpand}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-2xl leading-none px-2"
+              aria-label="Close expanded view"
+            >
+              &times;
+            </button>
+          </div>
+          <div className="text-center text-xl text-indigo-700 dark:text-indigo-400 mb-4 bg-indigo-50 dark:bg-indigo-900/30 rounded py-3">
+            <MathWrapper latex={latex} />
+          </div>
+          <div className="flex-grow relative bg-white dark:bg-slate-900 rounded-lg overflow-hidden min-h-[300px] mb-3 border border-slate-100 dark:border-slate-700">
+            <canvas ref={cvsRef} className="w-full h-full absolute inset-0" role="img" aria-label={`${title} expanded visualization`} />
+          </div>
+          <p className="text-sm text-slate-500 dark:text-slate-400 text-center">{description}</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 text-center mt-2">Click outside or &times; to close</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex flex-col shadow-sm">
+    <div
+      className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex flex-col shadow-sm cursor-pointer hover:ring-2 hover:ring-indigo-400 dark:hover:ring-indigo-500 transition-shadow"
+      onClick={onToggleExpand}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onToggleExpand?.(); }}
+    >
       <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-1">{title}</h3>
       <div className="text-center text-lg text-indigo-700 dark:text-indigo-400 mb-2 bg-indigo-50 dark:bg-indigo-900/30 rounded py-2 min-h-[50px] flex items-center justify-center">
         <MathWrapper latex={latex} />
@@ -43,6 +84,7 @@ function MaxwellCard({ title, latex, description, draw }: MaxwellCardProps) {
         <canvas ref={cvsRef} className="w-full h-full absolute inset-0" role="img" aria-label="Maxwell's equation animated visualization" />
       </div>
       <p className="text-xs text-slate-500 dark:text-slate-400 text-center">{description}</p>
+      <p className="text-xs text-indigo-400 dark:text-indigo-500 text-center mt-1">Click to expand</p>
     </div>
   );
 }
@@ -50,6 +92,7 @@ function MaxwellCard({ title, latex, description, draw }: MaxwellCardProps) {
 export default function MaxwellPage() {
   const { isDarkMode } = useProgressStore();
   const c = isDarkMode ? COLORS_DARK : COLORS;
+  const [expandedCard, setExpandedCard] = useState<number | null>(null);
 
   const drawGaussE = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number, t: number) => {
     const cx = w / 2, cy = h / 2;
@@ -195,24 +238,32 @@ export default function MaxwellPage() {
             latex="\oint \vec{E} \cdot d\vec{A} = \frac{Q}{\epsilon_0}"
             description="Electric charges produce electric fields. Field lines diverge from (+) charges."
             draw={drawGaussE}
+            expanded={expandedCard === 0}
+            onToggleExpand={() => setExpandedCard(expandedCard === 0 ? null : 0)}
           />
           <MaxwellCard
             title="2. Gauss's Law (B)"
             latex="\oint \vec{B} \cdot d\vec{A} = 0"
             description="No magnetic monopoles exist. Magnetic field lines always form closed loops."
             draw={drawGaussB}
+            expanded={expandedCard === 1}
+            onToggleExpand={() => setExpandedCard(expandedCard === 1 ? null : 1)}
           />
           <MaxwellCard
             title="3. Faraday's Law"
             latex="\oint \vec{E} \cdot d\vec{l} = -\frac{d\Phi_B}{dt}"
             description="Changing B-field induces E-field (and Voltage)."
             draw={drawFaraday}
+            expanded={expandedCard === 2}
+            onToggleExpand={() => setExpandedCard(expandedCard === 2 ? null : 2)}
           />
           <MaxwellCard
             title="4. Ampère-Maxwell"
             latex="\oint \vec{B} \cdot d\vec{l} = \mu_0(I + \epsilon_0 \frac{d\Phi_E}{dt})"
             description="Magnetic fields are generated by currents OR changing E-fields."
             draw={drawAmpere}
+            expanded={expandedCard === 3}
+            onToggleExpand={() => setExpandedCard(expandedCard === 3 ? null : 3)}
           />
         </div>
       }
