@@ -9,6 +9,7 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
+import { PhysicsChart } from '@/components/common/PhysicsChart';
 import type { EMWaveState } from '@/types';
 
 const POINTS = 200;
@@ -533,7 +534,7 @@ export default function EMWavePage() {
       }
       ctx.stroke();
     }
-  }, [state, viewMode, drawVIView, drawAxisSystemLocal, draw3DAxisArrows, c]);
+  }, [state, viewMode, drawVIView, drawAxisSystemLocal, draw3DAxisArrows, c, isDarkMode]);
 
   // Animation loop
   useEffect(() => {
@@ -586,7 +587,7 @@ export default function EMWavePage() {
                   </button>
                 ))}
               </div>
-              <canvas ref={canvasRef} className="w-full h-full" />
+              <canvas ref={canvasRef} className="w-full h-full" role="img" aria-label="Electromagnetic wave simulation showing E and B field oscillations" />
             </div>
             {viewMode === WaveViewMode.VIEW_VI && (
               <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-2 text-xs text-amber-800 dark:text-amber-300">
@@ -715,6 +716,49 @@ export default function EMWavePage() {
                   ]
             }
           />
+          {(() => {
+            const k = (2 * Math.PI * state.frequency * state.refractiveIndex) / 300;
+            if (viewMode !== WaveViewMode.VIEW_VI) {
+              const data = Array.from({ length: 50 }, (_, i) => {
+                const x = i * 6;
+                const E = state.amplitude * Math.sin(k * x);
+                const B = (state.amplitude * state.refractiveIndex / 300) * Math.sin(k * x);
+                return { x: x.toFixed(0), E: +E.toFixed(2), B: +B.toFixed(4) };
+              });
+              return (
+                <PhysicsChart
+                  title="E & B Field Snapshot (t = 0)"
+                  data={data}
+                  xKey="x"
+                  xLabel="Position (arb.)"
+                  yLabel="Amplitude"
+                  lines={[
+                    { dataKey: 'E', color: '#dc2626', name: 'E-field' },
+                    { dataKey: 'B', color: '#2563eb', name: 'B-field (×c)' },
+                  ]}
+                />
+              );
+            }
+            const omegaVal = 2 * Math.PI * state.frequency;
+            const phiV = state.vPhase * Math.PI / 180;
+            const phiI = state.iPhase * Math.PI / 180;
+            const data = Array.from({ length: 60 }, (_, i) => {
+              const t = i * 0.05;
+              const v = state.vAmplitude * Math.sin(omegaVal * t + phiV);
+              const iVal = state.iAmplitude * Math.sin(omegaVal * t + phiI);
+              return { t: t.toFixed(2), P: +(v * iVal / 1000).toFixed(2) };
+            });
+            return (
+              <PhysicsChart
+                title="Instantaneous Power p(t) = v·i"
+                data={data}
+                xKey="t"
+                xLabel="Time (s)"
+                yLabel="Power (kW)"
+                lines={[{ dataKey: 'P', color: '#9333ea', name: 'p(t)' }]}
+              />
+            );
+          })()}
           <TheoryGuide>
             {viewMode === WaveViewMode.VIEW_VI ? (
               <>

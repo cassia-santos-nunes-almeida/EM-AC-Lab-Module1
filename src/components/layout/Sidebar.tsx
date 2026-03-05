@@ -23,7 +23,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <div
           className="fixed inset-0 bg-black/30 z-40 lg:hidden"
           onClick={onClose}
-          aria-hidden
+          aria-hidden="true"
         />
       )}
 
@@ -35,16 +35,16 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
-          <Link to="/" className="flex items-center gap-2" onClick={onClose}>
+          <Link to="/" className="flex items-center gap-2" onClick={onClose} aria-label="EM&AC Lab home">
             <div className="p-2 bg-engineering-blue-600 rounded-lg">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2" />
               </svg>
             </div>
             <div>
-              <h1 className="text-base font-bold text-slate-800 dark:text-slate-100 tracking-tight">
+              <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 tracking-tight">
                 EM&AC Lab
-              </h1>
+              </h2>
               <p className="text-[10px] text-slate-400 dark:text-slate-500">Module 1</p>
             </div>
           </Link>

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Move } from 'lucide-react';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
 import { useProgressStore } from '@/store/progressStore';
@@ -30,7 +30,7 @@ export default function LorentzPage() {
   const physicsRef = useRef<ParticleState | null>(null);
   const animationRef = useRef(0);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     if (canvasRef.current) {
       physicsRef.current = {
         x: velocity >= 0 ? 50 : canvasRef.current.width - 50,
@@ -40,11 +40,11 @@ export default function LorentzPage() {
         trail: [],
       };
     }
-  };
+  }, [velocity]);
 
   useEffect(() => {
     if (!physicsRef.current) handleReset();
-  }, []);
+  }, [handleReset]);
 
   const drawVec = (
     ctx: CanvasRenderingContext2D,
@@ -180,7 +180,7 @@ export default function LorentzPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
-              <canvas ref={canvasRef} className="w-full h-full block" />
+              <canvas ref={canvasRef} className="w-full h-full block" role="img" aria-label="Lorentz force simulation showing charged particle trajectory in magnetic field" />
             </div>
           </div>
           <ControlPanel title="Particle Controls">

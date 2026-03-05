@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Maskable icon: content within safe zone (80% = 409px centered) -->
+  <rect width="512" height="512" fill="#2563eb"/>
+  <g transform="translate(256,236)">
+    <!-- Sine wave representing EM field -->
+    <path d="M-130,0 C-97,-65 -65,-65 -32,0 C0,65 32,65 65,0 C97,-65 130,-65 162,0"
+          fill="none" stroke="white" stroke-width="22" stroke-linecap="round" opacity="0.9"/>
+    <path d="M-130,0 C-97,50 -65,50 -32,0 C0,-50 32,-50 65,0 C97,50 130,50 162,0"
+          fill="none" stroke="#93c5fd" stroke-width="14" stroke-linecap="round" opacity="0.7"/>
+  </g>
+  <text x="256" y="410" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="800" font-size="72" fill="white" opacity="0.95">EM</text>
+</svg>

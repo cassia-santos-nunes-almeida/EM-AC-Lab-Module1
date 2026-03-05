@@ -27,6 +27,8 @@ export function MathWrapper({ latex, displayMode = false, className }: MathWrapp
 
   return (
     <span
+      role="math"
+      aria-label={latex}
       className={cn('katex-wrapper', className)}
       dangerouslySetInnerHTML={{ __html: html }}
     />

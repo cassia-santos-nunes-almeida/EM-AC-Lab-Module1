@@ -147,7 +147,7 @@ export function AiTutor({ moduleContext }: AiTutorProps) {
           <button
             onClick={() => setShowKeyInput(!showKeyInput)}
             className="p-1.5 rounded-lg hover:bg-white/20 transition-colors text-xs"
-            title="API Key settings"
+            aria-label="Toggle API key settings"
           >
             ⚙
           </button>
@@ -177,6 +177,7 @@ export function AiTutor({ moduleContext }: AiTutorProps) {
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="AIza..."
+              aria-label="Google Gemini API key"
               className="flex-1 px-2 py-1.5 text-xs rounded border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
             />
             <button
@@ -260,6 +261,7 @@ export function AiTutor({ moduleContext }: AiTutorProps) {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask about EM concepts..."
+            aria-label="Type your question"
             rows={1}
             className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-300 resize-none focus:outline-none focus:border-engineering-blue-500 dark:focus:border-engineering-blue-400"
           />

@@ -8,6 +8,9 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
+import { PhysicsChart } from '@/components/common/PhysicsChart';
+
+const EPSILON_0 = 8.854e-12;
 
 export default function GaussPage() {
   const { isDarkMode } = useProgressStore();
@@ -146,7 +149,7 @@ export default function GaussPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
-              <canvas ref={canvasRef} className="w-full h-full block" />
+              <canvas ref={canvasRef} className="w-full h-full block" role="img" aria-label="Gauss's law simulation showing electric or magnetic flux through a surface" />
               <div className="absolute top-4 left-4 pointer-events-none bg-white/90 dark:bg-slate-800/90 p-2 rounded border border-slate-200 dark:border-slate-700 shadow-sm">
                 <h5 className="font-bold text-xs text-slate-500 dark:text-slate-400 uppercase mb-1">Visualization</h5>
                 <div className="text-lg font-bold text-slate-800 dark:text-slate-200">
@@ -185,6 +188,38 @@ export default function GaussPage() {
       theory={
         <div className="space-y-6">
           <EquationBox title={`Gauss's Law for ${mode === 'ELECTRIC' ? 'Electric Fields' : 'Magnetism'}`} equations={equations} />
+          {(() => {
+            const Q = charge * 1e-6;
+            const flux = mode === 'ELECTRIC' ? Q / EPSILON_0 : 0;
+            const data = Array.from({ length: 30 }, (_, i) => {
+              const r = 0.2 + i * 0.06;
+              const E = mode === 'ELECTRIC' && charge !== 0
+                ? Math.abs(Q) / (4 * Math.PI * EPSILON_0 * r * r)
+                : 0;
+              return {
+                r: r.toFixed(2),
+                Flux: +flux.toExponential(2),
+                E: +E.toExponential(2),
+              };
+            });
+            return (
+              <PhysicsChart
+                title={mode === 'ELECTRIC' ? 'Flux & Field vs Radius' : 'Magnetic Flux (always zero)'}
+                data={data}
+                xKey="r"
+                xLabel="Radius (m)"
+                yLabel={mode === 'ELECTRIC' ? 'Value' : 'Flux (Wb)'}
+                lines={
+                  mode === 'ELECTRIC'
+                    ? [
+                        { dataKey: 'E', color: '#dc2626', name: 'E-field (N/C)' },
+                        { dataKey: 'Flux', color: '#9333ea', name: 'Flux (N·m²/C)' },
+                      ]
+                    : [{ dataKey: 'Flux', color: '#2563eb', name: 'Magnetic Flux' }]
+                }
+              />
+            );
+          })()}
           <TheoryGuide>
             {mode === 'ELECTRIC' ? (
               <p>

@@ -14,7 +14,9 @@ export function useAnimationFrame({ isPlaying = true, onFrame }: UseAnimationFra
   const rafRef = useRef(0);
   const callbackRef = useRef(onFrame);
 
-  callbackRef.current = onFrame;
+  useEffect(() => {
+    callbackRef.current = onFrame;
+  });
 
   const reset = useCallback(() => {
     timeRef.current = 0;

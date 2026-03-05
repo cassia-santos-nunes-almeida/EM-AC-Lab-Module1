@@ -8,7 +8,10 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
+import { PhysicsChart } from '@/components/common/PhysicsChart';
 import type { Charge } from '@/types';
+
+const K_COULOMB = 8.988e9;
 
 export default function CoulombPage() {
   const { isDarkMode } = useProgressStore();
@@ -194,7 +197,7 @@ export default function CoulombPage() {
 
       // Scale: 1 grid square (40px) = 0.1 m
       const SCALE_M_PER_PX = 0.1 / 40; // metres per pixel
-      const K_COULOMB = 8.99e9; // N·m²/C²
+      // K_COULOMB defined at module level
 
       // Scale reference label
       ctx.fillStyle = isDarkMode ? '#94a3b8' : '#64748b';
@@ -291,6 +294,8 @@ export default function CoulombPage() {
               <canvas
                 ref={canvasRef}
                 className="w-full h-full block"
+                role="img"
+                aria-label="Coulomb's law simulation with draggable charges showing electric field lines and force vectors"
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={() => setDraggingId(null)}
@@ -383,6 +388,24 @@ export default function CoulombPage() {
               { label: 'Force', math: '\\vec{F}_{net} \\text{ on } q = q \\vec{E}_{other}' },
             ]}
           />
+          {charges.length >= 2 && (() => {
+            const q1 = Math.abs(charges[0].q * 1e-6);
+            const q2 = Math.abs(charges[1].q * 1e-6);
+            const forceData = Array.from({ length: 40 }, (_, i) => {
+              const r = 0.02 + i * 0.012;
+              return { r: r.toFixed(2), F: +(K_COULOMB * q1 * q2 / (r * r)).toExponential(2) };
+            });
+            return (
+              <PhysicsChart
+                title="Coulomb Force vs Distance"
+                data={forceData}
+                xKey="r"
+                xLabel="Distance (m)"
+                yLabel="Force (N)"
+                lines={[{ dataKey: 'F', color: '#dc2626', name: 'F (N)' }]}
+              />
+            );
+          })()}
           <TheoryGuide>
             <p>
               <strong>Coulomb's Law:</strong> Force between charges is proportional to magnitude product,

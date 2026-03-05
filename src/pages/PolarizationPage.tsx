@@ -238,7 +238,7 @@ export default function PolarizationPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
-              <canvas ref={canvasRef} className="w-full h-full block" />
+              <canvas ref={canvasRef} className="w-full h-full block" role="img" aria-label="Polarization simulation showing Lissajous pattern and 3D wave propagation" />
               <div className="absolute top-4 left-4 flex gap-4 pointer-events-none">
                 <div className="bg-white/90 dark:bg-slate-800/90 p-2 rounded border border-slate-200 dark:border-slate-700">
                   <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block">Head-On View</span>
