@@ -56,7 +56,9 @@ export default function MagneticCircuitsPage() {
   const mmf = turns * current;
   const flux = mmf / reluctanceTotal;
   const B = flux / coreArea;
-  const H = mmf / pathLength;
+  // H differs by section: B = μ₀μᵣH_core = μ₀H_gap
+  const hCore = B / (MU_0 * muR);
+  const hGap = gapLength > 0 ? B / MU_0 : 0;
   const inductance = (turns * turns) / reluctanceTotal;
 
   const formatSI = (val: number, unit: string): string => {
@@ -197,28 +199,29 @@ export default function MagneticCircuitsPage() {
       // Output readouts
       ctx.font = '11px monospace';
       ctx.textAlign = 'left';
-      const readoutX = 15, readoutY = h - 90;
-      const lines = [
-        `H = ${formatSI(H, 'A/m')}`,
-        `B = ${formatSI(B, 'T')}`,
-        `Φ = ${formatSI(flux, 'Wb')}`,
-        `L = ${formatSI(inductance, 'H')}`,
+      const readoutX = 15, readoutY = h - 110;
+      const lines: { text: string; color: string }[] = [
+        { text: `H_core = ${formatSI(hCore, 'A/m')}`, color: col.B_FIELD },
+        ...(gapLength > 0 ? [{ text: `H_gap  = ${formatSI(hGap, 'A/m')}`, color: '#f59e0b' }] : []),
+        { text: `B = ${formatSI(B, 'T')}`, color: col.B_FIELD },
+        { text: `Φ = ${formatSI(flux, 'Wb')}`, color: isDarkMode ? '#94a3b8' : '#475569' },
+        { text: `L = ${formatSI(inductance, 'H')}`, color: isDarkMode ? '#94a3b8' : '#475569' },
       ];
       ctx.fillStyle = isDarkMode ? 'rgba(30,41,59,0.9)' : 'rgba(255,255,255,0.9)';
-      ctx.fillRect(readoutX - 5, readoutY - 14, 180, lines.length * 18 + 10);
+      ctx.fillRect(readoutX - 5, readoutY - 14, 200, lines.length * 18 + 10);
       ctx.strokeStyle = isDarkMode ? '#334155' : '#e2e8f0';
       ctx.lineWidth = 1;
-      ctx.strokeRect(readoutX - 5, readoutY - 14, 180, lines.length * 18 + 10);
+      ctx.strokeRect(readoutX - 5, readoutY - 14, 200, lines.length * 18 + 10);
       lines.forEach((line, i) => {
-        ctx.fillStyle = i < 2 ? col.B_FIELD : (isDarkMode ? '#94a3b8' : '#475569');
-        ctx.fillText(line, readoutX, readoutY + i * 18);
+        ctx.fillStyle = line.color;
+        ctx.fillText(line.text, readoutX, readoutY + i * 18);
       });
 
       animationRef.current = requestAnimationFrame(render);
     };
     render();
     return () => cancelAnimationFrame(animationRef.current);
-  }, [current, turns, gapPercent, materialIndex, isDarkMode, col, muR, material, B, H, flux, inductance]);
+  }, [current, turns, gapPercent, materialIndex, isDarkMode, col, muR, material, B, hCore, hGap, gapLength, flux, inductance]);
 
   return (
     <ModuleLayout
@@ -348,7 +351,7 @@ export default function MagneticCircuitsPage() {
               to="/"
               className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition-colors"
             >
-              Continue to Module 2 <ArrowRight size={16} />
+              Back to Overview — Module 2 coming soon <ArrowRight size={16} />
             </Link>
           </div>
         </div>
