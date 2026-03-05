@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Moon, Sun, CheckCircle, X } from 'lucide-react';
-import { MODULES } from '@/constants/physics';
+import { MODULES, LEARNING_TRACKS } from '@/constants/physics';
 import { useProgressStore } from '@/store/progressStore';
 import { cn } from '@/utils/cn';
 
@@ -71,17 +71,16 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </div>
         </div>
 
-        {/* Module list */}
+        {/* Module list grouped by learning track */}
         <nav className="flex-1 overflow-y-auto py-2">
-          {MODULES.map((mod) => {
-            const isActive = location.pathname === mod.path;
-            const isCompleted = completedModules.includes(mod.id);
-            const Icon = mod.icon;
-
+          {/* Overview link */}
+          {(() => {
+            const overview = MODULES.find((m) => m.id === 'overview')!;
+            const Icon = overview.icon;
+            const isActive = location.pathname === overview.path;
             return (
               <Link
-                key={mod.id}
-                to={mod.path}
+                to={overview.path}
                 onClick={onClose}
                 className={cn(
                   'flex items-center gap-3 px-4 py-2.5 mx-2 rounded-lg text-sm transition-all',
@@ -91,13 +90,74 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 )}
               >
                 <Icon size={18} className={isActive ? 'text-engineering-blue-500' : ''} />
-                <span className="flex-1">{mod.shortLabel}</span>
-                {isCompleted && mod.id !== 'overview' && (
-                  <CheckCircle size={14} className="text-green-500" />
-                )}
+                <span className="flex-1">{overview.shortLabel}</span>
               </Link>
             );
-          })}
+          })()}
+
+          {/* Track groups */}
+          {LEARNING_TRACKS.map((track) => (
+            <div key={track.id} className="mt-3">
+              <div className={cn('px-4 py-1 text-[10px] font-bold uppercase tracking-widest', track.color)}>
+                {track.label}
+              </div>
+              {MODULES.filter((m) => track.modules.includes(m.id)).map((mod) => {
+                const isActive = location.pathname === mod.path;
+                const isCompleted = completedModules.includes(mod.id);
+                const Icon = mod.icon;
+                return (
+                  <Link
+                    key={mod.id}
+                    to={mod.path}
+                    onClick={onClose}
+                    className={cn(
+                      'flex items-center gap-3 px-4 py-2 mx-2 rounded-lg text-sm transition-all',
+                      isActive
+                        ? 'bg-engineering-blue-50 dark:bg-engineering-blue-900/20 text-engineering-blue-700 dark:text-engineering-blue-300 font-semibold'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    )}
+                  >
+                    <Icon size={16} className={isActive ? 'text-engineering-blue-500' : ''} />
+                    <span className="flex-1">{mod.shortLabel}</span>
+                    {isCompleted && (
+                      <CheckCircle size={14} className="text-green-500" />
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
+
+          {/* Capstone: Maxwell */}
+          {(() => {
+            const maxwell = MODULES.find((m) => m.id === 'maxwell')!;
+            const Icon = maxwell.icon;
+            const isActive = location.pathname === maxwell.path;
+            const isCompleted = completedModules.includes(maxwell.id);
+            return (
+              <div className="mt-3">
+                <div className="px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-purple-500 dark:text-purple-400">
+                  Capstone
+                </div>
+                <Link
+                  to={maxwell.path}
+                  onClick={onClose}
+                  className={cn(
+                    'flex items-center gap-3 px-4 py-2 mx-2 rounded-lg text-sm transition-all',
+                    isActive
+                      ? 'bg-engineering-blue-50 dark:bg-engineering-blue-900/20 text-engineering-blue-700 dark:text-engineering-blue-300 font-semibold'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  )}
+                >
+                  <Icon size={16} className={isActive ? 'text-engineering-blue-500' : ''} />
+                  <span className="flex-1">{maxwell.shortLabel}</span>
+                  {isCompleted && (
+                    <CheckCircle size={14} className="text-green-500" />
+                  )}
+                </Link>
+              </div>
+            );
+          })()}
         </nav>
 
         {/* Footer */}
