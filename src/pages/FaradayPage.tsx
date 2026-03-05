@@ -45,7 +45,10 @@ export default function FaradayPage() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (isPlaying) timeRef.current += 0.02 * rate;
       const t = timeRef.current;
-      const B = Math.sin(t), dBdt = Math.cos(t);
+      const B = Math.sin(t);
+      // Chain rule: dB/dt_real = d(sin(ω·t_real))/dt_real = ω·cos(ω·t_real)
+      // Since t = ω·t_real, cos(t) = cos(ω·t_real), so dB/dt_real = rate·cos(t)
+      const dBdt = rate * Math.cos(t);
       setLiveB(B);
       setLiveEmf(-dBdt * loops);
 
@@ -185,7 +188,7 @@ export default function FaradayPage() {
       moduleId="faraday"
       simulation={
         <>
-        <RealWorldHook text="The 2003 Northeast blackout cascaded across 55 million people partly because changing magnetic flux in transformers triggered protective relays faster than operators could respond. Faraday's Law was at the center of it." />
+        <RealWorldHook text="Every electrical transformer relies on Faraday's Law: a changing current in one coil creates a changing magnetic flux that induces a voltage in a neighboring coil — the principle behind the entire power grid." />
         <PredictionGate
           gateId="faraday-induced-current"
           question="A bar magnet's north pole approaches a coil from the left. In which direction does the induced current flow when viewed from the left?"

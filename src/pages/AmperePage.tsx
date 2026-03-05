@@ -253,7 +253,7 @@ export default function AmperePage() {
       moduleId="ampere"
       simulation={
         <>
-        <RealWorldHook text="MRI machines generate fields of 1.5–3 Tesla using superconducting coils carrying tens of thousands of amperes. The field inside is calculated exactly as you will do here." />
+        <RealWorldHook text="MRI machines generate fields of 1.5–3 T using superconducting coils carrying hundreds of amperes through hundreds of turns. Ampère's law relates the enclosed current to the magnetic field you will calculate here." />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div

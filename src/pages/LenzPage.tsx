@@ -290,7 +290,7 @@ export default function LenzPage() {
       moduleId="lenz"
       simulation={
         <>
-        <RealWorldHook text="Induction cooktops heat the pan but not the surface. Eddy currents induced by a changing field generate heat only in the conducting pan — Lenz's Law determines why the direction of those currents produces heating, not repulsion." />
+        <RealWorldHook text="Induction cooktops use a rapidly alternating magnetic field to induce eddy currents in the pan. Those currents dissipate energy as I²R heat. Lenz's Law tells us the eddy currents flow in the direction that opposes the changing flux." />
         <PredictionGate
           gateId="lenz-reverse-direction"
           question="If the magnet is pulled away from the coil instead of pushed toward it, how does the induced current direction change?"

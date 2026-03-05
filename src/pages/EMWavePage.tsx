@@ -1072,8 +1072,10 @@ export default function EMWavePage() {
               const data = Array.from({ length: 50 }, (_, i) => {
                 const x = i * 6;
                 const E = state.amplitude * Math.sin(k * x);
-                const B = (state.amplitude * state.refractiveIndex / 300) * Math.sin(k * x);
-                return { x: x.toFixed(0), E: +E.toFixed(2), B: +B.toFixed(4) };
+                const Braw = (state.amplitude * state.refractiveIndex / 300) * Math.sin(k * x);
+                // Multiply B by c so it is visible alongside E on the same scale
+                const Bscaled = Braw * 300;
+                return { x: x.toFixed(0), E: +E.toFixed(2), B: +Bscaled.toFixed(2) };
               });
               return (
                 <PhysicsChart

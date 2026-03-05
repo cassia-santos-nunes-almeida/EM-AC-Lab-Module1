@@ -47,9 +47,9 @@ export const moduleQuizzes: Record<string, QuizQuestion[]> = {
         'Three',
         'Four',
       ],
-      correctIndex: 3,
+      correctIndex: 2,
       explanation:
-        'All four Maxwell\'s equations involve magnetic fields: Gauss\'s law for magnetism (∮B·dA = 0), Faraday\'s law (∮E·dl = −dΦ_B/dt), the Ampère–Maxwell law (∮B·dl = μ₀I + μ₀ε₀ dΦ_E/dt), and Gauss\'s law for electricity (which couples to B through the full set via the displacement-current link).',
+        'Three of the four equations explicitly contain magnetic field terms: Gauss\'s law for magnetism (∮B·dA = 0), Faraday\'s law (∮E·dl = −dΦ_B/dt), and the Ampère–Maxwell law (∮B·dl = μ₀I + μ₀ε₀ dΦ_E/dt). Gauss\'s law for electricity (∮E·dA = Q/ε₀) involves only the electric field and charge — it contains no B term.',
     },
   ],
 
