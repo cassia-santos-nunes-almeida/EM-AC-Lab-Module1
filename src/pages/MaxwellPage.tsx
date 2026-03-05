@@ -82,7 +82,7 @@ export default function MaxwellPage() {
     }
   }, [c]);
 
-  const drawGaussB = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number, _t: number) => {
+  const drawGaussB = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number) => {
     const cx = w / 2, cy = h / 2;
     ctx.fillStyle = c.B_FIELD;
     ctx.fillRect(cx - 30, cy - 12, 30, 24);

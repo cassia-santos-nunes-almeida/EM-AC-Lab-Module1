@@ -533,7 +533,7 @@ export default function EMWavePage() {
       }
       ctx.stroke();
     }
-  }, [state, viewMode, drawVIView, drawAxisSystemLocal, draw3DAxisArrows, c]);
+  }, [state, viewMode, drawVIView, drawAxisSystemLocal, draw3DAxisArrows, c, isDarkMode]);
 
   // Animation loop
   useEffect(() => {

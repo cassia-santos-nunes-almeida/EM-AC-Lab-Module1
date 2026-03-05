@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Move } from 'lucide-react';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
 import { useProgressStore } from '@/store/progressStore';
@@ -30,7 +30,7 @@ export default function LorentzPage() {
   const physicsRef = useRef<ParticleState | null>(null);
   const animationRef = useRef(0);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     if (canvasRef.current) {
       physicsRef.current = {
         x: velocity >= 0 ? 50 : canvasRef.current.width - 50,
@@ -40,11 +40,11 @@ export default function LorentzPage() {
         trail: [],
       };
     }
-  };
+  }, [velocity]);
 
   useEffect(() => {
     if (!physicsRef.current) handleReset();
-  }, []);
+  }, [handleReset]);
 
   const drawVec = (
     ctx: CanvasRenderingContext2D,
