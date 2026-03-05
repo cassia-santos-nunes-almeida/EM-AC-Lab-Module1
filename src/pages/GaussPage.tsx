@@ -8,6 +8,9 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
+import { PhysicsChart } from '@/components/common/PhysicsChart';
+
+const EPSILON_0 = 8.854e-12;
 
 export default function GaussPage() {
   const { isDarkMode } = useProgressStore();
@@ -185,6 +188,38 @@ export default function GaussPage() {
       theory={
         <div className="space-y-6">
           <EquationBox title={`Gauss's Law for ${mode === 'ELECTRIC' ? 'Electric Fields' : 'Magnetism'}`} equations={equations} />
+          {(() => {
+            const Q = charge * 1e-6;
+            const flux = mode === 'ELECTRIC' ? Q / EPSILON_0 : 0;
+            const data = Array.from({ length: 30 }, (_, i) => {
+              const r = 0.2 + i * 0.06;
+              const E = mode === 'ELECTRIC' && charge !== 0
+                ? Math.abs(Q) / (4 * Math.PI * EPSILON_0 * r * r)
+                : 0;
+              return {
+                r: r.toFixed(2),
+                Flux: +flux.toExponential(2),
+                E: +E.toExponential(2),
+              };
+            });
+            return (
+              <PhysicsChart
+                title={mode === 'ELECTRIC' ? 'Flux & Field vs Radius' : 'Magnetic Flux (always zero)'}
+                data={data}
+                xKey="r"
+                xLabel="Radius (m)"
+                yLabel={mode === 'ELECTRIC' ? 'Value' : 'Flux (Wb)'}
+                lines={
+                  mode === 'ELECTRIC'
+                    ? [
+                        { dataKey: 'E', color: '#dc2626', name: 'E-field (N/C)' },
+                        { dataKey: 'Flux', color: '#9333ea', name: 'Flux (N·m²/C)' },
+                      ]
+                    : [{ dataKey: 'Flux', color: '#2563eb', name: 'Magnetic Flux' }]
+                }
+              />
+            );
+          })()}
           <TheoryGuide>
             {mode === 'ELECTRIC' ? (
               <p>
