@@ -6,6 +6,7 @@ describe('progressStore', () => {
     // Reset to defaults
     useProgressStore.setState({
       completedModules: [],
+      quizScores: {},
       isDarkMode: false,
       sidebarOpen: false,
     });
@@ -57,5 +58,21 @@ describe('progressStore', () => {
     expect(useProgressStore.getState().sidebarOpen).toBe(true);
     useProgressStore.getState().setSidebarOpen(false);
     expect(useProgressStore.getState().sidebarOpen).toBe(false);
+  });
+
+  it('records correct quiz answers', () => {
+    useProgressStore.getState().recordCorrect('gauss', 0);
+    useProgressStore.getState().recordCorrect('gauss', 2);
+    expect(useProgressStore.getState().getScore('gauss')).toEqual([0, 2]);
+  });
+
+  it('does not duplicate quiz scores', () => {
+    useProgressStore.getState().recordCorrect('gauss', 0);
+    useProgressStore.getState().recordCorrect('gauss', 0);
+    expect(useProgressStore.getState().getScore('gauss')).toEqual([0]);
+  });
+
+  it('returns empty array for unscored modules', () => {
+    expect(useProgressStore.getState().getScore('unknown')).toEqual([]);
   });
 });
