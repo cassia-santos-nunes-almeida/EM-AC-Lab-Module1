@@ -9,6 +9,7 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
+import { RealWorldHook } from '@/components/common/RealWorldHook';
 import { PhysicsChart } from '@/components/common/PhysicsChart';
 
 const EPSILON_0 = 8.854e-12;
@@ -244,6 +245,8 @@ export default function GaussPage() {
     <ModuleLayout
       moduleId="gauss"
       simulation={
+        <>
+        <RealWorldHook text="Electrostatic shielding in coaxial cables, Faraday cages in microwave ovens, and the uniform field inside a capacitor all follow directly from this single law applied to the right surface." />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
@@ -292,6 +295,7 @@ export default function GaussPage() {
             </HintBox>
           </ControlPanel>
         </div>
+        </>
       }
       theory={
         <div className="space-y-6">

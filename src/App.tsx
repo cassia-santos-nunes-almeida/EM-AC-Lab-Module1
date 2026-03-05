@@ -31,6 +31,7 @@ const FaradayPage = lazyRetry(() => import('@/pages/FaradayPage'));
 const LenzPage = lazyRetry(() => import('@/pages/LenzPage'));
 const EMWavePage = lazyRetry(() => import('@/pages/EMWavePage'));
 const PolarizationPage = lazyRetry(() => import('@/pages/PolarizationPage'));
+const MagneticCircuitsPage = lazyRetry(() => import('@/pages/MagneticCircuitsPage'));
 
 function PageLoader() {
   return (
@@ -144,6 +145,16 @@ export default function App() {
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
                   <PolarizationPage />
+                </Suspense>
+              </ErrorBoundary>
+            }
+          />
+          <Route
+            path="magnetic-circuits"
+            element={
+              <ErrorBoundary>
+                <Suspense fallback={<PageLoader />}>
+                  <MagneticCircuitsPage />
                 </Suspense>
               </ErrorBoundary>
             }

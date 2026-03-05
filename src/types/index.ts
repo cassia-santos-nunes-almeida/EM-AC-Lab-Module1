@@ -13,12 +13,24 @@ export interface Equation {
   color?: string;
 }
 
+/** A single tiered hint for a quiz question. */
+export interface QuizHint {
+  /** Hint tier: 1 = conceptual, 2 = procedural, 3 = worked example. */
+  tier: 1 | 2 | 3;
+  /** Button label shown to the student. */
+  label: string;
+  /** The hint content. */
+  content: string;
+}
+
 /** Quiz question for ConceptCheck component */
 export interface QuizQuestion {
   question: string;
   options: string[];
   correctIndex: number;
   explanation: string;
+  /** Optional tiered hints revealed sequentially after wrong answers. */
+  hints?: QuizHint[];
 }
 
 /** Challenge for ChallengeCard component */
@@ -43,7 +55,7 @@ export interface EMWaveState {
   refractiveIndex: number;
 }
 
-/** Chat message for AI Tutor */
+/** Chat message for Think it Through tutor */
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;

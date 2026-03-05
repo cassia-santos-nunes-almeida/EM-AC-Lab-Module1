@@ -10,6 +10,7 @@ import {
   Radio,
   Layers,
   Home,
+  Cpu,
 } from 'lucide-react';
 
 /** Canvas drawing color palette */
@@ -43,6 +44,7 @@ export const WaveViewMode = {
   VIEW_2D: 'EM Wave 2D',
   VIEW_3D: 'EM Wave 3D',
   VIEW_VI: 'AC Phasors',
+  VIEW_PHASOR_SYNC: 'Phasor Sync',
 } as const;
 
 export type WaveViewModeType = (typeof WaveViewMode)[keyof typeof WaveViewMode];
@@ -150,6 +152,15 @@ export const MODULES: ModuleDefinition[] = [
     shortLabel: 'Maxwell',
     icon: BookOpen,
     description: "The four fundamental laws unifying electricity and magnetism",
+    track: 'capstone',
+  },
+  {
+    id: 'magnetic-circuits',
+    path: '/magnetic-circuits',
+    label: 'Magnetic Circuits',
+    shortLabel: 'Mag Circuits',
+    icon: Cpu,
+    description: 'From fields to devices — flux, reluctance, and inductance',
     track: 'capstone',
   },
 ];

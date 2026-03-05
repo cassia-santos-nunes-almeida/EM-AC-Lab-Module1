@@ -10,6 +10,8 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
+import { RealWorldHook } from '@/components/common/RealWorldHook';
+import { PredictionGate } from '@/components/common/PredictionGate';
 
 export default function FaradayPage() {
   const { isDarkMode } = useProgressStore();
@@ -182,6 +184,16 @@ export default function FaradayPage() {
     <ModuleLayout
       moduleId="faraday"
       simulation={
+        <>
+        <RealWorldHook text="The 2003 Northeast blackout cascaded across 55 million people partly because changing magnetic flux in transformers triggered protective relays faster than operators could respond. Faraday's Law was at the center of it." />
+        <PredictionGate
+          gateId="faraday-induced-current"
+          question="A bar magnet's north pole approaches a coil from the left. In which direction does the induced current flow when viewed from the left?"
+          options={[
+            { label: 'Clockwise', correct: false, explanation: 'Clockwise current (viewed from the left) would create a magnetic field pointing right — the same direction as the approaching magnet. This would attract the magnet, violating Lenz\'s law.' },
+            { label: 'Counterclockwise', correct: true, explanation: 'Counterclockwise current (viewed from the left) creates a field pointing left — opposing the increasing flux from the approaching north pole. This is exactly what Lenz\'s law predicts: the induced current opposes the change in flux.' },
+          ]}
+        >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
@@ -213,6 +225,8 @@ export default function FaradayPage() {
             </HintBox>
           </ControlPanel>
         </div>
+        </PredictionGate>
+        </>
       }
       theory={
         <div className="space-y-6">

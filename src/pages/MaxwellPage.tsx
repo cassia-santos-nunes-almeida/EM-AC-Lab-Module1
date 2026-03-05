@@ -3,6 +3,7 @@ import { COLORS, COLORS_DARK } from '@/constants/physics';
 import { useProgressStore } from '@/store/progressStore';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
+import { RealWorldHook } from '@/components/common/RealWorldHook';
 
 interface MaxwellCardProps {
   title: string;
@@ -232,6 +233,8 @@ export default function MaxwellPage() {
     <ModuleLayout
       moduleId="maxwell"
       simulation={
+        <>
+        <RealWorldHook text="The entire modern electrical grid — from power generation to wireless communication — is governed by four equations written in the 1860s. Every device you've ever used obeys them without exception." />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-2">
           <MaxwellCard
             title="1. Gauss's Law (E)"
@@ -266,6 +269,7 @@ export default function MaxwellPage() {
             onToggleExpand={() => setExpandedCard(expandedCard === 3 ? null : 3)}
           />
         </div>
+        </>
       }
       theory={
         <div className="space-y-6">

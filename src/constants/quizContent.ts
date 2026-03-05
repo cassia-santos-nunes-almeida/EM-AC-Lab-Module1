@@ -19,6 +19,11 @@ export const moduleQuizzes: Record<string, QuizQuestion[]> = {
       correctIndex: 3,
       explanation:
         'The Ampère–Maxwell law adds the displacement current ε₀(∂E/∂t) to the original Ampère\'s law, allowing it to account for time-varying electric fields and ensuring consistency with charge conservation.',
+      hints: [
+        { tier: 1, label: 'Conceptual hint', content: 'Think about which equation was modified to include a new term that accounts for time-varying electric fields.' },
+        { tier: 2, label: 'Procedural hint', content: 'The displacement current term ε₀(∂E/∂t) was added to one of the original equations to fix an inconsistency with charge conservation. Which equation relates magnetic fields to currents?' },
+        { tier: 3, label: 'Show worked step', content: 'Original Ampère\'s law: ∮B·dl = μ₀I_enc. Maxwell added: ∮B·dl = μ₀I_enc + μ₀ε₀(dΦ_E/dt). The extra term is the displacement current. This is the Ampère–Maxwell law — option D.' },
+      ],
     },
     {
       question:
@@ -391,10 +396,53 @@ export const moduleQuizzes: Record<string, QuizQuestion[]> = {
         'Right-circular polarization is represented by the Jones vector (1/√2)[1, −i]ᵀ, where the −i indicates the y-component lags the x-component by 90°. Left-circular polarization uses +i instead. The convention follows the optics standard where the observer faces the incoming wave.',
     },
   ],
+
+  /* ------------------------------------------------------------------ */
+  'magnetic-circuits': [
+    {
+      question:
+        'In a magnetic circuit, what is reluctance analogous to in an electric circuit?',
+      options: [
+        'Voltage',
+        'Current',
+        'Resistance',
+        'Capacitance',
+      ],
+      correctIndex: 2,
+      explanation:
+        'Reluctance ℛ = l/(μA) is the magnetic analog of resistance R = l/(σA). Just as resistance opposes current flow, reluctance opposes magnetic flux.',
+    },
+    {
+      question:
+        'What happens to the inductance of a toroid when an air gap is introduced?',
+      options: [
+        'Inductance increases',
+        'Inductance decreases',
+        'Inductance stays the same',
+        'Inductance becomes zero',
+      ],
+      correctIndex: 1,
+      explanation:
+        'An air gap has much higher reluctance than iron (μ_air ≪ μ_iron), so total reluctance increases and inductance L = N²/ℛ decreases.',
+    },
+    {
+      question:
+        'For an ideal transformer with N₁ = 100 and N₂ = 500 turns, if V₁ = 12 V, what is V₂?',
+      options: [
+        '2.4 V',
+        '12 V',
+        '60 V',
+        '600 V',
+      ],
+      correctIndex: 2,
+      explanation:
+        'For an ideal transformer, V₂/V₁ = N₂/N₁ = 500/100 = 5. Therefore V₂ = 5 × 12 V = 60 V.',
+    },
+  ],
 };
 
 // ---------------------------------------------------------------------------
-// Challenges — 1 per module, 9 total
+// Challenges — 1 per module
 // ---------------------------------------------------------------------------
 
 export const moduleChallenges: Record<string, Challenge[]> = {
@@ -539,6 +587,21 @@ export const moduleChallenges: Record<string, Challenge[]> = {
         'Identify the Jones vector displayed for each state and verify it matches the theoretical prediction.',
       ],
       hint: 'Equal amplitudes + 90° phase → circle. Unequal amplitudes or any other phase → ellipse. 0° or 180° phase → line.',
+    },
+  ],
+
+  'magnetic-circuits': [
+    {
+      title: 'Air-Gap Inductance Explorer',
+      description:
+        'Investigate how an air gap affects the inductance and flux density of a toroid core.',
+      instructions: [
+        'Start with an iron core (μᵣ = 5000), N = 200 turns, and I = 1 A with no air gap. Note the inductance L.',
+        'Gradually increase the gap from 0% to 5% and observe how L changes.',
+        'Switch to ferrite core (μᵣ = 1000) and compare the gap sensitivity.',
+        'Predict: at what gap length does L drop to half its no-gap value? Verify with the simulation.',
+      ],
+      hint: 'Remember: total reluctance ℛ = ℛ_core + ℛ_gap. The gap reluctance ℛ_gap = l_gap/(μ₀A) dominates even for small gaps because μ₀ ≪ μ_core.',
     },
   ],
 };

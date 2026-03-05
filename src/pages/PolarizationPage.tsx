@@ -10,6 +10,7 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
+import { RealWorldHook } from '@/components/common/RealWorldHook';
 import { Layers } from 'lucide-react';
 import type { Equation } from '@/types';
 
@@ -311,6 +312,8 @@ export default function PolarizationPage() {
     <ModuleLayout
       moduleId="polarization"
       simulation={
+        <>
+        <RealWorldHook text="LCD screens work by rotating the polarization of light between two crossed polarizers. Without the physics in this section, there are no flat screens, no sunglasses, and no glare-reducing camera filters." />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
@@ -404,6 +407,7 @@ export default function PolarizationPage() {
             <HintBox>For Circular polarization, magnitudes must be equal (Ex = Ey) and phase difference must be \u00B190\u00B0.</HintBox>
           </ControlPanel>
         </div>
+        </>
       }
       theory={
         <div className="space-y-6">
