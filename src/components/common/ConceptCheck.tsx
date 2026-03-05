@@ -1,22 +1,34 @@
 import { useState } from 'react';
-import { CheckCircle, XCircle, HelpCircle } from 'lucide-react';
+import { CheckCircle, XCircle, HelpCircle, Lightbulb } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { useProgressStore } from '@/store/progressStore';
 import type { QuizQuestion } from '@/types';
 
+/** Props for the ConceptCheck component. */
 interface ConceptCheckProps {
+  /** The quiz question to display. */
   question: QuizQuestion;
+  /** Called when the student answers correctly. */
   onCorrect?: () => void;
+  /** Unique key for hint tracking (e.g. "moduleId:questionIndex"). */
+  hintKey?: string;
 }
 
 /**
  * Multiple-choice predict-then-reveal quiz component.
  * Students must commit to an answer before seeing the result.
+ * Supports 3-tier progressive hints after wrong answers.
  */
-export function ConceptCheck({ question, onCorrect }: ConceptCheckProps) {
+export function ConceptCheck({ question, onCorrect, hintKey }: ConceptCheckProps) {
   const [selected, setSelected] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
+  const [revealedHintTier, setRevealedHintTier] = useState(0);
+
+  const { recordHintUsage } = useProgressStore();
 
   const isCorrect = selected === question.correctIndex;
+  const hints = question.hints ?? [];
+  const sortedHints = [...hints].sort((a, b) => a.tier - b.tier);
 
   const handleSubmit = () => {
     if (selected === null) return;
@@ -30,6 +42,17 @@ export function ConceptCheck({ question, onCorrect }: ConceptCheckProps) {
     setSelected(null);
     setRevealed(false);
   };
+
+  const handleRevealHint = (tier: number) => {
+    setRevealedHintTier(tier);
+    if (hintKey) {
+      recordHintUsage(hintKey, tier);
+    }
+  };
+
+  // Find the next hint tier that can be unlocked
+  const nextHint = sortedHints.find(h => h.tier > revealedHintTier);
+  const visibleHints = sortedHints.filter(h => h.tier <= revealedHintTier);
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
@@ -106,6 +129,34 @@ export function ConceptCheck({ question, onCorrect }: ConceptCheckProps) {
           <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
             {question.explanation}
           </p>
+
+          {/* Layered hints — shown after wrong answer */}
+          {!isCorrect && sortedHints.length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+              {/* Already revealed hints */}
+              {visibleHints.map(hint => (
+                <div key={hint.tier} className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-800/50">
+                  <Lightbulb size={14} className="text-amber-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1">{hint.label}</p>
+                    <p className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">{hint.content}</p>
+                  </div>
+                </div>
+              ))}
+
+              {/* Button for next hint */}
+              {nextHint && (
+                <button
+                  onClick={() => handleRevealHint(nextHint.tier)}
+                  className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
+                >
+                  <Lightbulb size={12} />
+                  {revealedHintTier === 0 ? 'Need a hint?' : nextHint.label}
+                </button>
+              )}
+            </div>
+          )}
+
           <button
             onClick={handleReset}
             className="text-xs text-engineering-blue-600 dark:text-engineering-blue-400 hover:underline"

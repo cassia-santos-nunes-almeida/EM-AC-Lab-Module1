@@ -10,6 +10,7 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
+import { RealWorldHook } from '@/components/common/RealWorldHook';
 import { PhysicsChart } from '@/components/common/PhysicsChart';
 import type { EMWaveState } from '@/types';
 
@@ -33,8 +34,11 @@ export default function EMWavePage() {
   });
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const phasorSyncTimeRef = useRef<HTMLCanvasElement>(null);
+  const phasorSyncPhasorRef = useRef<HTMLCanvasElement>(null);
   const timeRef = useRef(0);
   const animationRef = useRef(0);
+  const phasorSyncAnimRef = useRef(0);
 
   useCanvasTouch(canvasRef);
 
@@ -602,6 +606,210 @@ export default function EMWavePage() {
     return () => cancelAnimationFrame(animationRef.current);
   }, [drawWave, state.isPlaying]);
 
+  // Phasor Sync view rendering
+  useEffect(() => {
+    if (viewMode !== WaveViewMode.VIEW_PHASOR_SYNC) return;
+    const render = () => {
+      const timeCvs = phasorSyncTimeRef.current;
+      const phasorCvs = phasorSyncPhasorRef.current;
+      if (!timeCvs || !phasorCvs) return;
+
+      const timeCtx = timeCvs.getContext('2d');
+      const phasorCtx = phasorCvs.getContext('2d');
+      if (!timeCtx || !phasorCtx) return;
+
+      // Size canvases to parent
+      if (timeCvs.parentElement) {
+        timeCvs.width = timeCvs.parentElement.clientWidth;
+        timeCvs.height = timeCvs.parentElement.clientHeight;
+      }
+      if (phasorCvs.parentElement) {
+        phasorCvs.width = phasorCvs.parentElement.clientWidth;
+        phasorCvs.height = phasorCvs.parentElement.clientHeight;
+      }
+
+      const t = timeRef.current;
+      const omega = 2 * Math.PI * state.frequency;
+      const angle = omega * t * 0.02 * state.speed;
+
+      // --- Time-domain canvas ---
+      const tw = timeCvs.width, th = timeCvs.height;
+      timeCtx.clearRect(0, 0, tw, th);
+      if (isDarkMode) { timeCtx.fillStyle = '#0f172a'; timeCtx.fillRect(0, 0, tw, th); }
+
+      const marginL = 50, marginR = 20, marginT = 30, marginB = 30;
+      const drawW = tw - marginL - marginR;
+      const midY = th / 2;
+
+      // Axis
+      timeCtx.strokeStyle = c.AXIS;
+      timeCtx.lineWidth = 1.5;
+      timeCtx.beginPath();
+      timeCtx.moveTo(marginL, midY);
+      timeCtx.lineTo(tw - marginR, midY);
+      timeCtx.stroke();
+      timeCtx.beginPath();
+      timeCtx.moveTo(marginL, marginT);
+      timeCtx.lineTo(marginL, th - marginB);
+      timeCtx.stroke();
+
+      // Labels
+      timeCtx.fillStyle = c.TEXT_MAIN;
+      timeCtx.font = '11px sans-serif';
+      timeCtx.textAlign = 'center';
+      timeCtx.fillText('t', tw - marginR + 10, midY + 4);
+      timeCtx.textAlign = 'right';
+      timeCtx.fillText('A', marginL - 8, marginT + 4);
+
+      // Draw sinusoid
+      const cycles = 3;
+      const amp = (midY - marginT - 10) * (state.amplitude / 100);
+      timeCtx.beginPath();
+      timeCtx.strokeStyle = c.E_FIELD;
+      timeCtx.lineWidth = 2.5;
+      for (let i = 0; i <= POINTS; i++) {
+        const frac = i / POINTS;
+        const x = marginL + frac * drawW;
+        const ph = frac * cycles * 2 * Math.PI - angle;
+        const y = midY - amp * Math.sin(ph);
+        if (i === 0) timeCtx.moveTo(x, y); else timeCtx.lineTo(x, y);
+      }
+      timeCtx.stroke();
+
+      // "Now" line — fixed at 30% of the width
+      const nowFrac = 0.3;
+      const nowX = marginL + nowFrac * drawW;
+      const nowPh = nowFrac * cycles * 2 * Math.PI - angle;
+      const nowY = midY - amp * Math.sin(nowPh);
+
+      timeCtx.setLineDash([4, 4]);
+      timeCtx.strokeStyle = '#f59e0b';
+      timeCtx.lineWidth = 1.5;
+      timeCtx.beginPath();
+      timeCtx.moveTo(nowX, marginT);
+      timeCtx.lineTo(nowX, th - marginB);
+      timeCtx.stroke();
+      timeCtx.setLineDash([]);
+
+      // Dot at current position
+      timeCtx.beginPath();
+      timeCtx.arc(nowX, nowY, 6, 0, Math.PI * 2);
+      timeCtx.fillStyle = '#f59e0b';
+      timeCtx.fill();
+
+      // Label "now"
+      timeCtx.fillStyle = '#f59e0b';
+      timeCtx.font = '10px sans-serif';
+      timeCtx.textAlign = 'center';
+      timeCtx.fillText('now', nowX, th - marginB + 14);
+
+      // --- Phasor canvas ---
+      const pw = phasorCvs.width, ph2 = phasorCvs.height;
+      phasorCtx.clearRect(0, 0, pw, ph2);
+      if (isDarkMode) { phasorCtx.fillStyle = '#0f172a'; phasorCtx.fillRect(0, 0, pw, ph2); }
+
+      const pcx = pw / 2, pcy = ph2 / 2;
+      const pRadius = Math.min(pcx, pcy) - 40;
+      const pAmp = pRadius * (state.amplitude / 100);
+
+      // Circle outline
+      phasorCtx.beginPath();
+      phasorCtx.arc(pcx, pcy, pAmp, 0, Math.PI * 2);
+      phasorCtx.strokeStyle = isDarkMode ? '#334155' : '#e2e8f0';
+      phasorCtx.lineWidth = 1;
+      phasorCtx.stroke();
+
+      // Cross axes
+      phasorCtx.strokeStyle = c.AXIS;
+      phasorCtx.lineWidth = 1;
+      phasorCtx.beginPath();
+      phasorCtx.moveTo(pcx - pRadius - 10, pcy);
+      phasorCtx.lineTo(pcx + pRadius + 10, pcy);
+      phasorCtx.stroke();
+      phasorCtx.beginPath();
+      phasorCtx.moveTo(pcx, pcy - pRadius - 10);
+      phasorCtx.lineTo(pcx, pcy + pRadius + 10);
+      phasorCtx.stroke();
+
+      // Axis labels
+      phasorCtx.fillStyle = c.TEXT_MAIN;
+      phasorCtx.font = '10px sans-serif';
+      phasorCtx.textAlign = 'center';
+      phasorCtx.fillText('Re', pcx + pRadius + 20, pcy + 4);
+      phasorCtx.fillText('Im', pcx, pcy - pRadius - 16);
+
+      // The phasor angle matches the "now" phase
+      const phasorAngle = nowPh;
+
+      // Phasor arrow
+      const tipX = pcx + pAmp * Math.cos(phasorAngle);
+      const tipY = pcy - pAmp * Math.sin(phasorAngle);
+
+      phasorCtx.beginPath();
+      phasorCtx.moveTo(pcx, pcy);
+      phasorCtx.lineTo(tipX, tipY);
+      phasorCtx.strokeStyle = c.E_FIELD;
+      phasorCtx.lineWidth = 3;
+      phasorCtx.stroke();
+
+      // Arrowhead
+      const arrAngle = Math.atan2(pcy - tipY, tipX - pcx);
+      phasorCtx.save();
+      phasorCtx.translate(tipX, tipY);
+      phasorCtx.rotate(-arrAngle);
+      phasorCtx.fillStyle = c.E_FIELD;
+      phasorCtx.beginPath();
+      phasorCtx.moveTo(8, 0);
+      phasorCtx.lineTo(-4, -5);
+      phasorCtx.lineTo(-4, 5);
+      phasorCtx.fill();
+      phasorCtx.restore();
+
+      // Dot at tip
+      phasorCtx.beginPath();
+      phasorCtx.arc(tipX, tipY, 5, 0, Math.PI * 2);
+      phasorCtx.fillStyle = '#f59e0b';
+      phasorCtx.fill();
+
+      // Projection line to show relationship
+      phasorCtx.setLineDash([3, 3]);
+      phasorCtx.strokeStyle = '#f59e0b';
+      phasorCtx.lineWidth = 1;
+      phasorCtx.beginPath();
+      phasorCtx.moveTo(tipX, tipY);
+      phasorCtx.lineTo(pcx - pRadius - 10, tipY);
+      phasorCtx.stroke();
+      phasorCtx.setLineDash([]);
+
+      // Angle arc
+      if (pAmp > 10) {
+        const arcR = Math.min(30, pAmp * 0.4);
+        phasorCtx.beginPath();
+        phasorCtx.arc(pcx, pcy, arcR, -phasorAngle, 0, phasorAngle > 0);
+        phasorCtx.strokeStyle = isDarkMode ? '#94a3b8' : '#64748b';
+        phasorCtx.lineWidth = 1;
+        phasorCtx.stroke();
+
+        const angleDeg = ((phasorAngle % (2 * Math.PI)) * 180 / Math.PI).toFixed(0);
+        phasorCtx.fillStyle = isDarkMode ? '#94a3b8' : '#64748b';
+        phasorCtx.font = '10px sans-serif';
+        phasorCtx.textAlign = 'left';
+        phasorCtx.fillText(`${angleDeg}°`, pcx + arcR + 4, pcy - 4);
+      }
+
+      // CCW rotation indicator
+      phasorCtx.fillStyle = isDarkMode ? '#64748b' : '#94a3b8';
+      phasorCtx.font = '9px sans-serif';
+      phasorCtx.textAlign = 'center';
+      phasorCtx.fillText('↺ CCW', pcx, ph2 - 10);
+
+      if (state.isPlaying) timeRef.current += 1;
+      phasorSyncAnimRef.current = requestAnimationFrame(render);
+    };
+    render();
+    return () => cancelAnimationFrame(phasorSyncAnimRef.current);
+  }, [viewMode, state, c, isDarkMode]);
+
   // Phasor drag handlers
   const getCanvasPos = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -680,11 +888,13 @@ export default function EMWavePage() {
     <ModuleLayout
       moduleId="em-wave"
       simulation={
+        <>
+        <RealWorldHook text="The 2.4 GHz signal from your WiFi router has a wavelength of 12.5 cm — roughly the width of a laptop. When the wavelength matches physical dimensions, wave behavior dominates. That is exactly what this section is about." />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 flex-grow relative min-h-[350px]">
               <div className="absolute top-4 left-4 z-10 flex gap-2">
-                {[WaveViewMode.VIEW_2D, WaveViewMode.VIEW_3D, WaveViewMode.VIEW_VI].map((m) => (
+                {[WaveViewMode.VIEW_2D, WaveViewMode.VIEW_3D, WaveViewMode.VIEW_VI, WaveViewMode.VIEW_PHASOR_SYNC].map((m) => (
                   <button
                     key={m}
                     onClick={() => setViewMode(m)}
@@ -698,17 +908,34 @@ export default function EMWavePage() {
                   </button>
                 ))}
               </div>
-              <canvas
-                ref={canvasRef}
-                className="w-full h-full"
-                role="img"
-                aria-label="Electromagnetic wave simulation showing E and B field oscillations"
-                onMouseDown={handlePhasorMouseDown}
-                onMouseMove={handlePhasorMouseMove}
-                onMouseUp={handlePhasorMouseUp}
-                onMouseLeave={handlePhasorMouseUp}
-                style={{ cursor: viewMode === WaveViewMode.VIEW_VI ? 'crosshair' : undefined }}
-              />
+              {viewMode === WaveViewMode.VIEW_PHASOR_SYNC ? (
+                <div className="flex flex-col sm:flex-row gap-2 w-full h-full pt-10">
+                  <div className="flex-1 flex flex-col min-h-[200px]">
+                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 text-center mb-1">Time domain</p>
+                    <div className="flex-1 relative">
+                      <canvas ref={phasorSyncTimeRef} className="w-full h-full" role="img" aria-label="Time-domain sinusoid" />
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col min-h-[200px]">
+                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 text-center mb-1">Phasor (rotating)</p>
+                    <div className="flex-1 relative">
+                      <canvas ref={phasorSyncPhasorRef} className="w-full h-full" role="img" aria-label="Rotating phasor diagram" />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <canvas
+                  ref={canvasRef}
+                  className="w-full h-full"
+                  role="img"
+                  aria-label="Electromagnetic wave simulation showing E and B field oscillations"
+                  onMouseDown={handlePhasorMouseDown}
+                  onMouseMove={handlePhasorMouseMove}
+                  onMouseUp={handlePhasorMouseUp}
+                  onMouseLeave={handlePhasorMouseUp}
+                  style={{ cursor: viewMode === WaveViewMode.VIEW_VI ? 'crosshair' : undefined }}
+                />
+              )}
             </div>
             {viewMode === WaveViewMode.VIEW_VI && (
               <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-2 text-xs text-amber-800 dark:text-amber-300">
@@ -813,6 +1040,7 @@ export default function EMWavePage() {
             </ControlPanel>
           </div>
         </div>
+        </>
       }
       theory={
         <div className="space-y-6">

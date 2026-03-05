@@ -8,6 +8,8 @@ import { EquationBox } from '@/components/common/EquationBox';
 import { HintBox } from '@/components/common/HintBox';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
+import { RealWorldHook } from '@/components/common/RealWorldHook';
+import { PredictionGate } from '@/components/common/PredictionGate';
 
 export default function LenzPage() {
   const { isDarkMode } = useProgressStore();
@@ -287,6 +289,17 @@ export default function LenzPage() {
     <ModuleLayout
       moduleId="lenz"
       simulation={
+        <>
+        <RealWorldHook text="Induction cooktops heat the pan but not the surface. Eddy currents induced by a changing field generate heat only in the conducting pan — Lenz's Law determines why the direction of those currents produces heating, not repulsion." />
+        <PredictionGate
+          gateId="lenz-reverse-direction"
+          question="If the magnet is pulled away from the coil instead of pushed toward it, how does the induced current direction change?"
+          options={[
+            { label: 'Reverses direction', correct: true, explanation: 'When the magnet is pulled away, the flux through the coil decreases. To oppose this decrease, the induced current reverses — it now flows in the direction that tries to maintain the original flux, attracting the magnet back.' },
+            { label: 'Stays the same', correct: false, explanation: 'The current direction depends on whether flux is increasing or decreasing. Pulling the magnet away reverses the change in flux, so the current must reverse too.' },
+            { label: 'Stops flowing', correct: false, explanation: 'Current flows whenever the flux is changing. Pulling the magnet away still changes the flux — just in the opposite direction — so current still flows.' },
+          ]}
+        >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div
@@ -344,6 +357,8 @@ export default function LenzPage() {
             <HintBox>Nature hates change! Move magnet closer -&gt; Coil repels. Move away -&gt; Coil attracts.</HintBox>
           </ControlPanel>
         </div>
+        </PredictionGate>
+        </>
       }
       theory={
         <div className="space-y-6">

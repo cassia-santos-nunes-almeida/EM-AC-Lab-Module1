@@ -10,6 +10,8 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
+import { RealWorldHook } from '@/components/common/RealWorldHook';
+import { PredictionGate } from '@/components/common/PredictionGate';
 
 interface ParticleState {
   x: number;
@@ -296,6 +298,18 @@ export default function LorentzPage() {
     <ModuleLayout
       moduleId="lorentz"
       simulation={
+        <>
+        <RealWorldHook text="Particle accelerators like CERN steer proton beams using magnetic fields. A proton travelling at 99.9999991% of the speed of light is bent into a circle by this force — the same one you're about to calculate." />
+        <PredictionGate
+          gateId="lorentz-force-direction"
+          question="A positive charge moves to the right in a magnetic field pointing out of the screen. Which direction is the magnetic force?"
+          options={[
+            { label: 'Up', correct: true, explanation: 'Using the right-hand rule: point fingers in the velocity direction (right), curl them toward B (out of screen). Your thumb points up — that is the direction of F = qv × B.' },
+            { label: 'Down', correct: false, explanation: 'The right-hand rule gives the opposite direction. Point fingers right (velocity), curl toward the screen (B direction) — your thumb points up, not down.' },
+            { label: 'Left', correct: false, explanation: 'The force is perpendicular to both v and B. Since v is horizontal and B is out of the screen, the force must be vertical, not horizontal.' },
+            { label: 'Right', correct: false, explanation: 'The force is always perpendicular to the velocity. Since the charge moves right, the force cannot also point right.' },
+          ]}
+        >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div
@@ -333,6 +347,8 @@ export default function LorentzPage() {
             </HintBox>
           </ControlPanel>
         </div>
+        </PredictionGate>
+        </>
       }
       theory={
         <div className="space-y-6">

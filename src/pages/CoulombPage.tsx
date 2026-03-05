@@ -9,6 +9,7 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
+import { RealWorldHook } from '@/components/common/RealWorldHook';
 import { PhysicsChart } from '@/components/common/PhysicsChart';
 import type { Charge } from '@/types';
 
@@ -379,6 +380,8 @@ export default function CoulombPage() {
     <ModuleLayout
       moduleId="coulomb"
       simulation={
+        <>
+        <RealWorldHook text="The force between charges on a DNA strand is strong enough to hold the molecule together yet weak enough for enzymes to unzip it. The same inverse-square law governs both." />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div
@@ -469,6 +472,7 @@ export default function CoulombPage() {
             </HintBox>
           </ControlPanel>
         </div>
+        </>
       }
       theory={
         <div className="space-y-6">

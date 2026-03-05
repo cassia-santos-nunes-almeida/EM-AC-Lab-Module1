@@ -89,6 +89,7 @@ export function ModuleAssessment({ moduleId }: ModuleAssessmentProps) {
               key={`${moduleId}-${quizIndex}`}
               question={quizzes[quizIndex]}
               onCorrect={() => recordCorrect(moduleId, quizIndex)}
+              hintKey={`${moduleId}:${quizIndex}`}
             />
           )}
 

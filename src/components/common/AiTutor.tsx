@@ -5,18 +5,20 @@ import type { ChatMessage } from '@/types';
 
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
-const SYSTEM_PROMPT = `You are an expert physics tutor specializing in Electromagnetism and AC Circuit Analysis for engineering students. You are embedded in the EM&AC Lab, an interactive simulation tool.
+const SYSTEM_PROMPT = `You are a Socratic physics tutor embedded in the EM&AC Lab, an interactive simulation tool for Electromagnetism and AC Circuit Analysis.
 
-Your role:
-- Explain electromagnetic concepts clearly and concisely
-- Help students understand Maxwell's equations, Coulomb's law, Gauss's law, Ampère's law, Lorentz force, Faraday's law, Lenz's law, EM waves, and polarization
-- Use mathematical notation when helpful (use LaTeX format)
-- Reference the simulations available in the app when relevant
-- Encourage students to experiment with the interactive tools
-- Keep responses focused and educational
-- If you don't know something, say so honestly
+ABSOLUTE RULE — Never give a direct numerical answer or solve a problem for the student. Instead, guide them to discover the answer themselves.
 
-Keep responses concise (2-4 paragraphs max). Use bullet points for lists.`;
+Your method:
+1. When a student asks a question, respond with a focused counter-question that isolates the key concept they need.
+2. Acknowledge correct reasoning with brief encouragement, then ask the next logical question to deepen understanding.
+3. When a student is stuck, offer a small conceptual hint (not a procedural one) and follow up with another question.
+4. If a student asks you to "just tell me the answer", kindly explain that working through it themselves builds stronger understanding, then offer a simpler sub-question to get them started.
+5. Reference the interactive simulations in the app — suggest specific parameters to try (e.g., "What happens in the Coulomb simulation when you drag a charge closer?").
+
+Topics you cover: Maxwell's equations, Coulomb's law, Gauss's law, Ampère's law, Lorentz force, Faraday's law, Lenz's law, EM waves, polarization, and AC circuits.
+
+Use LaTeX notation for math when helpful. Keep responses concise (2-3 short paragraphs max). Use bullet points sparingly.`;
 
 interface AiTutorProps {
   moduleContext?: string;
@@ -125,7 +127,7 @@ export function AiTutor({ moduleContext }: AiTutorProps) {
       <button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-6 right-6 z-50 p-4 bg-engineering-blue-600 hover:bg-engineering-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
-        aria-label="Open AI Tutor"
+        aria-label="Open Think it Through"
       >
         <MessageCircle size={24} />
       </button>
@@ -139,7 +141,7 @@ export function AiTutor({ moduleContext }: AiTutorProps) {
         <div className="flex items-center gap-2">
           <Bot size={20} />
           <div>
-            <h3 className="text-sm font-bold">AI Tutor</h3>
+            <h3 className="text-sm font-bold">Think it Through</h3>
             <p className="text-[10px] opacity-80">Powered by Google Gemini</p>
           </div>
         </div>
@@ -154,7 +156,7 @@ export function AiTutor({ moduleContext }: AiTutorProps) {
           <button
             onClick={() => setIsOpen(false)}
             className="p-1.5 rounded-lg hover:bg-white/20 transition-colors"
-            aria-label="Close AI Tutor"
+            aria-label="Close Think it Through"
           >
             <X size={16} />
           </button>
@@ -196,7 +198,7 @@ export function AiTutor({ moduleContext }: AiTutorProps) {
           <div className="text-center py-8 space-y-3">
             <Bot size={32} className="mx-auto text-slate-300 dark:text-slate-600" />
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              Hi! I'm your AI physics tutor. Ask me anything about electromagnetics or AC circuits.
+              Hi! I won't give you answers directly — instead I'll ask questions that help you figure it out yourself. Ready?
             </p>
             <div className="flex flex-wrap gap-1.5 justify-center">
               {[

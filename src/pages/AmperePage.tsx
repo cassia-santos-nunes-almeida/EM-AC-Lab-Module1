@@ -9,6 +9,7 @@ import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
+import { RealWorldHook } from '@/components/common/RealWorldHook';
 
 export default function AmperePage() {
   const { isDarkMode } = useProgressStore();
@@ -251,6 +252,8 @@ export default function AmperePage() {
     <ModuleLayout
       moduleId="ampere"
       simulation={
+        <>
+        <RealWorldHook text="MRI machines generate fields of 1.5–3 Tesla using superconducting coils carrying tens of thousands of amperes. The field inside is calculated exactly as you will do here." />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div
@@ -295,6 +298,7 @@ export default function AmperePage() {
             </HintBox>
           </ControlPanel>
         </div>
+        </>
       }
       theory={
         <div className="space-y-6">

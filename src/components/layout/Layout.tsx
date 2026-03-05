@@ -12,7 +12,7 @@ export function Layout() {
   const isOnline = useOnlineStatus();
   const location = useLocation();
 
-  // Determine current module for AI Tutor context
+  // Determine current module for Think it Through context
   const currentModule = MODULES.find((m) => m.path === location.pathname);
 
   // Scroll to top on route change
@@ -70,7 +70,7 @@ export function Layout() {
         </main>
       </div>
 
-      {/* AI Tutor FAB */}
+      {/* Think it Through FAB */}
       <AiTutor moduleContext={currentModule?.label} />
     </div>
   );
