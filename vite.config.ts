@@ -18,6 +18,19 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
+        navigateFallback: '/index.html',
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: { cacheName: 'google-fonts', expiration: { maxEntries: 10, maxAgeSeconds: 365 * 24 * 60 * 60 } },
+          },
+          {
+            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/.*/i,
+            handler: 'CacheFirst',
+            options: { cacheName: 'cdn-cache', expiration: { maxEntries: 20, maxAgeSeconds: 30 * 24 * 60 * 60 } },
+          },
+        ],
       },
       manifest: {
         name: 'EM & AC Lab',
@@ -26,9 +39,11 @@ export default defineConfig({
         theme_color: '#2563eb',
         background_color: '#f8fafc',
         display: 'standalone',
+        orientation: 'any',
+        categories: ['education', 'utilities'],
         icons: [
-          { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/pwa-icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+          { src: '/pwa-maskable.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },
         ],
       },
     }),
