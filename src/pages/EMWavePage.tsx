@@ -584,8 +584,9 @@ export default function EMWavePage() {
     }
   }, [state, viewMode, drawVIView, drawAxisSystemLocal, draw3DAxisArrows, c, isDarkMode]);
 
-  // Animation loop
+  // Animation loop (for 2D, 3D, V-I modes — skipped during Phasor Sync)
   useEffect(() => {
+    if (viewMode === WaveViewMode.VIEW_PHASOR_SYNC) return;
     const render = () => {
       const canvas = canvasRef.current;
       if (canvas) {
@@ -604,7 +605,7 @@ export default function EMWavePage() {
     };
     render();
     return () => cancelAnimationFrame(animationRef.current);
-  }, [drawWave, state.isPlaying]);
+  }, [drawWave, state.isPlaying, viewMode]);
 
   // Phasor Sync view rendering
   useEffect(() => {
