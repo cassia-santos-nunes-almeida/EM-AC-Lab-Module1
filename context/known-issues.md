@@ -12,25 +12,21 @@
 - **Description**: Gemini API key is stored in localStorage in plain text. Adequate for a local educational tool but not production-grade.
 - **Mitigation**: Key never leaves the browser. Users are informed it's stored locally.
 
-### Pre-existing Lint Warnings (3 errors, 2 warnings)
-- **Severity**: Low
-- **Files affected**:
-  - `MaxwellPage.tsx:85` — `_t` is defined but never used (`@typescript-eslint/no-unused-vars`)
-  - `EMWavePage.tsx:536` — Missing `isDarkMode` in useCallback dependency array
-  - `EMWavePage.tsx` — Could not preserve existing manual memoization warning
-  - `LorentzPage.tsx:47` — Missing `handleReset` in useEffect dependency array
-- **Note**: These are all pre-existing, not introduced by the tab refactoring.
-
 ### KaTeX Font Warnings at Build Time
 - **Severity**: Low
 - **Description**: Vite reports "fonts/KaTeX_*.woff2 didn't resolve at build time, will remain unchanged to be resolved at runtime" for all KaTeX font files. Fonts still work at runtime.
 - **Root cause**: KaTeX CSS references relative font paths that Vite can't resolve during bundling.
 
+### Partial 3-Tier Hint Coverage
+- **Severity**: Low
+- **Description**: Only Maxwell Q1 and Magnetic Circuits questions have 3-tier hints. The remaining 24+ quiz questions only have the standard explanation on correct answer.
+- **Plan**: Progressively add hint tiers to all questions in future sprints.
+
 ## Tech Debt
 
 ### Test Coverage
-- No tests written yet. Vitest + testing-library are installed and configured.
-- Priority: Add smoke tests for shared components, then page render tests.
+- 60 tests passing (shared components + page render tests).
+- Could expand: integration tests for PredictionGate flow, ConceptCheck hint progression, Phasor Sync animation.
 
 ### recharts Not Yet Used
 - recharts is installed but no charts are currently rendered. Could be used for:
@@ -42,7 +38,23 @@
 - PWA manifest references `pwa-192x192.png` and `pwa-512x512.png` but these don't exist in `/public/`.
 - Need to generate app icons.
 
-## Resolved Issues (this sprint)
+### Pre-existing Lint Warnings
+- **Files affected**:
+  - `MaxwellPage.tsx:85` — `_t` is defined but never used
+  - `EMWavePage.tsx` — Missing `isDarkMode` in useCallback dependency array
+  - `LorentzPage.tsx:47` — Missing `handleReset` in useEffect dependency array
+- **Note**: Pre-existing from earlier sprints, not introduced by Phase 2 work.
+
+## Resolved Issues
+
+### ~~Double Time Increment in Phasor Sync~~ ✅ (2026-03-05)
+- Both the main animation loop and the Phasor Sync loop were incrementing `timeRef.current`, causing 2x speed. Fixed by guarding main loop with `if (viewMode === VIEW_PHASOR_SYNC) return;`.
+
+### ~~Averaged H in Magnetic Circuits~~ ✅ (2026-03-05)
+- Was computing single H = MMF/l which is wrong for composite circuits. Fixed to show H_core = B/(μ₀μᵣ) and H_gap = B/μ₀ separately.
+
+### ~~Misleading Module 2 Link~~ ✅ (2026-03-05)
+- Button said "Continue to Module 2" but linked to `/` (Overview). Fixed to link to actual Module 2 at `https://em-ac-lab-module.vercel.app/`.
 
 ### ~~ConceptCheck/ChallengeCard Not Rendered~~ ✅
 - Fixed: Created `ModuleAssessment` wrapper, integrated into all 9 pages via `ModuleLayout`.

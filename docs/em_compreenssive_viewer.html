@@ -55,9 +55,10 @@
             LENZ: 'LENZ',
             EM_WAVE: 'EM_WAVE',
             POLARIZATION: 'POLARIZATION',
+            MAGNETIC_CIRCUITS: 'MAGNETIC_CIRCUITS',
         };
 
-        const WaveViewMode = { VIEW_2D: '2D', VIEW_3D: '3D', VIEW_VI: 'VI' };
+        const WaveViewMode = { VIEW_2D: '2D', VIEW_3D: '3D', VIEW_VI: 'VI', VIEW_PHASOR_SYNC: 'Phasor Sync' };
 
         const COLORS = {
             E_FIELD: '#dc2626',
@@ -90,7 +91,8 @@
                 Orbit: <g><circle cx="12" cy="12" r="3"/><path d="M2.5 12a9.5 9.5 0 0 1 19 0"/><path d="M12 2.5a9.5 9.5 0 0 1 0 19"/></g>,
                 Lightbulb: <g><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-1 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></g>,
                 Home: <g><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></g>,
-                AlertTriangle: <g><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></g>
+                AlertTriangle: <g><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></g>,
+                Cpu: <g><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></g>
             };
             return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{icons[name] || null}</svg>;
         };
@@ -113,6 +115,7 @@
         const Lightbulb = (p) => <Icon name="Lightbulb" {...p} />;
         const Home = (p) => <Icon name="Home" {...p} />;
         const AlertTriangle = (p) => <Icon name="AlertTriangle" {...p} />;
+        const Cpu = (p) => <Icon name="Cpu" {...p} />;
 
         // --- 3. SHARED COMPONENTS ---
         const Slider = ({ label, value, min, max, step = 1, unit = '', onChange, color = 'bg-blue-600' }) => {
@@ -206,6 +209,50 @@
             </div>
         );
 
+        const RealWorldHook = ({ text }) => (
+            <div className="flex items-start gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50/80 mb-4">
+                <div className="mt-0.5 shrink-0 text-amber-500"><Lightbulb size={20} /></div>
+                <p className="text-sm text-amber-900 leading-relaxed">{text}</p>
+            </div>
+        );
+
+        const PredictionGate = ({ question, options, children }) => {
+            const [chosen, setChosen] = useState(null);
+            const [revealed, setRevealed] = useState(false);
+            const handleSelect = (index) => {
+                if (chosen !== null) return;
+                setChosen(index);
+                setTimeout(() => setRevealed(true), 300);
+            };
+            if (revealed) {
+                const opt = options[chosen];
+                return (
+                    <div>
+                        <div className={`flex items-center gap-2 p-3 rounded-lg mb-4 border ${opt.correct ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+                            <span className="text-sm font-semibold">{opt.correct ? '✓ Correct!' : '✗ Not quite.'}</span>
+                            <span className="text-xs text-slate-600">{opt.explanation}</span>
+                        </div>
+                        {children}
+                    </div>
+                );
+            }
+            return (
+                <div className="flex flex-col items-center justify-center min-h-[400px] p-8 bg-gradient-to-b from-slate-50 to-white rounded-xl border border-slate-200">
+                    <Lightbulb size={32} className="text-amber-500 mb-4" />
+                    <h3 className="text-lg font-bold text-slate-800 mb-2 text-center">Predict First!</h3>
+                    <p className="text-sm text-slate-600 mb-6 text-center max-w-lg">{question}</p>
+                    <div className="grid gap-3 w-full max-w-md">
+                        {options.map((opt, i) => (
+                            <button key={i} onClick={() => handleSelect(i)}
+                                className={`px-4 py-3 rounded-lg border text-sm font-medium transition-all ${chosen === i ? (opt.correct ? 'bg-green-100 border-green-400' : 'bg-red-100 border-red-400') : 'bg-white border-slate-200 hover:border-indigo-400 hover:shadow'}`}>
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
         // --- 4. TABS ---
         const OverviewTab = ({ onNavigate }) => {
             const ModuleCard = ({ title, desc, icon, tab }) => (
@@ -243,13 +290,15 @@
                         <div className="lg:col-span-8 xl:col-span-9">
                             <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2"><BookOpen size={20} className="text-slate-400"/> Learning Modules</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                <ModuleCard tab={Tab.MAXWELL} title="Maxwell's Eq." icon={<BookOpen size={28}/>} desc="A comparative overview of the four fundamental equations of electromagnetism." />
+                                <ModuleCard tab={Tab.GAUSS} title="Gauss's Law" icon={<Orbit size={28}/>} desc="Explore electric and magnetic flux through Gaussian surfaces." />
                                 <ModuleCard tab={Tab.COULOMB} title="Coulomb's Law" icon={<CircleDot size={28}/>} desc="Visualize electric fields and forces between multiple charges using the superposition principle." />
                                 <ModuleCard tab={Tab.AMPERE} title="Ampère's Law" icon={<Activity size={28}/>} desc="Explore magnetic fields generated by currents and the Right-Hand Grip Rule." />
                                 <ModuleCard tab={Tab.LORENTZ} title="Lorentz Force" icon={<Move size={28}/>} desc="Simulate charged particle motion in magnetic fields (Cyclotron motion)." />
                                 <ModuleCard tab={Tab.FARADAY} title="Faraday & Lenz" icon={<Zap size={28}/>} desc="Observe electromagnetic induction and how nature opposes flux changes." />
-                                <ModuleCard tab={Tab.MAXWELL} title="Maxwell's Eq." icon={<BookOpen size={28}/>} desc="A comparative overview of the four fundamental equations of electromagnetism." />
                                 <ModuleCard tab={Tab.EM_WAVE} title="EM Waves" icon={<Radio size={28}/>} desc="Analyze wave propagation, E/B field relationships, and AC power in circuits." />
                                 <ModuleCard tab={Tab.POLARIZATION} title="Polarization" icon={<Layers size={28}/>} desc="Understand Linear, Circular, and Elliptical polarization states." />
+                                <ModuleCard tab={Tab.MAGNETIC_CIRCUITS} title="Magnetic Circuits" icon={<Cpu size={28}/>} desc="From fields to devices — flux, reluctance, inductance, and the bridge to AC machines." />
                             </div>
                         </div>
 
@@ -295,6 +344,19 @@
                     </div>
                 </div>
             );
+        };
+
+        const REAL_WORLD_HOOKS = {
+            maxwell: "Every wireless device you use — from Wi-Fi routers to MRI machines — operates on principles captured by Maxwell's four equations, the complete description of electromagnetism.",
+            gauss: "Gauss's Law explains why a Faraday cage blocks phone signals and why lightning doesn't harm passengers inside a car — the electric field inside a closed conductor is zero.",
+            coulomb: "Electrostatic precipitators in power plants use Coulomb forces to remove 99% of particulate pollution from exhaust gases, cleaning the air for millions of people.",
+            ampere: "Ampère's Law is the basis of every electromagnet — from junkyard cranes lifting cars to the superconducting magnets in MRI scanners producing fields 60,000× stronger than Earth's.",
+            lorentz: "The Lorentz force steers charged particles in cyclotrons for cancer therapy, bends electron beams in old CRT televisions, and confines plasma in experimental fusion reactors.",
+            faraday: "Every power plant on Earth — coal, gas, nuclear, wind, hydro — generates electricity through Faraday's Law: spinning a coil in a magnetic field to induce voltage.",
+            lenz: "Lenz's Law is why regenerative braking works in electric vehicles — the opposing EMF converts kinetic energy back into electrical energy, extending range by up to 30%.",
+            emWave: "The EM wave spectrum spans from radio waves (km wavelength) used for broadcasting, through visible light (nm), to gamma rays used in medical imaging and cancer treatment.",
+            polarization: "Polarization isn't just physics theory — it's in your sunglasses (blocking glare), 3D cinema (separating left/right eye images), and LCD screens (controlling light pixel by pixel).",
+            magneticCircuits: "Transformers, electric motors, and inductors all rely on magnetic circuits. Understanding reluctance and flux paths is essential for designing efficient electrical machines."
         };
 
         const CoulombsTab = () => {
@@ -443,6 +505,8 @@
             };
 
             return (
+                <div>
+                <RealWorldHook text={REAL_WORLD_HOOKS.coulomb} />
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                     <div className="lg:col-span-2 flex flex-col gap-4">
                         <div className="bg-white rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex-grow min-h-[400px] cursor-crosshair">
@@ -469,6 +533,7 @@
                             </div>
                         </div>
                     </ControlPanel>
+                </div>
                 </div>
             );
         };
@@ -549,6 +614,8 @@
                 : [{ label: 'Gauss Law (B)', math: '\\Phi_B = \\oint \\vec{B} \\cdot d\\vec{A} = 0', color: 'text-blue-600' }, { label: 'Result', math: '\\text{Flux In} = \\text{Flux Out}' }];
 
             return (
+                <div>
+                <RealWorldHook text={REAL_WORLD_HOOKS.gauss} />
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                     <div className="lg:col-span-2 flex flex-col gap-4">
                         <div className="bg-white rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
@@ -579,6 +646,7 @@
                             </div>
                         </div>
                     </ControlPanel>
+                </div>
                 </div>
             );
         };
@@ -623,6 +691,8 @@
                 return () => cancelAnimationFrame(animationRef.current);
             }, [current]);
             return (
+                <div>
+                <RealWorldHook text={REAL_WORLD_HOOKS.ampere} />
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                     <div className="lg:col-span-2 flex flex-col gap-4">
                         <div className="bg-white rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
@@ -636,6 +706,7 @@
                         <HintBox>Reverse the current direction to see the field lines switch between Clockwise and Counter-Clockwise (Right-Hand Grip Rule).</HintBox>
                         <div className="mt-8 p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm space-y-3"><div className="flex items-center gap-2 text-slate-600 border-b border-slate-200 pb-2"><Info size={16} /><h4 className="font-bold">Theory Guide</h4></div><ul className="list-disc pl-4 space-y-1 text-xs text-slate-600"><li><strong>Right-Hand Grip Rule:</strong> Point thumb in I direction. Fingers curl in B direction.</li><li><strong>Field Strength:</strong> B is proportional to Current (<LatexRenderer latex="I" />) and inversely proportional to radius (<LatexRenderer latex="r" />). Field strength drops as <LatexRenderer latex="1/r" />.</li></ul></div>
                     </ControlPanel>
+                </div>
                 </div>
             );
         };
@@ -679,6 +750,17 @@
                 return () => cancelAnimationFrame(animationRef.current);
             }, [velocity, bField, charge, mass]);
             return (
+                <div>
+                <RealWorldHook text={REAL_WORLD_HOOKS.lorentz} />
+                <PredictionGate
+                    question="A positive charge moves to the right in a magnetic field pointing into the page. Which way will the force act?"
+                    options={[
+                        { label: 'Upward (toward top of screen)', correct: true, explanation: 'Correct! By the right-hand rule: v (right) × B (into page) = F (upward) for a positive charge.' },
+                        { label: 'Downward (toward bottom)', correct: false, explanation: 'Try the right-hand rule: point fingers in the velocity direction, curl toward B.' },
+                        { label: 'Into the page (same as B)', correct: false, explanation: 'The Lorentz force is always perpendicular to both v and B.' },
+                        { label: 'To the left (opposite to v)', correct: false, explanation: 'The force is perpendicular to velocity, not opposite to it.' }
+                    ]}
+                >
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                     <div className="lg:col-span-2 flex flex-col gap-4">
                         <div className="bg-white rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex-grow min-h-[400px]"><canvas ref={canvasRef} className="w-full h-full block" /></div>
@@ -699,6 +781,8 @@
                             </div>
                         </div>
                     </ControlPanel>
+                </div>
+                </PredictionGate>
                 </div>
             );
         };
@@ -735,6 +819,17 @@
                 return () => cancelAnimationFrame(animationRef.current);
             }, [isPlaying, rate, loops]);
             return (
+                <div>
+                <RealWorldHook text={REAL_WORLD_HOOKS.faraday} />
+                <PredictionGate
+                    question="A magnetic field through a coil is increasing. What direction will the induced current flow?"
+                    options={[
+                        { label: 'Direction that opposes the increase (creates opposing B)', correct: true, explanation: 'Correct! By Lenz\'s Law, the induced current opposes the change in flux that created it.' },
+                        { label: 'Same direction as the external B field', correct: false, explanation: 'That would reinforce the change — Lenz\'s Law says nature opposes change.' },
+                        { label: 'No current — only voltage is induced', correct: false, explanation: 'If the coil is a closed loop, the induced EMF drives a current.' },
+                        { label: 'Alternating direction rapidly', correct: false, explanation: 'The direction is determined by whether flux is increasing or decreasing.' }
+                    ]}
+                >
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                     <div className="lg:col-span-2 flex flex-col gap-4">
                         <div className="bg-white rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex-grow min-h-[400px]"><canvas ref={canvasRef} className="w-full h-full block" /></div>
@@ -759,6 +854,8 @@
                             </div>
                         </div>
                     </ControlPanel>
+                </div>
+                </PredictionGate>
                 </div>
             );
         };
@@ -798,6 +895,17 @@
                 return () => cancelAnimationFrame(animationRef.current);
             }, [magnetPos, prevPos, autoPlay, showField, numTurns]);
             return (
+                <div>
+                <RealWorldHook text={REAL_WORLD_HOOKS.lenz} />
+                <PredictionGate
+                    question="You push a magnet toward a coil. The coil will..."
+                    options={[
+                        { label: 'Repel the magnet (oppose approach)', correct: true, explanation: 'Correct! Lenz\'s Law: the induced current creates a field opposing the increasing flux, repelling the approaching magnet.' },
+                        { label: 'Attract the magnet (pull it closer)', correct: false, explanation: 'That would increase the flux change — nature opposes change, not encourages it.' },
+                        { label: 'Do nothing until the magnet stops', correct: false, explanation: 'EMF is induced whenever flux is changing, not when it stops.' },
+                        { label: 'Heat up but exert no force', correct: false, explanation: 'The induced current does produce heat, but it also creates a magnetic field that exerts force.' }
+                    ]}
+                >
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                     <div className="lg:col-span-2 flex flex-col gap-4">
                         <div className="bg-white rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex-grow min-h-[400px]"><canvas ref={canvasRef} className="w-full h-full block" /></div>
@@ -818,6 +926,8 @@
                         </div>
                     </ControlPanel>
                 </div>
+                </PredictionGate>
+                </div>
             );
         };
 
@@ -831,7 +941,7 @@
             const drawGaussB = (ctx, w, h, t) => { const cx = w/2, cy = h/2; ctx.fillStyle = '#2563eb'; ctx.fillRect(cx-30, cy-12, 30, 24); ctx.fillStyle = '#dc2626'; ctx.fillRect(cx, cy-12, 30, 24); ctx.fillStyle = 'white'; ctx.font='bold 10px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('S', cx-15, cy); ctx.fillText('N', cx+15, cy); ctx.strokeStyle = '#93c5fd'; ctx.lineWidth = 1.5; const loops = 4; for(let i=1; i<=loops; i++) { const scale = i * 25; ctx.beginPath(); ctx.moveTo(cx+30, cy); ctx.bezierCurveTo(cx+30+scale, cy-scale, cx-30-scale, cy-scale, cx-30, cy); ctx.stroke(); ctx.save(); ctx.translate(cx, cy - scale * 0.75); ctx.rotate(Math.PI); ctx.fillStyle = '#93c5fd'; ctx.beginPath(); ctx.moveTo(-3,-2); ctx.lineTo(3,0); ctx.lineTo(-3,2); ctx.fill(); ctx.restore(); ctx.beginPath(); ctx.moveTo(cx+30, cy); ctx.bezierCurveTo(cx+30+scale, cy+scale, cx-30-scale, cy+scale, cx-30, cy); ctx.stroke(); ctx.save(); ctx.translate(cx, cy + scale * 0.75); ctx.rotate(Math.PI); ctx.fillStyle = '#93c5fd'; ctx.beginPath(); ctx.moveTo(-3,-2); ctx.lineTo(3,0); ctx.lineTo(-3,2); ctx.fill(); ctx.restore(); } };
             const drawFaraday = (ctx, w, h, t) => { const cx = w/2, cy = h/2, flux = Math.sin(t*0.05); ctx.fillStyle = COLORS.B_FIELD; ctx.beginPath(); ctx.arc(cx, cy, 30*Math.abs(flux), 0, Math.PI*2); ctx.fill(); ctx.fillStyle = 'white'; ctx.textAlign = 'center'; ctx.textBaseline='middle'; ctx.fillText(flux > 0 ? "⊙" : "⊗", cx, cy); ctx.strokeStyle = COLORS.E_FIELD; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy, 60, 0, Math.PI*2); ctx.stroke(); const dFlux = Math.cos(t*0.05), angle = t*0.1*(dFlux>0?-1:1); ctx.fillStyle = COLORS.E_FIELD; ctx.beginPath(); ctx.arc(cx+60*Math.cos(angle), cy+60*Math.sin(angle), 4, 0, Math.PI*2); ctx.fill(); };
             const drawAmpere = (ctx, w, h, t) => { const cx = w/2, cy = h/2; ctx.fillStyle = COLORS.CURRENT; ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = 'white'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText("⊗", cx, cy+1); ctx.strokeStyle = COLORS.B_FIELD; for(let r=30; r<=60; r+=15) { ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke(); const angle = t*0.05+r; const px = cx+r*Math.cos(angle), py = cy+r*Math.sin(angle); ctx.save(); ctx.translate(px, py); ctx.rotate(angle + Math.PI/2); ctx.fillStyle=COLORS.B_FIELD; ctx.beginPath(); ctx.moveTo(-3,-3); ctx.lineTo(3,0); ctx.lineTo(-3,3); ctx.fill(); ctx.restore(); } };
-            return (<div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full p-2"><MaxwellCard title="1. Gauss's Law (E)" latex="\oint \vec{E} \cdot d\vec{A} = \frac{Q}{\epsilon_0}" description="Electric charges produce electric fields. Field lines diverge from (+) charges." draw={drawGaussE} /><MaxwellCard title="2. Gauss's Law (B)" latex="\oint \vec{B} \cdot d\vec{A} = 0" description="No magnetic monopoles exist. Magnetic field lines always form closed loops." draw={drawGaussB} /><MaxwellCard title="3. Faraday's Law" latex="\oint \vec{E} \cdot d\vec{l} = -\frac{d\Phi_B}{dt}" description="Changing B-field induces E-field (and Voltage)." draw={drawFaraday} /><MaxwellCard title="4. Ampère-Maxwell" latex="\oint \vec{B} \cdot d\vec{l} = \mu_0(I + \epsilon_0 \frac{d\Phi_E}{dt})" description="Magnetic fields are generated by currents OR changing E-fields." draw={drawAmpere} /></div>);
+            return (<div><RealWorldHook text={REAL_WORLD_HOOKS.maxwell} /><div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full p-2"><MaxwellCard title="1. Gauss's Law (E)" latex="\oint \vec{E} \cdot d\vec{A} = \frac{Q}{\epsilon_0}" description="Electric charges produce electric fields. Field lines diverge from (+) charges." draw={drawGaussE} /><MaxwellCard title="2. Gauss's Law (B)" latex="\oint \vec{B} \cdot d\vec{A} = 0" description="No magnetic monopoles exist. Magnetic field lines always form closed loops." draw={drawGaussB} /><MaxwellCard title="3. Faraday's Law" latex="\oint \vec{E} \cdot d\vec{l} = -\frac{d\Phi_B}{dt}" description="Changing B-field induces E-field (and Voltage)." draw={drawFaraday} /><MaxwellCard title="4. Ampère-Maxwell" latex="\oint \vec{B} \cdot d\vec{l} = \mu_0(I + \epsilon_0 \frac{d\Phi_E}{dt})" description="Magnetic fields are generated by currents OR changing E-fields." draw={drawAmpere} /></div></div>);
         };
 
         const EMWaveTab = () => {
@@ -932,15 +1042,78 @@
                     }
                 }
             };
-            const drawWave = useCallback((ctx, width, height) => { ctx.clearRect(0, 0, width, height); const t = timeRef.current; const omega = 2 * Math.PI * state.frequency; const k = (2 * Math.PI * state.frequency * state.refractiveIndex) / 300; const bVisualAmplitude = state.amplitude * state.refractiveIndex; if (viewMode === WaveViewMode.VIEW_VI) { drawVIView(ctx, width, height, t, omega); return; } const startX = 60, endX = width - 40, drawWidth = endX - startX; if (viewMode === WaveViewMode.VIEW_2D) { const cyE = height * 0.25, cyB = height * 0.75; ctx.strokeStyle = COLORS.GRID; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(20, height/2); ctx.lineTo(width-20, height/2); ctx.stroke(); drawAxisSystem(ctx, startX, endX, cyE, "x", "E (y)"); ctx.lineWidth = 3; ctx.strokeStyle = COLORS.E_FIELD; ctx.beginPath(); for (let i = 0; i <= POINTS; i++) { const x = startX + (i / POINTS) * drawWidth; const ph = k * ((i / POINTS) * drawWidth) - omega * t * 0.02 * state.speed; const val = state.amplitude * Math.sin(ph); const y = cyE - val; if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); } ctx.stroke(); const ampX = startX + 40; ctx.strokeStyle = COLORS.TEXT_MUTED; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(ampX, cyE); ctx.lineTo(ampX, cyE - state.amplitude); ctx.stroke(); ctx.fillStyle = COLORS.TEXT_MAIN; ctx.textAlign = 'left'; ctx.font = '10px sans-serif'; ctx.fillText(`A=${state.amplitude}`, ampX + 2, cyE - state.amplitude / 2); ctx.beginPath(); ctx.moveTo(ampX - 3, cyE - state.amplitude); ctx.lineTo(ampX + 3, cyE - state.amplitude); ctx.stroke(); const lambdaPx = 300 / (state.frequency * state.refractiveIndex); const waveY = cyE + state.amplitude + 25; const waveStart = startX + 100; const waveEnd = waveStart + lambdaPx; if (waveEnd < endX) { ctx.strokeStyle = COLORS.TEXT_MAIN; ctx.beginPath(); ctx.moveTo(waveStart, waveY); ctx.lineTo(waveEnd, waveY); ctx.stroke(); ctx.beginPath(); ctx.moveTo(waveStart, waveY-4); ctx.lineTo(waveStart, waveY+4); ctx.stroke(); ctx.beginPath(); ctx.moveTo(waveEnd, waveY-4); ctx.lineTo(waveEnd, waveY+4); ctx.stroke(); ctx.textAlign = 'center'; ctx.fillStyle = COLORS.TEXT_MAIN; ctx.fillText(`λ ≈ ${lambdaPx.toFixed(0)}px`, waveStart + lambdaPx/2, waveY + 15); } drawAxisSystem(ctx, startX, endX, cyB, "x", "B (z)"); ctx.lineWidth = 3; ctx.strokeStyle = COLORS.B_FIELD; ctx.beginPath(); for (let i = 0; i <= POINTS; i++) { const x = startX + (i / POINTS) * drawWidth; const ph = k * ((i / POINTS) * drawWidth) - omega * t * 0.02 * state.speed; const val = bVisualAmplitude * Math.sin(ph); const y = cyB - val; if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); } ctx.stroke(); ctx.fillStyle = COLORS.B_FIELD; ctx.font = "14px monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; for (let i = 0; i <= POINTS; i+=10) { const x = startX + (i / POINTS) * drawWidth; const ph = k * ((i / POINTS) * drawWidth) - omega * t * 0.02 * state.speed; const val = bVisualAmplitude * Math.sin(ph); if (Math.abs(val) > 5) { const symbol = val > 0 ? "⊙" : "⊗"; ctx.fillText(symbol, x, cyB + (val > 0 ? 15 : -15)); } } } else { const centerY = height / 2; drawAxisSystem(ctx, startX, endX, centerY, "x", ""); draw3DAxisArrows(ctx, startX, centerY); if (state.refractiveIndex > 1) { ctx.fillStyle = `rgba(37, 99, 235, ${0.05 * state.refractiveIndex})`; ctx.fillRect(startX, 0, drawWidth, height); ctx.fillStyle = COLORS.TEXT_MUTED; ctx.font = '12px sans-serif'; ctx.textAlign = 'right'; ctx.fillText(`Medium n=${state.refractiveIndex}`, endX - 10, height - 10); } ctx.lineWidth = 3; ctx.beginPath(); ctx.strokeStyle = COLORS.E_FIELD; for (let i = 0; i <= POINTS; i++) { const x = startX + (i / POINTS) * drawWidth; const ph = k * ((i / POINTS) * drawWidth) - omega * t * 0.02 * state.speed; const val = state.amplitude * Math.sin(ph); const y = centerY - val; if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); if (i % 8 === 0) { ctx.save(); ctx.lineWidth = 1; ctx.globalAlpha = 0.2; ctx.moveTo(x, centerY); ctx.lineTo(x, y); ctx.stroke(); ctx.restore(); ctx.beginPath(); ctx.moveTo(x, y); } } ctx.stroke(); ctx.beginPath(); ctx.strokeStyle = COLORS.B_FIELD; for (let i = 0; i <= POINTS; i++) { const x = startX + (i / POINTS) * drawWidth; const ph = k * ((i / POINTS) * drawWidth) - omega * t * 0.02 * state.speed; const val = bVisualAmplitude * Math.sin(ph); const drawX = x - val * 0.5; const drawY = centerY + val * 0.6; if (i === 0) ctx.moveTo(drawX, drawY); else ctx.lineTo(drawX, drawY); if (i % 8 === 0) { ctx.save(); ctx.lineWidth = 1; ctx.globalAlpha = 0.2; ctx.moveTo(x, centerY); ctx.lineTo(drawX, drawY); ctx.stroke(); ctx.restore(); ctx.beginPath(); ctx.moveTo(drawX, drawY); } } ctx.stroke(); } }, [state, viewMode]);
+            const drawPhasorSyncView = (ctx, width, height, t, omega) => {
+                const midX = width / 2;
+                // --- LEFT: Time-domain sinusoid ---
+                const tStartX = 40, tEndX = midX - 20, tCenterY = height / 2;
+                ctx.strokeStyle = COLORS.AXIS; ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.moveTo(tStartX, tCenterY); ctx.lineTo(tEndX, tCenterY); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(tStartX, tCenterY - 110); ctx.lineTo(tStartX, tCenterY + 110); ctx.stroke();
+                ctx.fillStyle = COLORS.TEXT_MUTED; ctx.font = '10px sans-serif'; ctx.textAlign = 'left';
+                ctx.fillText('Time →', tEndX - 30, tCenterY + 15);
+                ctx.fillText('Amplitude', tStartX + 5, tCenterY - 115);
+                // Draw sinusoid
+                const drawW = tEndX - tStartX;
+                ctx.beginPath(); ctx.strokeStyle = COLORS.E_FIELD; ctx.lineWidth = 2;
+                for (let i = 0; i <= 200; i++) {
+                    const x = tStartX + (i / 200) * drawW;
+                    const phase = omega * (t * 0.02 * state.speed + (i / 200) * 4);
+                    const val = state.amplitude * Math.sin(phase);
+                    const y = tCenterY - val;
+                    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                // "Now" marker
+                const nowPhase = omega * t * 0.02 * state.speed;
+                const nowVal = state.amplitude * Math.sin(nowPhase);
+                const nowX = tStartX;
+                const nowY = tCenterY - nowVal;
+                ctx.fillStyle = COLORS.E_FIELD; ctx.beginPath(); ctx.arc(nowX, nowY, 5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = COLORS.TEXT_MAIN; ctx.font = 'bold 10px sans-serif'; ctx.fillText('now', nowX + 8, nowY - 8);
+
+                // --- RIGHT: Rotating phasor ---
+                const pCX = midX + (width - midX) / 2, pCY = height / 2, pR = Math.min((width - midX) / 2 - 40, height / 2 - 40);
+                // Reference circle
+                ctx.beginPath(); ctx.strokeStyle = COLORS.GRID; ctx.lineWidth = 1;
+                ctx.arc(pCX, pCY, pR, 0, Math.PI * 2); ctx.stroke();
+                // Axes
+                ctx.strokeStyle = COLORS.AXIS;
+                ctx.beginPath(); ctx.moveTo(pCX - pR - 10, pCY); ctx.lineTo(pCX + pR + 10, pCY); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(pCX, pCY - pR - 10); ctx.lineTo(pCX, pCY + pR + 10); ctx.stroke();
+                // Phasor arrow
+                const angle = nowPhase;
+                const tipX = pCX + pR * Math.cos(angle);
+                const tipY = pCY - pR * Math.sin(angle);
+                ctx.beginPath(); ctx.strokeStyle = COLORS.E_FIELD; ctx.lineWidth = 3;
+                ctx.moveTo(pCX, pCY); ctx.lineTo(tipX, tipY); ctx.stroke();
+                ctx.fillStyle = COLORS.E_FIELD; ctx.beginPath(); ctx.arc(tipX, tipY, 5, 0, Math.PI * 2); ctx.fill();
+                // Projection line to y-axis
+                ctx.beginPath(); ctx.strokeStyle = `${COLORS.E_FIELD}60`; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+                ctx.moveTo(tipX, tipY); ctx.lineTo(pCX, tipY); ctx.stroke(); ctx.setLineDash([]);
+                // Angle arc
+                if (Math.abs(angle % (2 * Math.PI)) > 0.1) {
+                    ctx.beginPath(); ctx.strokeStyle = COLORS.TEXT_MUTED; ctx.lineWidth = 1;
+                    ctx.arc(pCX, pCY, 30, 0, -angle, angle > 0); ctx.stroke();
+                    const degVal = ((angle * 180 / Math.PI) % 360).toFixed(0);
+                    ctx.fillStyle = COLORS.TEXT_MUTED; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+                    ctx.fillText(`${degVal}°`, pCX + 45 * Math.cos(-angle / 2), pCY + 45 * Math.sin(-angle / 2));
+                }
+                // Labels
+                ctx.fillStyle = COLORS.TEXT_MAIN; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText('Time-Domain Sinusoid', (tStartX + tEndX) / 2, 25);
+                ctx.fillText('Rotating Phasor', pCX, 25);
+            };
+            const drawWave = useCallback((ctx, width, height) => { ctx.clearRect(0, 0, width, height); const t = timeRef.current; const omega = 2 * Math.PI * state.frequency; const k = (2 * Math.PI * state.frequency * state.refractiveIndex) / 300; const bVisualAmplitude = state.amplitude * state.refractiveIndex; if (viewMode === WaveViewMode.VIEW_PHASOR_SYNC) { drawPhasorSyncView(ctx, width, height, t, omega); return; } if (viewMode === WaveViewMode.VIEW_VI) { drawVIView(ctx, width, height, t, omega); return; } const startX = 60, endX = width - 40, drawWidth = endX - startX; if (viewMode === WaveViewMode.VIEW_2D) { const cyE = height * 0.25, cyB = height * 0.75; ctx.strokeStyle = COLORS.GRID; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(20, height/2); ctx.lineTo(width-20, height/2); ctx.stroke(); drawAxisSystem(ctx, startX, endX, cyE, "x", "E (y)"); ctx.lineWidth = 3; ctx.strokeStyle = COLORS.E_FIELD; ctx.beginPath(); for (let i = 0; i <= POINTS; i++) { const x = startX + (i / POINTS) * drawWidth; const ph = k * ((i / POINTS) * drawWidth) - omega * t * 0.02 * state.speed; const val = state.amplitude * Math.sin(ph); const y = cyE - val; if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); } ctx.stroke(); const ampX = startX + 40; ctx.strokeStyle = COLORS.TEXT_MUTED; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(ampX, cyE); ctx.lineTo(ampX, cyE - state.amplitude); ctx.stroke(); ctx.fillStyle = COLORS.TEXT_MAIN; ctx.textAlign = 'left'; ctx.font = '10px sans-serif'; ctx.fillText(`A=${state.amplitude}`, ampX + 2, cyE - state.amplitude / 2); ctx.beginPath(); ctx.moveTo(ampX - 3, cyE - state.amplitude); ctx.lineTo(ampX + 3, cyE - state.amplitude); ctx.stroke(); const lambdaPx = 300 / (state.frequency * state.refractiveIndex); const waveY = cyE + state.amplitude + 25; const waveStart = startX + 100; const waveEnd = waveStart + lambdaPx; if (waveEnd < endX) { ctx.strokeStyle = COLORS.TEXT_MAIN; ctx.beginPath(); ctx.moveTo(waveStart, waveY); ctx.lineTo(waveEnd, waveY); ctx.stroke(); ctx.beginPath(); ctx.moveTo(waveStart, waveY-4); ctx.lineTo(waveStart, waveY+4); ctx.stroke(); ctx.beginPath(); ctx.moveTo(waveEnd, waveY-4); ctx.lineTo(waveEnd, waveY+4); ctx.stroke(); ctx.textAlign = 'center'; ctx.fillStyle = COLORS.TEXT_MAIN; ctx.fillText(`λ ≈ ${lambdaPx.toFixed(0)}px`, waveStart + lambdaPx/2, waveY + 15); } drawAxisSystem(ctx, startX, endX, cyB, "x", "B (z)"); ctx.lineWidth = 3; ctx.strokeStyle = COLORS.B_FIELD; ctx.beginPath(); for (let i = 0; i <= POINTS; i++) { const x = startX + (i / POINTS) * drawWidth; const ph = k * ((i / POINTS) * drawWidth) - omega * t * 0.02 * state.speed; const val = bVisualAmplitude * Math.sin(ph); const y = cyB - val; if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); } ctx.stroke(); ctx.fillStyle = COLORS.B_FIELD; ctx.font = "14px monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; for (let i = 0; i <= POINTS; i+=10) { const x = startX + (i / POINTS) * drawWidth; const ph = k * ((i / POINTS) * drawWidth) - omega * t * 0.02 * state.speed; const val = bVisualAmplitude * Math.sin(ph); if (Math.abs(val) > 5) { const symbol = val > 0 ? "⊙" : "⊗"; ctx.fillText(symbol, x, cyB + (val > 0 ? 15 : -15)); } } } else { const centerY = height / 2; drawAxisSystem(ctx, startX, endX, centerY, "x", ""); draw3DAxisArrows(ctx, startX, centerY); if (state.refractiveIndex > 1) { ctx.fillStyle = `rgba(37, 99, 235, ${0.05 * state.refractiveIndex})`; ctx.fillRect(startX, 0, drawWidth, height); ctx.fillStyle = COLORS.TEXT_MUTED; ctx.font = '12px sans-serif'; ctx.textAlign = 'right'; ctx.fillText(`Medium n=${state.refractiveIndex}`, endX - 10, height - 10); } ctx.lineWidth = 3; ctx.beginPath(); ctx.strokeStyle = COLORS.E_FIELD; for (let i = 0; i <= POINTS; i++) { const x = startX + (i / POINTS) * drawWidth; const ph = k * ((i / POINTS) * drawWidth) - omega * t * 0.02 * state.speed; const val = state.amplitude * Math.sin(ph); const y = centerY - val; if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); if (i % 8 === 0) { ctx.save(); ctx.lineWidth = 1; ctx.globalAlpha = 0.2; ctx.moveTo(x, centerY); ctx.lineTo(x, y); ctx.stroke(); ctx.restore(); ctx.beginPath(); ctx.moveTo(x, y); } } ctx.stroke(); ctx.beginPath(); ctx.strokeStyle = COLORS.B_FIELD; for (let i = 0; i <= POINTS; i++) { const x = startX + (i / POINTS) * drawWidth; const ph = k * ((i / POINTS) * drawWidth) - omega * t * 0.02 * state.speed; const val = bVisualAmplitude * Math.sin(ph); const drawX = x - val * 0.5; const drawY = centerY + val * 0.6; if (i === 0) ctx.moveTo(drawX, drawY); else ctx.lineTo(drawX, drawY); if (i % 8 === 0) { ctx.save(); ctx.lineWidth = 1; ctx.globalAlpha = 0.2; ctx.moveTo(x, centerY); ctx.lineTo(drawX, drawY); ctx.stroke(); ctx.restore(); ctx.beginPath(); ctx.moveTo(drawX, drawY); } } ctx.stroke(); } }, [state, viewMode]);
             useEffect(() => { const render = () => { const c = canvasRef.current; if (c) { const ctx = c.getContext('2d'); c.width = c.parentElement.clientWidth; c.height = c.parentElement.clientHeight; drawWave(ctx, c.width, c.height); } if (state.isPlaying) timeRef.current += 1; animationRef.current = requestAnimationFrame(render); }; render(); return () => cancelAnimationFrame(animationRef.current); }, [drawWave, state.isPlaying]);
             const omega = (2 * Math.PI * state.frequency).toFixed(2); const lambda = (300 / (state.frequency * state.refractiveIndex)).toFixed(0); const kVal = ((2 * Math.PI) / parseFloat(lambda)).toFixed(3); const phaseDiff = state.vPhase - state.iPhase; const pAvg = (0.5 * state.vAmplitude * state.iAmplitude * Math.cos(phaseDiff * Math.PI / 180)).toFixed(0);
             
             return (
+                <div>
+                <RealWorldHook text={REAL_WORLD_HOOKS.emWave} />
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                     <div className="lg:col-span-2 flex flex-col gap-4">
                         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex-grow relative min-h-[350px]">
-                            <div className="absolute top-4 left-4 z-10 flex gap-2"> {[WaveViewMode.VIEW_2D, WaveViewMode.VIEW_3D, WaveViewMode.VIEW_VI].map(m => ( <button key={m} onClick={() => setViewMode(m)} className={`px-3 py-1 rounded text-xs font-bold border ${viewMode === m ? 'bg-indigo-600 text-white' : 'bg-white'}`}>{m}</button> ))} </div>
+                            <div className="absolute top-4 left-4 z-10 flex gap-2"> {[WaveViewMode.VIEW_2D, WaveViewMode.VIEW_3D, WaveViewMode.VIEW_VI, WaveViewMode.VIEW_PHASOR_SYNC].map(m => ( <button key={m} onClick={() => setViewMode(m)} className={`px-3 py-1 rounded text-xs font-bold border ${viewMode === m ? 'bg-indigo-600 text-white' : 'bg-white'}`}>{m}</button> ))} </div>
                             <canvas ref={canvasRef} className="w-full h-full" />
                         </div>
                         <EquationBox 
@@ -988,6 +1161,7 @@
                         </ControlPanel>
                     </div>
                 </div>
+                </div>
             );
         };
 
@@ -1022,6 +1196,8 @@
              const equations = [ { label: 'Net Vector', math: '\\vec{E}(z,t) = E_x \\hat{x} + E_y \\hat{y}', color: 'text-purple-600' }, { label: 'x-Comp', math: `E_x = ${ex} \\cos(kz - \\omega t)` }, { label: 'y-Comp', math: `E_y = ${ey} \\cos(kz - \\omega t + ${phaseDelta}^\\circ)` }, { label: 'State', math: `\\text{${type}}`, color: 'font-bold' } ];
              if (type === 'Circular') { equations.push({ label: 'Condition', math: '|E_x| = |E_y|, \\delta = \\pm 90^\\circ', color: 'text-emerald-600' }); } else if (type === 'Linear') { equations.push({ label: 'Condition', math: `\\delta = n\\pi, \\text{Slope} = ${(ey/(ex||1)).toFixed(2)}` }); }
              return (
+                 <div>
+                 <RealWorldHook text={REAL_WORLD_HOOKS.polarization} />
                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                      <div className="lg:col-span-2 flex flex-col gap-4">
                         <div className="bg-white rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex-grow min-h-[400px]"><canvas ref={canvasRef} className="w-full h-full block" /><div className="absolute top-4 left-4 flex gap-4 pointer-events-none"><div className="bg-white/90 p-2 rounded border border-slate-200"><span className="text-xs font-bold text-slate-500 block">Head-On View</span><span className="text-lg font-bold text-purple-600">{type} Polarization</span></div></div><div className="absolute top-4 right-4 bg-white/90 p-3 rounded border border-slate-200 shadow-sm text-xs pointer-events-none"><h5 className="font-bold text-slate-700 mb-2 border-b border-slate-200 pb-1">Legend</h5><div className="space-y-1.5"><div className="flex items-center gap-2"><div className="w-6 h-0 border-b-2 border-red-600 border-dashed"></div><span className="text-slate-600">Ex</span></div><div className="flex items-center gap-2"><div className="w-6 h-0 border-b-2 border-blue-600 border-dashed"></div><span className="text-slate-600">Ey</span></div><div className="flex items-center gap-2"><div className="w-6 h-1 bg-purple-600 rounded-full"></div><span className="text-slate-600">Net E-Field</span></div></div></div></div>
@@ -1041,7 +1217,160 @@
                         </div>
                      </ControlPanel>
                  </div>
+                 </div>
              );
+        };
+
+        const MagneticCircuitsTab = () => {
+            const [material, setMaterial] = useState('iron');
+            const [turns, setTurns] = useState(100);
+            const [current, setCurrent] = useState(2);
+            const [gapPercent, setGapPercent] = useState(5);
+            const canvasRef = useRef(null);
+            const animationRef = useRef(0);
+
+            const MU_0 = 4 * Math.PI * 1e-7;
+            const materials = { air: { label: 'Air', muR: 1 }, iron: { label: 'Iron', muR: 5000 }, ferrite: { label: 'Ferrite', muR: 1000 } };
+            const muR = materials[material].muR;
+            const meanRadius = 0.05; // 5 cm
+            const coreArea = 4e-4; // 4 cm²
+            const totalPath = 2 * Math.PI * meanRadius;
+            const gapLength = totalPath * (gapPercent / 100);
+            const corePath = totalPath - gapLength;
+            const reluctanceCore = corePath / (MU_0 * muR * coreArea);
+            const reluctanceGap = gapLength / (MU_0 * coreArea);
+            const reluctanceTotal = reluctanceCore + reluctanceGap;
+            const mmf = turns * current;
+            const flux = mmf / reluctanceTotal;
+            const B = flux / coreArea;
+            const hCore = B / (MU_0 * muR);
+            const hGap = gapPercent > 0 ? B / MU_0 : 0;
+            const inductance = turns * turns / reluctanceTotal;
+
+            useEffect(() => {
+                const render = () => {
+                    const canvas = canvasRef.current; if (!canvas) return;
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = canvas.parentElement.clientWidth;
+                    canvas.height = canvas.parentElement.clientHeight;
+                    const w = canvas.width, h = canvas.height, cx = w / 2, cy = h / 2;
+                    ctx.clearRect(0, 0, w, h);
+
+                    // Draw toroid
+                    const outerR = Math.min(w, h) * 0.35;
+                    const innerR = outerR * 0.6;
+                    const midR = (outerR + innerR) / 2;
+
+                    // Core fill
+                    ctx.fillStyle = material === 'iron' ? '#6b7280' : (material === 'ferrite' ? '#4b5563' : '#e2e8f0');
+                    ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, Math.PI * 2); ctx.arc(cx, cy, innerR, 0, Math.PI * 2, true); ctx.fill();
+
+                    // Gap visualization
+                    if (gapPercent > 0) {
+                        const gapAngle = (gapPercent / 100) * Math.PI * 2;
+                        ctx.fillStyle = '#fef3c7';
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, outerR + 2, -gapAngle / 2, gapAngle / 2);
+                        ctx.arc(cx, cy, innerR - 2, gapAngle / 2, -gapAngle / 2, true);
+                        ctx.fill();
+                        ctx.strokeStyle = '#d97706'; ctx.lineWidth = 2; ctx.setLineDash([4, 4]);
+                        ctx.beginPath(); ctx.arc(cx, cy, outerR + 2, -gapAngle / 2, gapAngle / 2); ctx.stroke();
+                        ctx.beginPath(); ctx.arc(cx, cy, innerR - 2, -gapAngle / 2, gapAngle / 2); ctx.stroke();
+                        ctx.setLineDash([]);
+                        ctx.fillStyle = '#92400e'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+                        ctx.fillText('AIR GAP', cx + (outerR + 15) * Math.cos(0), cy + 4);
+                    }
+
+                    // Coil turns (left side)
+                    const coilCount = Math.min(turns / 10, 12);
+                    for (let i = 0; i < coilCount; i++) {
+                        const angle = Math.PI + (i / coilCount - 0.5) * Math.PI * 0.8;
+                        const x1 = cx + innerR * Math.cos(angle) * 0.9;
+                        const y1 = cy + innerR * Math.sin(angle) * 0.9;
+                        const x2 = cx + outerR * Math.cos(angle) * 1.1;
+                        const y2 = cy + outerR * Math.sin(angle) * 1.1;
+                        ctx.strokeStyle = COLORS.CURRENT; ctx.lineWidth = 3;
+                        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+                    }
+
+                    // Flux lines inside core
+                    const fluxAlpha = Math.min(flux * 1e6, 1);
+                    ctx.strokeStyle = `rgba(37, 99, 235, ${fluxAlpha})`; ctx.lineWidth = 2;
+                    for (let r = innerR + 5; r < outerR - 5; r += (outerR - innerR) / 4) {
+                        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+                        // Arrow
+                        const arrowAngle = Math.PI * 1.5;
+                        const ax = cx + r * Math.cos(arrowAngle), ay = cy + r * Math.sin(arrowAngle);
+                        ctx.fillStyle = `rgba(37, 99, 235, ${fluxAlpha})`;
+                        ctx.save(); ctx.translate(ax, ay); ctx.rotate(arrowAngle + Math.PI / 2);
+                        ctx.beginPath(); ctx.moveTo(-4, -3); ctx.lineTo(4, 0); ctx.lineTo(-4, 3); ctx.fill();
+                        ctx.restore();
+                    }
+
+                    // Readout panel
+                    ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.fillRect(10, 10, 220, gapPercent > 0 ? 160 : 140);
+                    ctx.strokeStyle = '#e2e8f0'; ctx.strokeRect(10, 10, 220, gapPercent > 0 ? 160 : 140);
+                    ctx.fillStyle = COLORS.TEXT_MAIN; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'left';
+                    ctx.fillText('Computed Values', 20, 30);
+                    ctx.font = '11px sans-serif'; ctx.fillStyle = COLORS.TEXT_MUTED;
+                    let yPos = 50;
+                    ctx.fillText(`MMF = ${mmf.toFixed(1)} A·turns`, 20, yPos); yPos += 18;
+                    ctx.fillText(`Φ = ${(flux * 1e6).toFixed(2)} μWb`, 20, yPos); yPos += 18;
+                    ctx.fillText(`B = ${B.toFixed(4)} T`, 20, yPos); yPos += 18;
+                    ctx.fillText(`H_core = ${hCore.toFixed(1)} A/m`, 20, yPos); yPos += 18;
+                    if (gapPercent > 0) { ctx.fillText(`H_gap = ${hGap.toFixed(0)} A/m`, 20, yPos); yPos += 18; }
+                    ctx.fillText(`ℛ_total = ${reluctanceTotal.toExponential(2)} A·t/Wb`, 20, yPos); yPos += 18;
+                    ctx.fillText(`L = ${(inductance * 1e3).toFixed(2)} mH`, 20, yPos);
+
+                    animationRef.current = requestAnimationFrame(render);
+                };
+                render();
+                return () => cancelAnimationFrame(animationRef.current);
+            }, [material, turns, current, gapPercent]);
+
+            return (
+                <div>
+                <RealWorldHook text={REAL_WORLD_HOOKS.magneticCircuits} />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+                    <div className="lg:col-span-2 flex flex-col gap-4">
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
+                            <canvas ref={canvasRef} className="w-full h-full block" />
+                        </div>
+                        <EquationBox title="Magnetic Circuit Equations" equations={[
+                            { label: 'Flux', math: '\\Phi = \\frac{MMF}{\\mathcal{R}_{total}}', color: 'text-blue-600' },
+                            { label: 'Reluctance', math: '\\mathcal{R} = \\frac{l}{\\mu_0 \\mu_r A}', color: 'text-indigo-600' },
+                            { label: "Hopkinson", math: 'MMF = NI = \\Phi \\cdot \\mathcal{R}' },
+                            { label: 'Inductance', math: 'L = \\frac{N^2}{\\mathcal{R}}', color: 'text-emerald-600' }
+                        ]} />
+                    </div>
+                    <ControlPanel title="Magnetic Circuit">
+                        <div className="mb-4">
+                            <label className="text-xs font-bold text-slate-500 mb-2 block">Core Material</label>
+                            <select value={material} onChange={(e) => setMaterial(e.target.value)} className="w-full bg-slate-100 rounded-lg p-2 text-sm">
+                                {Object.entries(materials).map(([k, v]) => <option key={k} value={k}>{v.label} (μᵣ = {v.muR})</option>)}
+                            </select>
+                        </div>
+                        <Slider label={`Turns (N): ${turns}`} value={turns} min={10} max={500} step={10} onChange={setTurns} color="bg-amber-600" />
+                        <Slider label={`Current (I): ${current} A`} value={current} min={0} max={10} step={0.1} onChange={setCurrent} color="bg-amber-600" />
+                        <Slider label={`Air Gap: ${gapPercent}%`} value={gapPercent} min={0} max={20} onChange={setGapPercent} color="bg-blue-600" />
+                        <HintBox>Increase the air gap and watch the reluctance skyrocket — even a small gap dominates the total reluctance in a ferromagnetic circuit!</HintBox>
+                        <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm space-y-3">
+                            <div className="flex items-center gap-2 text-slate-600 border-b border-slate-200 pb-2"><Info size={16} /><h4 className="font-bold">Theory Guide</h4></div>
+                            <div className="space-y-2 text-xs text-slate-600">
+                                <p><strong>Magnetic Circuit Analogy:</strong> MMF (NI) is like voltage, Φ is like current, ℛ is like resistance.</p>
+                                <p><strong>Air Gap Effect:</strong> Even a tiny air gap has huge reluctance because μᵣ = 1 for air vs thousands for iron.</p>
+                                <p><strong>H differs by section:</strong> H_core = B/(μ₀μᵣ) is small in iron. H_gap = B/μ₀ is large in air.</p>
+                            </div>
+                        </div>
+                        <div className="mt-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200 text-sm">
+                            <h4 className="font-bold text-indigo-800 mb-2">Bridge to Module 2</h4>
+                            <p className="text-xs text-indigo-700 mb-3">Magnetic circuits are the foundation of transformers and electric machines. Continue to AC machines in Module 2.</p>
+                            <a href="https://em-ac-lab-module.vercel.app/" target="_blank" className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors">Continue to Module 2 →</a>
+                        </div>
+                    </ControlPanel>
+                </div>
+                </div>
+            );
         };
 
         const App = () => {
@@ -1058,6 +1387,7 @@
                     case Tab.LENZ: return <LenzTab />;
                     case Tab.EM_WAVE: return <EMWaveTab />;
                     case Tab.POLARIZATION: return <PolarizationTab />;
+                    case Tab.MAGNETIC_CIRCUITS: return <MagneticCircuitsTab />;
                     default: return <OverviewTab onNavigate={setActiveTab} />;
                 }
             };
@@ -1078,6 +1408,7 @@
                                 <TabButton id={Tab.LENZ} label="Lenz" icon={<Magnet size={16} />} />
                                 <TabButton id={Tab.EM_WAVE} label="EM Wave" icon={<Radio size={16} />} />
                                 <TabButton id={Tab.POLARIZATION} label="Polarization" icon={<Layers size={16} />} />
+                                <TabButton id={Tab.MAGNETIC_CIRCUITS} label="Mag Circuits" icon={<Cpu size={16} />} />
                             </nav>
                         </div>
                     </header>
