@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useCanvasTouch } from '@/hooks/useCanvasTouch';
 import { Move } from 'lucide-react';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
 import { useProgressStore } from '@/store/progressStore';
@@ -28,8 +29,10 @@ export default function LorentzPage() {
   const [mass, setMass] = useState(2);
   const [dragMode, setDragMode] = useState<'none' | 'particle' | 'velocity'>('none');
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  useCanvasTouch(canvasRef);
   const physicsRef = useRef<ParticleState | null>(null);
   const animationRef = useRef(0);
+  const hoverPos = useRef<{ x: number; y: number } | null>(null);
 
   const handleReset = useCallback(() => {
     if (canvasRef.current) {
@@ -74,8 +77,9 @@ export default function LorentzPage() {
   }, [getCanvasPoint, mass]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (dragMode === 'none') return;
     const pt = getCanvasPoint(e);
+    hoverPos.current = pt;
+    if (dragMode === 'none') return;
     const p = physicsRef.current;
     if (!pt || !p) return;
     if (dragMode === 'particle') {
@@ -83,13 +87,26 @@ export default function LorentzPage() {
       p.y = pt.y;
       p.trail = [];
     } else if (dragMode === 'velocity') {
-      // New velocity = (mouse - particle) / 0.3 scale factor
       p.vx = (pt.x - p.x) / 0.3;
       p.vy = (pt.y - p.y) / 0.3;
     }
   }, [dragMode, getCanvasPoint]);
 
   const handleMouseUp = useCallback(() => setDragMode('none'), []);
+  const handleMouseLeaveLorentz = useCallback(() => {
+    setDragMode('none');
+    hoverPos.current = null;
+  }, []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const p = physicsRef.current;
+    if (!p) return;
+    const step = 5;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); p.x -= step; }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); p.x += step; }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); p.y -= step; }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); p.y += step; }
+  }, []);
 
   useEffect(() => {
     if (!physicsRef.current) handleReset();
@@ -233,7 +250,41 @@ export default function LorentzPage() {
         ctx.fillStyle = col.TEXT_MUTED;
         ctx.font = '11px sans-serif';
         ctx.textAlign = 'left';
-        ctx.fillText('Drag particle to move · Drag arrow tip to aim', 10, cvs.height - 10);
+        ctx.fillText('Drag particle to move \u00B7 Drag arrow tip to aim', 10, cvs.height - 10);
+
+        // Hover readout: show speed, |F|, cyclotron radius
+        if (hoverPos.current && dragMode === 'none') {
+          const speed = Math.hypot(p.vx, p.vy);
+          const Beff = Math.abs(bField / 20);
+          const Fmag = Math.abs(charge) * speed * Beff;
+          const rCyc = Beff > 0.01 && charge !== 0
+            ? (mass * speed / (Math.abs(charge) * Beff)).toFixed(1)
+            : '\u221E';
+
+          const lines = [
+            `|v| = ${speed.toFixed(1)}`,
+            `|F| = ${Fmag.toFixed(1)}`,
+            `r_c = ${rCyc}`,
+          ];
+
+          ctx.font = '10px monospace';
+          const tw = 110;
+          const th = 46;
+          const tx = 10, ty = cvs.height - 65;
+          ctx.fillStyle = isDarkMode ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+          ctx.beginPath();
+          ctx.roundRect(tx, ty, tw, th, 4);
+          ctx.fill();
+          ctx.strokeStyle = isDarkMode ? '#475569' : '#cbd5e1';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.fillStyle = isDarkMode ? '#e2e8f0' : '#1e293b';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'top';
+          lines.forEach((line, i) => {
+            ctx.fillText(line, tx + 6, ty + 4 + i * 14);
+          });
+        }
       }
       animationRef.current = requestAnimationFrame(loop);
     };
@@ -247,7 +298,11 @@ export default function LorentzPage() {
       simulation={
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
+            <div
+              className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px] outline-none"
+              tabIndex={0}
+              onKeyDown={handleKeyDown}
+            >
               <canvas
                 ref={canvasRef}
                 className="w-full h-full block"
@@ -257,7 +312,7 @@ export default function LorentzPage() {
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
+                onMouseLeave={handleMouseLeaveLorentz}
               />
             </div>
           </div>

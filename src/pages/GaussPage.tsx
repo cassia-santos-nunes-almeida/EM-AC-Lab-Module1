@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useCanvasTouch } from '@/hooks/useCanvasTouch';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
 import { useProgressStore } from '@/store/progressStore';
 import { ControlPanel } from '@/components/common/ControlPanel';
@@ -21,7 +22,9 @@ export default function GaussPage() {
   const [radius, setRadius] = useState(100);
   const [dragging, setDragging] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  useCanvasTouch(canvasRef);
   const animationRef = useRef(0);
+  const hoverPos = useRef<{ x: number; y: number } | null>(null);
 
   const getCanvasPoint = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -48,8 +51,9 @@ export default function GaussPage() {
   }, [getCanvasPoint, radius]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!dragging) return;
     const pt = getCanvasPoint(e);
+    hoverPos.current = pt;
+    if (!dragging) return;
     const canvas = canvasRef.current;
     if (!pt || !canvas) return;
     const cx = canvas.width / 2, cy = canvas.height / 2;
@@ -58,6 +62,10 @@ export default function GaussPage() {
   }, [dragging, getCanvasPoint]);
 
   const handleMouseUp = useCallback(() => setDragging(false), []);
+  const handleMouseLeaveGauss = useCallback(() => {
+    setDragging(false);
+    hoverPos.current = null;
+  }, []);
 
 
   useEffect(() => {
@@ -169,11 +177,57 @@ export default function GaussPage() {
           }
         }
       }
+      // Hover tooltip: E-field at mouse position
+      if (hoverPos.current && mode === 'ELECTRIC' && charge !== 0 && !dragging) {
+        const hx = hoverPos.current.x, hy = hoverPos.current.y;
+        const distPx = Math.hypot(hx - cx, hy - cy);
+        if (distPx > 20) {
+          const rM = distPx * 0.01; // 1px = 0.01m
+          const Q = Math.abs(charge * 1e-6);
+          const E = Q / (4 * Math.PI * EPSILON_0 * rM * rM);
+          const eStr = E >= 1e6
+            ? `${(E / 1e6).toFixed(1)} MV/m`
+            : E >= 1e3
+              ? `${(E / 1e3).toFixed(1)} kV/m`
+              : `${E.toFixed(1)} V/m`;
+
+          // Crosshair
+          ctx.strokeStyle = isDarkMode ? '#94a3b8' : '#475569';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(hx - 5, hy); ctx.lineTo(hx + 5, hy);
+          ctx.moveTo(hx, hy - 5); ctx.lineTo(hx, hy + 5);
+          ctx.stroke();
+
+          // Tooltip
+          const line1 = `|E| = ${eStr}`;
+          const line2 = `r = ${rM.toFixed(2)} m`;
+          ctx.font = '11px sans-serif';
+          const tw = Math.max(ctx.measureText(line1).width, ctx.measureText(line2).width) + 14;
+          const th = 34;
+          const tx = Math.min(hx + 12, canvas.width - tw - 4);
+          const ty = Math.max(hy - 36, 4);
+          ctx.fillStyle = isDarkMode ? 'rgba(30, 41, 59, 0.92)' : 'rgba(255, 255, 255, 0.92)';
+          ctx.beginPath();
+          ctx.roundRect(tx, ty, tw, th, 4);
+          ctx.fill();
+          ctx.strokeStyle = isDarkMode ? '#475569' : '#cbd5e1';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.fillStyle = isDarkMode ? '#e2e8f0' : '#1e293b';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'top';
+          ctx.fillText(line1, tx + 7, ty + 4);
+          ctx.fillStyle = isDarkMode ? '#94a3b8' : '#64748b';
+          ctx.fillText(line2, tx + 7, ty + 19);
+        }
+      }
+
       animationRef.current = requestAnimationFrame(render);
     };
     render();
     return () => cancelAnimationFrame(animationRef.current);
-  }, [mode, charge, radius, isDarkMode, col]);
+  }, [mode, charge, radius, isDarkMode, col, dragging]);
 
   const equations =
     mode === 'ELECTRIC'
@@ -202,7 +256,7 @@ export default function GaussPage() {
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
+                onMouseLeave={handleMouseLeaveGauss}
               />
               <div className="absolute top-4 left-4 pointer-events-none bg-white/90 dark:bg-slate-800/90 p-2 rounded border border-slate-200 dark:border-slate-700 shadow-sm">
                 <h5 className="font-bold text-xs text-slate-500 dark:text-slate-400 uppercase mb-1">Visualization</h5>

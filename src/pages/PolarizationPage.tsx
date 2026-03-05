@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useCanvasTouch } from '@/hooks/useCanvasTouch';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
 import { useProgressStore } from '@/store/progressStore';
 import { ControlPanel } from '@/components/common/ControlPanel';
@@ -25,6 +26,12 @@ export default function PolarizationPage() {
   const timeRef = useRef(0);
   const animationRef = useRef(0);
   const traceRef = useRef<Array<{ x: number; y: number }>>([]);
+
+  useCanvasTouch(canvasRef);
+
+  // Drag state for E-field vector tip
+  const draggingVector = useRef(false);
+  const lissajousCenter = useRef({ x: 0, y: 0, scale: 1 });
 
   // Clear trace on parameter change
   useEffect(() => {
@@ -62,6 +69,7 @@ export default function PolarizationPage() {
       const cx = midX / 2, cy = h / 2;
       const maxR = Math.min(midX, h) * 0.35;
       const scale = maxR / 100;
+      lissajousCenter.current = { x: cx, y: cy, scale };
 
       // Axes
       ctx.strokeStyle = c.AXIS;
@@ -118,10 +126,26 @@ export default function PolarizationPage() {
       ctx.moveTo(cx, cy);
       ctx.lineTo(tipX, tipY);
       ctx.stroke();
-      ctx.fillStyle = c.POWER;
+      // Draggable handle at vector tip
       ctx.beginPath();
-      ctx.arc(tipX, tipY, 4, 0, Math.PI * 2);
+      ctx.arc(tipX, tipY, draggingVector.current ? 8 : 5, 0, Math.PI * 2);
+      ctx.fillStyle = c.POWER;
+      ctx.globalAlpha = draggingVector.current ? 0.6 : 0.35;
       ctx.fill();
+      ctx.globalAlpha = 1;
+      // Solid dot
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, 3, 0, Math.PI * 2);
+      ctx.fillStyle = c.POWER;
+      ctx.fill();
+
+      // Drag hint
+      if (!draggingVector.current) {
+        ctx.fillStyle = c.TEXT_MUTED;
+        ctx.font = '9px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Drag vector tip to set Ex/Ey', cx, cy + maxR + 35);
+      }
 
       // 3D propagation view - right half
       const start3D = midX + 50;
@@ -187,6 +211,58 @@ export default function PolarizationPage() {
     return () => cancelAnimationFrame(animationRef.current);
   }, [ex, ey, phaseDelta, isPlaying, c, isDarkMode]);
 
+  // Vector drag handlers
+  const getCanvasPos = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height),
+    };
+  }, []);
+
+  const handleVectorMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const { x, y } = getCanvasPos(e);
+    const { x: cx, y: cy, scale } = lissajousCenter.current;
+    const t = timeRef.current;
+    const rad = (phaseDelta * Math.PI) / 180;
+    const tipX = cx + ex * Math.cos(t) * scale;
+    const tipY = cy - ey * Math.cos(t + rad) * scale;
+    if (Math.hypot(x - tipX, y - tipY) < 20) {
+      draggingVector.current = true;
+    }
+  }, [ex, ey, phaseDelta, getCanvasPos]);
+
+  const handleVectorMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!draggingVector.current) return;
+    const { x, y } = getCanvasPos(e);
+    const { x: cx, y: cy, scale } = lissajousCenter.current;
+    const t = timeRef.current;
+    const rad = (phaseDelta * Math.PI) / 180;
+
+    // Mouse position in field units
+    const mouseFieldX = (x - cx) / scale;
+    const mouseFieldY = -(y - cy) / scale;
+
+    // Solve for amplitudes: valX = ex*cos(t), valY = ey*cos(t+rad)
+    const cosT = Math.cos(t);
+    const cosTRad = Math.cos(t + rad);
+
+    if (Math.abs(cosT) > 0.1) {
+      const newEx = Math.round(Math.max(0, Math.min(100, Math.abs(mouseFieldX / cosT))));
+      setEx(newEx);
+    }
+    if (Math.abs(cosTRad) > 0.1) {
+      const newEy = Math.round(Math.max(0, Math.min(100, Math.abs(mouseFieldY / cosTRad))));
+      setEy(newEy);
+    }
+  }, [phaseDelta, getCanvasPos]);
+
+  const handleVectorMouseUp = useCallback(() => {
+    draggingVector.current = false;
+  }, []);
+
   // Polarization type detection
   let type = 'Elliptical';
   if (Math.abs(phaseDelta) % 180 === 0) type = 'Linear';
@@ -238,7 +314,17 @@ export default function PolarizationPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
-              <canvas ref={canvasRef} className="w-full h-full block" role="img" aria-label="Polarization simulation showing Lissajous pattern and 3D wave propagation" />
+              <canvas
+                ref={canvasRef}
+                className="w-full h-full block"
+                role="img"
+                aria-label="Polarization simulation showing Lissajous pattern and 3D wave propagation"
+                onMouseDown={handleVectorMouseDown}
+                onMouseMove={handleVectorMouseMove}
+                onMouseUp={handleVectorMouseUp}
+                onMouseLeave={handleVectorMouseUp}
+                style={{ cursor: 'crosshair' }}
+              />
               <div className="absolute top-4 left-4 flex gap-4 pointer-events-none">
                 <div className="bg-white/90 dark:bg-slate-800/90 p-2 rounded border border-slate-200 dark:border-slate-700">
                   <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block">Head-On View</span>
