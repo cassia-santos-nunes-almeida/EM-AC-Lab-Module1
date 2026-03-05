@@ -12,7 +12,6 @@ import { ModuleLayout } from '@/components/common/ModuleLayout';
 import { RealWorldHook } from '@/components/common/RealWorldHook';
 import { PredictionGate } from '@/components/common/PredictionGate';
 import { ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 const MU_0 = 4 * Math.PI * 1e-7;
 
@@ -347,12 +346,14 @@ export default function MagneticCircuitsPage() {
               The <MathWrapper latex="L" /> in your circuit equations is the inductance of a real coil, determined by its geometry
               and core material. The math continues in Module 2. The physics started here.
             </p>
-            <Link
-              to="/"
+            <a
+              href="https://em-ac-lab-module.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition-colors"
             >
-              Back to Overview — Module 2 coming soon <ArrowRight size={16} />
-            </Link>
+              Continue to Module 2 <ArrowRight size={16} />
+            </a>
           </div>
         </div>
       }
