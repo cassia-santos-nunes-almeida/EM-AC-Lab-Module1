@@ -56,3 +56,38 @@
 **Decision**: Add `skipWaiting`, `clientsClaim`, `cleanupOutdatedCaches` to VitePWA config + `lazyRetry` wrapper for dynamic imports.
 **Rationale**: After deploys with new chunk hashes, users with cached old `index.html` got "Failed to fetch dynamically imported module" errors. `skipWaiting` forces immediate SW activation; `lazyRetry` auto-reloads the page once if a chunk fails to load.
 **Date**: 2026-03-04
+
+## ADR-014: Socratic "Think it Through" tutor over direct-answer AI
+**Decision**: Rewrite the AI Tutor system prompt to enforce Socratic method; rename "AI Tutor" → "Think it Through" throughout the app.
+**Rationale**: An AI that simply answers physics questions undermines the learning process. The Socratic approach forces students to think: the tutor responds with counter-questions, acknowledges correct reasoning, and only gives small conceptual hints when stuck. The "Think it Through" name reinforces this philosophy and sets student expectations correctly.
+**Date**: 2026-03-05
+
+## ADR-015: PredictionGate commit-then-reveal pattern
+**Decision**: Create a `PredictionGate` component that hides the simulation behind a one-shot prediction question. Applied to Lorentz, Faraday, and Lenz pages.
+**Rationale**: Research on active learning shows that making predictions before observing outcomes significantly improves conceptual understanding. The gate forces a cognitive commitment — students must think about what will happen before they can explore. Predictions are stored in Zustand (one-shot, non-retractable) so students see their original prediction alongside the simulation. Applied only to pages where the outcome is non-obvious.
+**Date**: 2026-03-05
+
+## ADR-016: Three-tier progressive hints in ConceptCheck
+**Decision**: Extend ConceptCheck with optional 3-tier hints revealed sequentially after wrong answers: Tier 1 (Conceptual nudge) → Tier 2 (Procedural guidance) → Tier 3 (Worked example).
+**Rationale**: Immediate full solutions discourage effort. Tiered hints scaffold learning: a conceptual nudge may be enough for strong students, while struggling students can progressively access more specific help. Hint usage is tracked in Zustand (`hintUsage` map) to persist across sessions and potentially inform future analytics. Only revealed after at least one wrong attempt to reward initial effort.
+**Date**: 2026-03-05
+
+## ADR-017: RealWorldHook cards for engineering context
+**Decision**: Add a `RealWorldHook` component (amber lightbulb card) at the top of every module page with 2-3 sentences connecting the physics to real engineering applications.
+**Rationale**: Students often ask "why does this matter?" Showing immediate practical relevance (MRI machines, power grids, wireless charging, etc.) before the simulation motivates engagement. The amber styling differentiates it from theory content (blue) and quizzes (slate).
+**Date**: 2026-03-05
+
+## ADR-018: Phasor Sync dual-canvas view mode
+**Decision**: Add a "Phasor Sync" view mode to EMWavePage with two synchronized canvases: a time-domain sinusoid and a rotating phasor diagram sharing the same animation clock.
+**Rationale**: Students struggle to connect phasor rotation to sinusoidal waveforms. The synchronized dual view makes this relationship explicit: the phasor angle maps to the sinusoid's phase, and the projection line connects the phasor tip to the current value on the time plot. A "now" marker on the sinusoid moves in sync with the phasor rotation.
+**Date**: 2026-03-05
+
+## ADR-019: Magnetic Circuits capstone module
+**Decision**: Create a new Magnetic Circuits page with a toroid simulation (adjustable core material, turns, current, air gap), full theory section, and bridge to Module 2.
+**Rationale**: Magnetic circuits bridge the gap between electromagnetic field theory (Module 1) and AC machines (Module 2). The toroid is the canonical example: students can explore how material permeability, air gaps, and coil parameters affect flux, reluctance, and inductance. The page computes H_core and H_gap separately (physically correct for composite circuits) and includes mutual inductance theory with transformer ratios to motivate the next module.
+**Date**: 2026-03-05
+
+## ADR-020: Separate H_core and H_gap in magnetic circuit display
+**Decision**: Display H_core = B/(μ₀μᵣ) and H_gap = B/μ₀ separately rather than a single averaged H = MMF/l.
+**Rationale**: In a composite magnetic circuit, H differs by section. An averaged H misleads students into thinking the field is uniform. Showing both values — where H_gap ≫ H_core for ferromagnetic materials — teaches the key insight that air gaps dominate the magnetic field intensity even when they're a small fraction of the path.
+**Date**: 2026-03-05
