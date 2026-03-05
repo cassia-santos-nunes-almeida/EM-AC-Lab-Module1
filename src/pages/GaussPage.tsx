@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
 import { useProgressStore } from '@/store/progressStore';
 import { ControlPanel } from '@/components/common/ControlPanel';
@@ -19,8 +19,46 @@ export default function GaussPage() {
   const [mode, setMode] = useState<'ELECTRIC' | 'MAGNETIC'>('ELECTRIC');
   const [charge, setCharge] = useState(5);
   const [radius, setRadius] = useState(100);
+  const [dragging, setDragging] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef(0);
+
+  const getCanvasPoint = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+    };
+  }, []);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const pt = getCanvasPoint(e);
+    const canvas = canvasRef.current;
+    if (!pt || !canvas) return;
+    const cx = canvas.width / 2, cy = canvas.height / 2;
+    const dist = Math.sqrt((pt.x - cx) ** 2 + (pt.y - cy) ** 2);
+    // Click near the dashed circle edge (within 12px)
+    if (Math.abs(dist - radius) < 12) {
+      setDragging(true);
+    }
+  }, [getCanvasPoint, radius]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!dragging) return;
+    const pt = getCanvasPoint(e);
+    const canvas = canvasRef.current;
+    if (!pt || !canvas) return;
+    const cx = canvas.width / 2, cy = canvas.height / 2;
+    const dist = Math.sqrt((pt.x - cx) ** 2 + (pt.y - cy) ** 2);
+    setRadius(Math.round(Math.max(50, Math.min(200, dist))));
+  }, [dragging, getCanvasPoint]);
+
+  const handleMouseUp = useCallback(() => setDragging(false), []);
+
 
   useEffect(() => {
     const render = () => {
@@ -50,6 +88,12 @@ export default function GaussPage() {
       ctx.fillStyle = col.TEXT_MAIN;
       ctx.font = '12px sans-serif';
       ctx.fillText(`Gaussian Surface (r = ${(radius * 0.01).toFixed(2)} m)`, cx + radius + 5, cy);
+      // Drag hint
+      ctx.fillStyle = col.TEXT_MUTED;
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('↔ Drag edge to resize', cx, cy - radius - 8);
+      ctx.textAlign = 'start';
 
       if (mode === 'ELECTRIC') {
         ctx.fillStyle = charge > 0 ? col.E_FIELD : col.B_FIELD;
@@ -149,7 +193,17 @@ export default function GaussPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden flex-grow min-h-[400px]">
-              <canvas ref={canvasRef} className="w-full h-full block" role="img" aria-label="Gauss's law simulation showing electric or magnetic flux through a surface" />
+              <canvas
+                ref={canvasRef}
+                className="w-full h-full block"
+                style={{ cursor: dragging ? 'grabbing' : 'default' }}
+                role="img"
+                aria-label="Gauss's law simulation showing electric or magnetic flux through a surface"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+              />
               <div className="absolute top-4 left-4 pointer-events-none bg-white/90 dark:bg-slate-800/90 p-2 rounded border border-slate-200 dark:border-slate-700 shadow-sm">
                 <h5 className="font-bold text-xs text-slate-500 dark:text-slate-400 uppercase mb-1">Visualization</h5>
                 <div className="text-lg font-bold text-slate-800 dark:text-slate-200">
