@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { useCanvasTouch } from '@/hooks/useCanvasTouch';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
-import { useProgressStore } from '@/store/progressStore';
+import { useThemeStore } from '@/store/progressStore';
 import { ControlPanel } from '@/components/common/ControlPanel';
 import { Slider } from '@/components/common/Slider';
 import { EquationBox } from '@/components/common/EquationBox';
 import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
+import { MODULE_URLS } from '@/constants/modules';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
 import { RealWorldHook } from '@/components/common/RealWorldHook';
 import { PredictionGate } from '@/components/common/PredictionGate';
@@ -23,7 +24,7 @@ const CORE_MATERIALS = [
 ] as const;
 
 export default function MagneticCircuitsPage() {
-  const { isDarkMode } = useProgressStore();
+  const isDarkMode = useThemeStore((s) => s.theme === 'dark');
   const col = isDarkMode ? COLORS_DARK : COLORS;
 
   // Toroid simulation controls
@@ -67,7 +68,11 @@ export default function MagneticCircuitsPage() {
     return `${(val * 1e9).toFixed(1)} n${unit}`;
   };
 
-  // Canvas rendering
+  // Ref for derived values consumed in the canvas draw loop
+  const derivedRef = useRef({ B, hCore, hGap, gapLength, flux, inductance, col, muR, material });
+  derivedRef.current = { B, hCore, hGap, gapLength, flux, inductance, col, muR, material };
+
+  // Canvas rendering — only restart on actual state changes
   useEffect(() => {
     const render = () => {
       const canvas = canvasRef.current;
@@ -79,6 +84,7 @@ export default function MagneticCircuitsPage() {
         canvas.height = canvas.parentElement.clientHeight;
       }
       const w = canvas.width, h = canvas.height;
+      const d = derivedRef.current;
       ctx.clearRect(0, 0, w, h);
       if (isDarkMode) { ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, w, h); }
 
@@ -109,7 +115,7 @@ export default function MagneticCircuitsPage() {
           ? (isDarkMode ? '#334155' : '#94a3b8')
           : (isDarkMode ? '#44403c' : '#a8a29e');
       ctx.fill();
-      ctx.strokeStyle = col.TEXT_MAIN;
+      ctx.strokeStyle = d.col.TEXT_MAIN;
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
@@ -134,12 +140,12 @@ export default function MagneticCircuitsPage() {
       // Draw field lines inside core
       if (Math.abs(current) > 0.01) {
         const numLines = 5;
-        const fieldAlpha = Math.min(1, Math.abs(B) / 0.5);
+        const fieldAlpha = Math.min(1, Math.abs(d.B) / 0.5);
         ctx.globalAlpha = 0.3 + 0.5 * fieldAlpha;
         for (let i = 0; i < numLines; i++) {
           const r = innerR + ((i + 0.5) / numLines) * coreWidth;
           ctx.beginPath();
-          ctx.strokeStyle = col.B_FIELD;
+          ctx.strokeStyle = d.col.B_FIELD;
           ctx.lineWidth = 1 + fieldAlpha;
           ctx.setLineDash([4, 4]);
           if (gapPercent > 0.5) {
@@ -163,7 +169,7 @@ export default function MagneticCircuitsPage() {
           ctx.save();
           ctx.translate(ax, ay);
           ctx.rotate(dir);
-          ctx.fillStyle = col.B_FIELD;
+          ctx.fillStyle = d.col.B_FIELD;
           ctx.beginPath();
           ctx.moveTo(6, 0);
           ctx.lineTo(-4, -4);
@@ -175,7 +181,7 @@ export default function MagneticCircuitsPage() {
 
       // Draw coil turns (small marks on outer ring)
       const turnCount = Math.min(turns, 40); // visual limit
-      ctx.strokeStyle = col.CURRENT;
+      ctx.strokeStyle = d.col.CURRENT;
       ctx.lineWidth = 1.5;
       for (let i = 0; i < turnCount; i++) {
         const angle = gapEnd + 0.1 + (i / turnCount) * (2 * Math.PI - gapAngleRad - 0.2);
@@ -190,21 +196,21 @@ export default function MagneticCircuitsPage() {
       }
 
       // Labels
-      ctx.fillStyle = col.TEXT_MAIN;
+      ctx.fillStyle = d.col.TEXT_MAIN;
       ctx.font = '12px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(`${material.label} core (μᵣ = ${muR.toLocaleString()})`, cx, cy - outerR - 20);
+      ctx.fillText(`${d.material.label} core (μᵣ = ${d.muR.toLocaleString()})`, cx, cy - outerR - 20);
 
       // Output readouts
       ctx.font = '11px monospace';
       ctx.textAlign = 'left';
       const readoutX = 15, readoutY = h - 110;
       const lines: { text: string; color: string }[] = [
-        { text: `H_core = ${formatSI(hCore, 'A/m')}`, color: col.B_FIELD },
-        ...(gapLength > 0 ? [{ text: `H_gap  = ${formatSI(hGap, 'A/m')}`, color: '#f59e0b' }] : []),
-        { text: `B = ${formatSI(B, 'T')}`, color: col.B_FIELD },
-        { text: `Φ = ${formatSI(flux, 'Wb')}`, color: isDarkMode ? '#94a3b8' : '#475569' },
-        { text: `L = ${formatSI(inductance, 'H')}`, color: isDarkMode ? '#94a3b8' : '#475569' },
+        { text: `H_core = ${formatSI(d.hCore, 'A/m')}`, color: d.col.B_FIELD },
+        ...(d.gapLength > 0 ? [{ text: `H_gap  = ${formatSI(d.hGap, 'A/m')}`, color: '#f59e0b' }] : []),
+        { text: `B = ${formatSI(d.B, 'T')}`, color: d.col.B_FIELD },
+        { text: `Φ = ${formatSI(d.flux, 'Wb')}`, color: isDarkMode ? '#94a3b8' : '#475569' },
+        { text: `L = ${formatSI(d.inductance, 'H')}`, color: isDarkMode ? '#94a3b8' : '#475569' },
       ];
       ctx.fillStyle = isDarkMode ? 'rgba(30,41,59,0.9)' : 'rgba(255,255,255,0.9)';
       ctx.fillRect(readoutX - 5, readoutY - 14, 200, lines.length * 18 + 10);
@@ -220,7 +226,8 @@ export default function MagneticCircuitsPage() {
     };
     render();
     return () => cancelAnimationFrame(animationRef.current);
-  }, [current, turns, gapPercent, materialIndex, isDarkMode, col, muR, material, B, hCore, hGap, gapLength, flux, inductance]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current, turns, gapPercent, materialIndex, isDarkMode]);
 
   return (
     <ModuleLayout
@@ -274,6 +281,9 @@ export default function MagneticCircuitsPage() {
             <HintBox>
               Even a tiny air gap drastically reduces inductance because μ₀ ≪ μ_iron.
             </HintBox>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2">
+              <strong>Note:</strong> μᵣ = 5,000 (Iron) is a typical linearized value. Real iron is nonlinear — μᵣ varies from ~100 (near saturation) to ~10,000 (low flux density). This simulation neglects B-H curve nonlinearity and fringing at the air gap (flux is assumed confined to the core cross-section A).
+            </p>
           </ControlPanel>
         </div>
         </PredictionGate>
@@ -294,19 +304,19 @@ export default function MagneticCircuitsPage() {
           <TheoryGuide>
             <ul className="list-disc pl-4 space-y-2">
               <li>
-                <strong>Magnetic flux Φ</strong> is the total field through a cross-section: <MathWrapper latex="\Phi = BA" />.
+                <strong>Magnetic flux Φ</strong> is the total field through a cross-section: <MathWrapper formula="\Phi = BA" />.
                 It is analogous to current in electric circuits.
               </li>
               <li>
-                <strong>Field strength H</strong> is the magnetizing force: <MathWrapper latex="H = NI / l" />.
+                <strong>Field strength H</strong> is the magnetizing force: <MathWrapper formula="H = NI / l" />.
                 It is analogous to voltage (EMF).
               </li>
               <li>
-                <strong>Reluctance <MathWrapper latex="\mathcal{R}" /></strong> opposes flux just as resistance opposes current.
-                For a uniform path: <MathWrapper latex="\mathcal{R} = l / (\mu A)" />.
+                <strong>Reluctance <MathWrapper formula="\mathcal{R}" /></strong> opposes flux just as resistance opposes current.
+                For a uniform path: <MathWrapper formula="\mathcal{R} = l / (\mu A)" />.
               </li>
               <li>
-                <strong>Hopkinson's law</strong> (<MathWrapper latex="\text{MMF} = \Phi \mathcal{R}" />) is the magnetic version of Ohm's law.
+                <strong>Hopkinson's law</strong> (<MathWrapper formula="\text{MMF} = \Phi \mathcal{R}" />) is the magnetic version of Ohm's law.
                 Series reluctances add, just like series resistors.
               </li>
             </ul>
@@ -324,14 +334,14 @@ export default function MagneticCircuitsPage() {
             <ul className="list-disc pl-4 space-y-2">
               <li>
                 Two coils sharing magnetic flux are <strong>mutually coupled</strong>.
-                The coupling coefficient <MathWrapper latex="k" /> ranges from 0 (no coupling) to 1 (ideal, all flux shared).
+                The coupling coefficient <MathWrapper formula="k" /> ranges from 0 (no coupling) to 1 (ideal, all flux shared).
               </li>
               <li>
-                An <strong>ideal transformer</strong> has <MathWrapper latex="k = 1" /> and transforms voltage by the turns ratio: <MathWrapper latex="V_2/V_1 = N_2/N_1" />.
+                An <strong>ideal transformer</strong> has <MathWrapper formula="k = 1" /> and transforms voltage by the turns ratio: <MathWrapper formula="V_2/V_1 = N_2/N_1" />.
               </li>
               <li>
-                <strong>Worked example:</strong> A transformer has <MathWrapper latex="N_1 = 100" /> and <MathWrapper latex="N_2 = 500" /> turns.
-                If <MathWrapper latex="V_1 = 12\text{ V}" />, then <MathWrapper latex="V_2 = 12 \times 500/100 = 60\text{ V}" />.
+                <strong>Worked example:</strong> A transformer has <MathWrapper formula="N_1 = 100" /> and <MathWrapper formula="N_2 = 500" /> turns.
+                If <MathWrapper formula="V_1 = 12\text{ V}" />, then <MathWrapper formula="V_2 = 12 \times 500/100 = 60\text{ V}" />.
               </li>
               <li className="text-xs text-slate-500 dark:text-slate-400 italic">
                 Note: Full circuit treatment (reflected impedance, dot convention) is covered in Module 3.
@@ -343,11 +353,11 @@ export default function MagneticCircuitsPage() {
           <div className="p-5 rounded-xl border-2 border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20">
             <p className="text-sm text-indigo-900 dark:text-indigo-200 leading-relaxed font-medium">
               Every inductor in Module 2 — every RL circuit, every RLC transient — has a physical origin in what you just learned.
-              The <MathWrapper latex="L" /> in your circuit equations is the inductance of a real coil, determined by its geometry
+              The <MathWrapper formula="L" /> in your circuit equations is the inductance of a real coil, determined by its geometry
               and core material. The math continues in Module 2. The physics started here.
             </p>
             <a
-              href="https://em-ac-lab-module.vercel.app/"
+              href={MODULE_URLS.module2}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition-colors"

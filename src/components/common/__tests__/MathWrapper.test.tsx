@@ -10,14 +10,14 @@ vi.mock('katex', () => ({
 
 describe('MathWrapper', () => {
   it('renders katex output via dangerouslySetInnerHTML', () => {
-    const { container } = render(<MathWrapper latex="E = mc^2" />);
+    const { container } = render(<MathWrapper formula="E = mc^2" />);
     const wrapper = container.querySelector('.katex-wrapper');
     expect(wrapper).toBeInTheDocument();
     expect(wrapper?.innerHTML).toContain('E = mc^2');
   });
 
   it('applies custom className', () => {
-    const { container } = render(<MathWrapper latex="x" className="my-math" />);
+    const { container } = render(<MathWrapper formula="x" className="my-math" />);
     expect(container.querySelector('.katex-wrapper')).toHaveClass('my-math');
   });
 });

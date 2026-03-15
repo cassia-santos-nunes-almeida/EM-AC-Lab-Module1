@@ -47,7 +47,7 @@ src/
 - **Class merging**: Always use `cn()` from `@/utils/cn` for Tailwind classes
 - **Dark mode**: Class-based (`.dark` on `<html>`). Every component MUST have `dark:` variants
 - **Canvas colors**: Import `COLORS` / `COLORS_DARK` from `@/constants/physics`; select based on `isDarkMode` from store
-- **Math rendering**: Use `<MathWrapper latex="..." />` — never raw HTML or custom parsers
+- **Math rendering**: Use `<MathWrapper formula="..." />` — never raw HTML or custom parsers
 - **Icons**: Import from `lucide-react` — never custom SVG icons
 - **Components**: TypeScript + proper interfaces for all props
 - **State**: Zustand store for cross-component state; local useState for component-internal state
