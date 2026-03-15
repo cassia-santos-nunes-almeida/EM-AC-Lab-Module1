@@ -62,7 +62,7 @@
 - Was computing single H = MMF/l which is wrong for composite circuits. Fixed to show H_core = B/(μ₀μᵣ) and H_gap = B/μ₀ separately.
 
 ### ~~Misleading Module 2 Link~~ ✅ (2026-03-05)
-- Button said "Continue to Module 2" but linked to `/` (Overview). Fixed to link to actual Module 2 at `https://em-ac-lab-module.vercel.app/`.
+- Button said "Continue to Module 2" but linked to `/` (Overview). Fixed to link to actual Module 2 at `https://em-ac-lab-module2.vercel.app/`.
 
 ### ~~ConceptCheck/ChallengeCard Not Rendered~~ ✅
 - Fixed: Created `ModuleAssessment` wrapper, integrated into all 9 pages via `ModuleLayout`.
