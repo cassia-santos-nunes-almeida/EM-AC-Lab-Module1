@@ -11,7 +11,7 @@ This app is part of a three-module progressive learning sequence:
 | Module | Focus | Description |
 |---|---|---|
 | **Module 1 (this app)** | Electromagnetic Fundamentals | Maxwell's equations, field laws, EM waves, magnetic circuits |
-| [Module 2](https://em-ac-lab-module.vercel.app/) | Circuit Analysis | Component physics, time/s-domain analysis, Laplace transforms |
+| [Module 2](https://em-ac-lab-module2.vercel.app/) | Circuit Analysis | Component physics, time/s-domain analysis, Laplace transforms |
 | [Module 3](https://em-ac-lab-module3.vercel.app/) | Transmission Lines & Antennas | Coupled coils, transmission line theory, Smith chart, antennas |
 
 **Module 1 → Module 2 bridge:** The Magnetic Circuits module introduces reluctance, mutual inductance, and transformer ratios — concepts that carry directly into Module 2's circuit analysis. **Module 1 → Module 3 bridge:** EM wave propagation and phasor concepts lay the groundwork for transmission line theory in Module 3.
