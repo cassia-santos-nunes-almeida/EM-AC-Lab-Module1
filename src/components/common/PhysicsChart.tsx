@@ -8,7 +8,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { useProgressStore } from '@/store/progressStore';
+import { useThemeStore } from '@/store/progressStore';
 
 interface ChartLine {
   dataKey: string;
@@ -26,7 +26,7 @@ interface PhysicsChartProps {
 }
 
 export function PhysicsChart({ title, data, xKey, xLabel, yLabel, lines }: PhysicsChartProps) {
-  const { isDarkMode } = useProgressStore();
+  const isDarkMode = useThemeStore((s) => s.theme === 'dark');
   const textColor = isDarkMode ? '#94a3b8' : '#64748b';
   const gridColor = isDarkMode ? '#334155' : '#e2e8f0';
 

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useCanvasTouch } from '@/hooks/useCanvasTouch';
 import { Move } from 'lucide-react';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
-import { useProgressStore } from '@/store/progressStore';
+import { useThemeStore } from '@/store/progressStore';
 import { ControlPanel } from '@/components/common/ControlPanel';
 import { Slider } from '@/components/common/Slider';
 import { EquationBox } from '@/components/common/EquationBox';
@@ -22,7 +22,7 @@ interface ParticleState {
 }
 
 export default function LorentzPage() {
-  const { isDarkMode } = useProgressStore();
+  const isDarkMode = useThemeStore((s) => s.theme === 'dark');
   const col = isDarkMode ? COLORS_DARK : COLORS;
 
   const [velocity, setVelocity] = useState(50);
@@ -342,7 +342,7 @@ export default function LorentzPage() {
               <Move size={16} /> Respawn
             </button>
             <HintBox>
-              Increase the Mass (<MathWrapper latex="m" />) to see the radius expand. Heavier particles are
+              Increase the Mass (<MathWrapper formula="m" />) to see the radius expand. Heavier particles are
               harder to deflect!
             </HintBox>
           </ControlPanel>
@@ -367,7 +367,7 @@ export default function LorentzPage() {
               <strong>Right Hand Rule:</strong> Force is perpendicular to both velocity and B-field.
             </p>
             <p>
-              <strong>Cyclotron Radius:</strong> <MathWrapper latex="r = mv / qB" />. Faster/heavier particles
+              <strong>Cyclotron Radius:</strong> <MathWrapper formula="r = mv / qB" />. Faster/heavier particles
               orbit wider. Stronger fields tighten the orbit.
             </p>
           </TheoryGuide>

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useCanvasTouch } from '@/hooks/useCanvasTouch';
 import { COLORS, COLORS_DARK, WaveViewMode, type WaveViewModeType } from '@/constants/physics';
-import { useProgressStore } from '@/store/progressStore';
+import { useThemeStore } from '@/store/progressStore';
 import { ControlPanel } from '@/components/common/ControlPanel';
 import { Slider } from '@/components/common/Slider';
 import { EquationBox } from '@/components/common/EquationBox';
@@ -17,7 +17,7 @@ import type { EMWaveState } from '@/types';
 const POINTS = 200;
 
 export default function EMWavePage() {
-  const { isDarkMode } = useProgressStore();
+  const isDarkMode = useThemeStore((s) => s.theme === 'dark');
   const c = isDarkMode ? COLORS_DARK : COLORS;
 
   const [viewMode, setViewMode] = useState<WaveViewModeType>(WaveViewMode.VIEW_3D);
@@ -942,7 +942,7 @@ export default function EMWavePage() {
               <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-2 text-xs text-amber-800 dark:text-amber-300">
                 <strong>AC Circuits &amp; EM Waves:</strong> Maxwell&apos;s equations predict that time-varying fields propagate as waves.
                 In circuits, the same sinusoidal solutions appear as voltage/current phasors. The power factor
-                <MathWrapper latex="\cos(\Delta\phi)" /> determines energy transfer efficiency.
+                <MathWrapper formula="\cos(\Delta\phi)" /> determines energy transfer efficiency.
               </div>
             )}
           </div>
@@ -1114,14 +1114,14 @@ export default function EMWavePage() {
               <>
                 <p>
                   <strong>Instantaneous Power:</strong>{' '}
-                  <MathWrapper latex="p(t) = v(t) \cdot i(t)" />. It oscillates at{' '}
-                  <MathWrapper latex="2\omega" />.
+                  <MathWrapper formula="p(t) = v(t) \cdot i(t)" />. It oscillates at{' '}
+                  <MathWrapper formula="2\omega" />.
                 </p>
                 <p>
                   <strong>Average Power:</strong> Depends on phase difference{' '}
-                  <MathWrapper latex="\Delta\phi" />. Max when in phase (
-                  <MathWrapper latex="\Delta\phi=0" />), zero when{' '}
-                  <MathWrapper latex="90^\circ" /> out of phase.
+                  <MathWrapper formula="\Delta\phi" />. Max when in phase (
+                  <MathWrapper formula="\Delta\phi=0" />), zero when{' '}
+                  <MathWrapper formula="90^\circ" /> out of phase.
                 </p>
               </>
             ) : (
@@ -1133,8 +1133,8 @@ export default function EMWavePage() {
                   They are perpendicular to each other and to the direction of propagation.
                 </p>
                 <p>
-                  In a vacuum, velocity <MathWrapper latex="v = c" />. In a medium with refractive
-                  index <MathWrapper latex="n" />, velocity becomes <MathWrapper latex="v = c/n" />.
+                  In a vacuum, velocity <MathWrapper formula="v = c" />. In a medium with refractive
+                  index <MathWrapper formula="n" />, velocity becomes <MathWrapper formula="v = c/n" />.
                 </p>
               </>
             )}

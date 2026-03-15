@@ -1,7 +1,8 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
-import { useProgressStore } from '@/store/progressStore';
+import { useThemeStore } from '@/store/progressStore';
 import { MathWrapper } from '@/components/common/MathWrapper';
+import { CollapsibleSection } from '@/components/common/CollapsibleSection';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
 import { RealWorldHook } from '@/components/common/RealWorldHook';
 
@@ -57,7 +58,7 @@ function MaxwellCard({ title, latex, description, draw, expanded, onToggleExpand
             </button>
           </div>
           <div className="text-center text-xl text-indigo-700 dark:text-indigo-400 mb-4 bg-indigo-50 dark:bg-indigo-900/30 rounded py-3">
-            <MathWrapper latex={latex} />
+            <MathWrapper formula={latex} />
           </div>
           <div className="flex-grow relative bg-white dark:bg-slate-900 rounded-lg overflow-hidden min-h-[300px] mb-3 border border-slate-100 dark:border-slate-700">
             <canvas ref={cvsRef} className="w-full h-full absolute inset-0" role="img" aria-label={`${title} expanded visualization`} />
@@ -79,7 +80,7 @@ function MaxwellCard({ title, latex, description, draw, expanded, onToggleExpand
     >
       <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-1">{title}</h3>
       <div className="text-center text-lg text-indigo-700 dark:text-indigo-400 mb-2 bg-indigo-50 dark:bg-indigo-900/30 rounded py-2 min-h-[50px] flex items-center justify-center">
-        <MathWrapper latex={latex} />
+        <MathWrapper formula={latex} />
       </div>
       <div className="flex-grow relative bg-white dark:bg-slate-900 rounded-lg overflow-hidden min-h-[160px] mb-2 border border-slate-100 dark:border-slate-700">
         <canvas ref={cvsRef} className="w-full h-full absolute inset-0" role="img" aria-label="Maxwell's equation animated visualization" />
@@ -91,7 +92,7 @@ function MaxwellCard({ title, latex, description, draw, expanded, onToggleExpand
 }
 
 export default function MaxwellPage() {
-  const { isDarkMode } = useProgressStore();
+  const isDarkMode = useThemeStore((s) => s.theme === 'dark');
   const c = isDarkMode ? COLORS_DARK : COLORS;
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
 
@@ -282,26 +283,56 @@ export default function MaxwellPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4 border border-slate-200 dark:border-slate-600">
                 <h4 className="font-bold text-red-600 dark:text-red-400 mb-2">1. Gauss's Law (E)</h4>
-                <div className="text-center py-2"><MathWrapper latex="\oint \vec{E} \cdot d\vec{A} = \frac{Q_{enc}}{\epsilon_0}" /></div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Electric flux through a closed surface equals the enclosed charge divided by <MathWrapper latex="\epsilon_0" />. Charges are sources/sinks of electric fields.</p>
+                <div className="text-center py-2"><MathWrapper formula="\oint \vec{E} \cdot d\vec{A} = \frac{Q_{enc}}{\epsilon_0}" /></div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Electric flux through a closed surface equals the enclosed charge divided by <MathWrapper formula="\epsilon_0" />. Charges are sources/sinks of electric fields.</p>
               </div>
               <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4 border border-slate-200 dark:border-slate-600">
                 <h4 className="font-bold text-blue-600 dark:text-blue-400 mb-2">2. Gauss's Law (B)</h4>
-                <div className="text-center py-2"><MathWrapper latex="\oint \vec{B} \cdot d\vec{A} = 0" /></div>
+                <div className="text-center py-2"><MathWrapper formula="\oint \vec{B} \cdot d\vec{A} = 0" /></div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Magnetic flux through a closed surface is always zero. There are no magnetic monopoles — field lines always form closed loops.</p>
               </div>
               <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4 border border-slate-200 dark:border-slate-600">
                 <h4 className="font-bold text-emerald-600 dark:text-emerald-400 mb-2">3. Faraday's Law</h4>
-                <div className="text-center py-2"><MathWrapper latex="\oint \vec{E} \cdot d\vec{l} = -\frac{d\Phi_B}{dt}" /></div>
+                <div className="text-center py-2"><MathWrapper formula="\oint \vec{E} \cdot d\vec{l} = -\frac{d\Phi_B}{dt}" /></div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">A changing magnetic flux induces an electric field (EMF). This is the basis for generators, transformers, and inductors.</p>
               </div>
               <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4 border border-slate-200 dark:border-slate-600">
                 <h4 className="font-bold text-amber-600 dark:text-amber-400 mb-2">4. Ampère–Maxwell</h4>
-                <div className="text-center py-2"><MathWrapper latex="\oint \vec{B} \cdot d\vec{l} = \mu_0\left(I_{enc} + \epsilon_0 \frac{d\Phi_E}{dt}\right)" /></div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Magnetic fields are generated by currents AND changing electric fields. Maxwell's displacement current term (<MathWrapper latex="\epsilon_0 \frac{d\Phi_E}{dt}" />) predicts electromagnetic waves.</p>
+                <div className="text-center py-2"><MathWrapper formula="\oint \vec{B} \cdot d\vec{l} = \mu_0\left(I_{enc} + \epsilon_0 \frac{d\Phi_E}{dt}\right)" /></div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Magnetic fields are generated by currents AND changing electric fields. Maxwell's displacement current term (<MathWrapper formula="\epsilon_0 \frac{d\Phi_E}{dt}" />) predicts electromagnetic waves.</p>
               </div>
             </div>
           </div>
+
+          <CollapsibleSection title="Differential Form (Point Form)">
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+              The integral forms above are equivalent to these point-form (differential) equations,
+              which describe the fields at every point in space rather than over surfaces and paths.
+              The differential and integral forms are connected by the divergence and Stokes' theorems.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4 border border-slate-200 dark:border-slate-600">
+                <h4 className="font-bold text-red-600 dark:text-red-400 mb-2">1. Gauss's Law (E)</h4>
+                <div className="text-center py-2"><MathWrapper formula="\nabla \cdot \vec{E} = \frac{\rho}{\epsilon_0}" /></div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">The divergence of E equals the local charge density. Electric field lines originate from positive charges and terminate on negative charges.</p>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4 border border-slate-200 dark:border-slate-600">
+                <h4 className="font-bold text-blue-600 dark:text-blue-400 mb-2">2. Gauss's Law (B)</h4>
+                <div className="text-center py-2"><MathWrapper formula="\nabla \cdot \vec{B} = 0" /></div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">The divergence of B is always zero everywhere. Magnetic field lines have no beginning or end — they always form closed loops.</p>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4 border border-slate-200 dark:border-slate-600">
+                <h4 className="font-bold text-emerald-600 dark:text-emerald-400 mb-2">3. Faraday's Law</h4>
+                <div className="text-center py-2"><MathWrapper formula="\nabla \times \vec{E} = -\frac{\partial \vec{B}}{\partial t}" /></div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">The curl of E equals the negative time rate of change of B. A time-varying magnetic field creates a circulating electric field.</p>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4 border border-slate-200 dark:border-slate-600">
+                <h4 className="font-bold text-amber-600 dark:text-amber-400 mb-2">4. Ampère–Maxwell</h4>
+                <div className="text-center py-2"><MathWrapper formula="\nabla \times \vec{B} = \mu_0 \vec{J} + \mu_0 \epsilon_0 \frac{\partial \vec{E}}{\partial t}" /></div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">The curl of B is generated by current density J and the displacement current. This predicts that a changing electric field produces a magnetic field.</p>
+              </div>
+            </div>
+          </CollapsibleSection>
         </div>
       }
     />
