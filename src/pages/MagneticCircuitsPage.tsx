@@ -70,7 +70,9 @@ export default function MagneticCircuitsPage() {
 
   // Ref for derived values consumed in the canvas draw loop
   const derivedRef = useRef({ B, hCore, hGap, gapLength, flux, inductance, col, muR, material });
-  derivedRef.current = { B, hCore, hGap, gapLength, flux, inductance, col, muR, material };
+  useEffect(() => {
+    derivedRef.current = { B, hCore, hGap, gapLength, flux, inductance, col, muR, material };
+  }, [B, hCore, hGap, gapLength, flux, inductance, col, muR, material]);
 
   // Canvas rendering — only restart on actual state changes
   useEffect(() => {
