@@ -43,7 +43,15 @@
   - `MaxwellPage.tsx:85` — `_t` is defined but never used
   - `EMWavePage.tsx` — Missing `isDarkMode` in useCallback dependency array
   - `LorentzPage.tsx:47` — Missing `handleReset` in useEffect dependency array
-- **Note**: Pre-existing from earlier sprints, not introduced by Phase 2 work.
+- **Note**: Pre-existing from earlier sprints, not introduced by Phase 2 or audit work.
+
+### Iron Permeability Linearization
+- **Severity**: Low (documented)
+- **Description**: μᵣ = 5000 for iron is a linearized value. Real iron is nonlinear (μᵣ ~ 100–10,000). A note is shown in the MagneticCircuitsPage UI.
+
+### Fringing Effects Ignored
+- **Severity**: Low (documented)
+- **Description**: Air gap simulation assumes no fringing at the gap boundary. A note explains this in the UI.
 
 ## Resolved Issues
 

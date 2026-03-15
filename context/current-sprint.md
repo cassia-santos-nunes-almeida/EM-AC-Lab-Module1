@@ -45,6 +45,16 @@
 - [x] Implement AI Tutor with Google Gemini integration
 - [x] Create quiz content (27 questions + 9 challenges)
 
+### Completed (Cross-Module Audit — 2026-03-15)
+- [x] Reworded Maxwell Q3 quiz: "How many equations explicitly contain B or Φ_B?" → correct answer: 3
+- [x] Added iron permeability note in MagneticCircuitsPage: "μᵣ = 5000 is linearized; real iron μᵣ ~ 100–10,000"
+- [x] Added fringing effect note in MagneticCircuitsPage: "No fringing assumed at air gap"
+- [x] Added Maxwell differential forms (∇·E, ∇·B, ∇×E, ∇×B) in CollapsibleSection on MaxwellPage
+- [x] Unified dark mode localStorage key to `emac-theme` (shared across all three modules)
+- [x] Added cross-module URL env vars (VITE_MODULE*_URL) and `src/constants/modules.ts`
+- [x] Fixed MagneticCircuitsPage useEffect: moved derivedRef update to useEffect (React 19 refs rule)
+- [x] All 60 tests passing, build clean
+
 ### Upcoming / Not Yet Done
 - [ ] Add smoke tests for shared components
 - [ ] Add render tests for each page
