@@ -226,7 +226,6 @@ export default function MagneticCircuitsPage() {
     };
     render();
     return () => cancelAnimationFrame(animationRef.current);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current, turns, gapPercent, materialIndex, isDarkMode]);
 
   return (
