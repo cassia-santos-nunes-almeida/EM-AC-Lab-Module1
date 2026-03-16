@@ -55,6 +55,14 @@
 - [x] Fixed MagneticCircuitsPage useEffect: moved derivedRef update to useEffect (React 19 refs rule)
 - [x] All 60 tests passing, build clean
 
+### Completed (Image & Analytics Sprint — 2026-03-16)
+- [x] Added 15 real-world educational images with FigureImage component across all module pages
+- [x] Standardized README with unified template
+- [x] Added Vercel Analytics with owner filtering, session tracking, referrer detection
+- [x] Fixed broken Wikimedia image URLs (corrected MD5 hash paths, replaced non-existent filenames)
+- [x] Added FigureImage click-to-enlarge modal + responsive size constraints
+- All PRs merged to `main`
+
 ### Upcoming / Not Yet Done
 - [ ] Add smoke tests for shared components
 - [ ] Add render tests for each page
@@ -62,6 +70,7 @@
 - [ ] Generate PWA icons (pwa-192x192.png, pwa-512x512.png)
 - [ ] Consider using recharts for field strength vs distance graphs
 - [ ] Add 3-tier hints to remaining module quiz questions (only Maxwell Q1 and Magnetic Circuits have them so far)
+- [ ] Manually verify all Wikimedia image URLs load correctly on the live site
 
 ## New Components (Phase 2)
 - `RealWorldHook` — amber card with lightbulb icon, shows real-world engineering context
@@ -77,5 +86,6 @@
 - Build: clean (no TypeScript or lint errors)
 
 ## Branch
-- Working branch: `claude/review-codebase-ksI6g`
-- All changes committed and pushed
+- Previous working branch: `claude/review-codebase-ksI6g` (merged)
+- Latest working branch: `claude/audit-react-educational-apps-mqaVf` (merged to main)
+- All changes committed, pushed, and merged
