@@ -16,11 +16,6 @@ interface FigureImageProps {
   className?: string;
 }
 
-/**
- * A figure component that displays an image with a caption, attribution,
- * and a loading/error state. Used to add real-world photographs and
- * diagrams alongside educational content.
- */
 export function FigureImage({
   src,
   alt,
@@ -35,7 +30,7 @@ export function FigureImage({
   return (
     <figure
       className={cn(
-        'rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm',
+        'max-w-md mx-auto rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm',
         className,
       )}
     >
@@ -50,18 +45,20 @@ export function FigureImage({
             Image unavailable
           </div>
         )}
-        <img
-          src={src}
-          alt={alt}
-          loading="lazy"
-          onLoad={() => setLoaded(true)}
-          onError={() => setError(true)}
-          className={cn(
-            'w-full h-auto object-cover transition-opacity duration-300',
-            loaded ? 'opacity-100' : 'opacity-0',
-            error && 'hidden',
-          )}
-        />
+        <a href={src} target="_blank" rel="noopener noreferrer" title="Click to view full size">
+          <img
+            src={src}
+            alt={alt}
+            loading="lazy"
+            onLoad={() => setLoaded(true)}
+            onError={() => setError(true)}
+            className={cn(
+              'w-full h-auto max-h-72 object-contain transition-opacity duration-300 cursor-zoom-in',
+              loaded ? 'opacity-100' : 'opacity-0',
+              error && 'hidden',
+            )}
+          />
+        </a>
       </div>
       <figcaption className="px-4 py-3 space-y-1">
         <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
