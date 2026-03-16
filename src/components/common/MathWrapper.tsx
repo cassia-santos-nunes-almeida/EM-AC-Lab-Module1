@@ -5,23 +5,18 @@ import { cn } from '@/utils/cn';
 interface MathWrapperProps {
   /** LaTeX formula string */
   formula?: string;
-  /** @deprecated Use `formula` instead */
-  latex?: string;
   /** Display as block (centered) mode */
   block?: boolean;
-  /** @deprecated Use `block` instead */
-  displayMode?: boolean;
   /** Additional CSS classes */
   className?: string;
 }
 
 /**
  * KaTeX math renderer with error fallback.
- * Replaces the old custom parseLatex/LatexRenderer.
  */
-export function MathWrapper({ formula, latex, block, displayMode, className }: MathWrapperProps) {
-  const text = formula ?? latex ?? '';
-  const isBlock = block ?? displayMode ?? false;
+export function MathWrapper({ formula, block, className }: MathWrapperProps) {
+  const text = formula ?? '';
+  const isBlock = block ?? false;
 
   const html = useMemo(() => {
     try {

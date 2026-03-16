@@ -43,9 +43,10 @@ function detectReferrerSource(): string | null {
  * Call once at the app root level.
  */
 export function useAnalytics() {
-  const sessionStart = useRef(Date.now());
+  const sessionStart = useRef(0);
 
   useEffect(() => {
+    sessionStart.current = Date.now();
     if (isOwner()) return;
 
     // Track referrer source on first load
