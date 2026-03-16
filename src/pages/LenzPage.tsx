@@ -365,7 +365,7 @@ export default function LenzPage() {
         <div className="space-y-6">
           <FigureImage
             className="mb-6"
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Eddy_currents_due_to_magnet.svg/440px-Eddy_currents_due_to_magnet.svg.png"
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/Eddy_currents_due_to_magnet.svg/500px-Eddy_currents_due_to_magnet.svg.png"
             alt="Eddy currents induced in a conductor by a moving magnet"
             caption="Eddy currents from Lenz's law: a moving magnet induces currents that create an opposing field, braking the motion."
             attribution="Wikimedia Commons, CC BY-SA 3.0"

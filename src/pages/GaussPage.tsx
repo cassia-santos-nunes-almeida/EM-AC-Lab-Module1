@@ -302,11 +302,11 @@ export default function GaussPage() {
         <div className="space-y-6">
           <FigureImage
             className="mb-6"
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Faraday_cage_-_FISL_14_-_2013-07-03.jpg/640px-Faraday_cage_-_FISL_14_-_2013-07-03.jpg"
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Faraday_Cage.JPG/500px-Faraday_Cage.JPG"
             alt="Faraday cage demonstration showing electric field shielding"
             caption="A Faraday cage: Gauss's law explains why the electric field inside a closed conductor is zero."
-            attribution="Rodrigo Ghiraldelli, CC BY-SA 3.0 — Wikimedia Commons"
-            sourceUrl="https://commons.wikimedia.org/wiki/File:Faraday_cage_-_FISL_14_-_2013-07-03.jpg"
+            attribution="Amanjosan2008, CC BY-SA 4.0 — Wikimedia Commons"
+            sourceUrl="https://commons.wikimedia.org/wiki/File:Faraday_Cage.JPG"
           />
           <EquationBox title={`Gauss's Law for ${mode === 'ELECTRIC' ? 'Electric Fields' : 'Magnetism'}`} equations={equations} />
           {(() => {

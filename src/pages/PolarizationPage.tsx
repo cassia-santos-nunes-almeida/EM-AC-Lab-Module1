@@ -414,7 +414,7 @@ export default function PolarizationPage() {
         <div className="space-y-6">
           <FigureImage
             className="mb-6"
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Polarizing_filter.jpg/640px-Polarizing_filter.jpg"
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Polarizing_filter.jpg/500px-Polarizing_filter.jpg"
             alt="Effect of a polarizing filter on reflected light from water"
             caption="Polarizing filter in action: reflected light from water is partially polarized, and a filter can block it to reduce glare."
             attribution="Amithm, CC BY-SA 3.0 — Wikimedia Commons"

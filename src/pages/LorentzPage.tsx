@@ -355,14 +355,14 @@ export default function LorentzPage() {
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 mb-6">
             <FigureImage
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Cyclotron_patent.png/440px-Cyclotron_patent.png"
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Cyclotron_patent.png/500px-Cyclotron_patent.png"
               alt="Lawrence's original cyclotron patent diagram"
               caption="Lawrence's cyclotron patent: charged particles spiral outward as the Lorentz force bends their path into circles."
               attribution="Ernest O. Lawrence, Public Domain — Wikimedia Commons"
               sourceUrl="https://commons.wikimedia.org/wiki/File:Cyclotron_patent.png"
             />
             <FigureImage
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Polarlicht_2.jpg/640px-Polarlicht_2.jpg"
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Polarlicht_2.jpg/500px-Polarlicht_2.jpg"
               alt="Aurora borealis (Northern Lights)"
               caption="Aurora borealis: solar wind particles spiral along Earth's magnetic field due to the Lorentz force, exciting atmospheric gases."
               attribution="United States Air Force, Public Domain — Wikimedia Commons"

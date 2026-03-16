@@ -295,11 +295,11 @@ export default function MagneticCircuitsPage() {
         <div className="space-y-6">
           <FigureImage
             className="mb-6"
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Elektronik-Transformator.jpg/640px-Elektronik-Transformator.jpg"
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/IF_transformer.JPG/500px-IF_transformer.JPG"
             alt="Toroidal transformer with copper windings on a ferrite core"
             caption="A toroidal transformer: the closed core confines nearly all magnetic flux, minimizing leakage."
-            attribution="Honina, CC BY-SA 3.0 — Wikimedia Commons"
-            sourceUrl="https://commons.wikimedia.org/wiki/File:Elektronik-Transformator.jpg"
+            attribution="LoKiLeCh, CC BY-SA 3.0 — Wikimedia Commons"
+            sourceUrl="https://commons.wikimedia.org/wiki/File:IF_transformer.JPG"
           />
           {/* Subsection 1: Flux and Reluctance */}
           <EquationBox
