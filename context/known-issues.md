@@ -17,16 +17,14 @@
 - **Description**: Vite reports "fonts/KaTeX_*.woff2 didn't resolve at build time, will remain unchanged to be resolved at runtime" for all KaTeX font files. Fonts still work at runtime.
 - **Root cause**: KaTeX CSS references relative font paths that Vite can't resolve during bundling.
 
-### Partial 3-Tier Hint Coverage
-- **Severity**: Low
-- **Description**: Only Maxwell Q1 and Magnetic Circuits questions have 3-tier hints. The remaining 24+ quiz questions only have the standard explanation on correct answer.
-- **Plan**: Progressively add hint tiers to all questions in future sprints.
+### ~~Partial 3-Tier Hint Coverage~~ ✅ (2026-03-16)
+- All 27 quiz questions now have 3-tier hints (conceptual, procedural, worked example).
 
 ## Tech Debt
 
 ### Test Coverage
-- 60 tests passing (shared components + page render tests).
-- Could expand: integration tests for PredictionGate flow, ConceptCheck hint progression, Phasor Sync animation.
+- 71 tests passing (shared components + page render tests + PredictionGate + 3-tier hint progression).
+- Could expand: integration tests for Phasor Sync animation.
 
 ### recharts Not Yet Used
 - recharts is installed but no charts are currently rendered. Could be used for:

@@ -10,7 +10,7 @@ Part of the three-module EM&AC Lab course: **M1 (EM Fundamentals)** → M2 (Circ
 npm run dev          # Start dev server (Vite)
 npm run build        # TypeScript check + production build
 npm run lint         # ESLint (incl. jsx-a11y accessibility)
-npm test             # Vitest test suite (60 tests)
+npm test             # Vitest test suite (71 tests)
 npm run preview      # Preview production build locally
 ```
 

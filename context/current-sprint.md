@@ -82,7 +82,7 @@
 - `hintUsage` — tracks highest hint tier revealed per question (key → tier 1-3)
 
 ## Test Status
-- 60/60 tests passing
+- 71/71 tests passing
 - Build: clean (no TypeScript or lint errors)
 
 ## Branch
