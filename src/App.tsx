@@ -3,6 +3,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { Layout } from '@/components/layout/Layout';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { lazy, Suspense } from 'react';
+import { beforeSendFilter, useAnalytics } from '@/hooks/useAnalytics';
 
 // Retry dynamic imports once on failure (handles stale service worker cache)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,6 +47,8 @@ function PageLoader() {
 }
 
 export default function App() {
+  useAnalytics();
+
   return (
     <BrowserRouter>
       <Routes>
@@ -162,7 +165,7 @@ export default function App() {
           />
         </Route>
       </Routes>
-      <Analytics />
+      <Analytics beforeSend={beforeSendFilter} />
     </BrowserRouter>
   );
 }
