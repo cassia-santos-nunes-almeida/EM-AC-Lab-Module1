@@ -479,18 +479,18 @@ export default function CoulombPage() {
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 mb-6">
             <FigureImage
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Bcoulomb.png/449px-Bcoulomb.png"
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Bcoulomb.png/500px-Bcoulomb.png"
               alt="Coulomb's torsion balance used to measure electrostatic force"
               caption="Coulomb's torsion balance (1785): the instrument that first quantified the inverse-square law for electric charges."
               attribution="Charles-Augustin de Coulomb, Public Domain — Wikimedia Commons"
               sourceUrl="https://commons.wikimedia.org/wiki/File:Bcoulomb.png"
             />
             <FigureImage
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Van_de_Graaff_generator.jpg/468px-Van_de_Graaff_generator.jpg"
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Van_de_Graaff_Generator_-_Science_City_-_Calcutta_1997_444.JPG/500px-Van_de_Graaff_Generator_-_Science_City_-_Calcutta_1997_444.JPG"
               alt="Van de Graaff generator producing visible electric sparks"
               caption="A Van de Graaff generator: accumulated charge creates electric fields strong enough to ionize air."
-              attribution="Brocken Inaglory, CC BY-SA 3.0 — Wikimedia Commons"
-              sourceUrl="https://commons.wikimedia.org/wiki/File:Van_de_Graaff_generator.jpg"
+              attribution="Biswarup Ganguly, CC BY 3.0 — Wikimedia Commons"
+              sourceUrl="https://commons.wikimedia.org/wiki/File:Van_de_Graaff_Generator_-_Science_City_-_Calcutta_1997_444.JPG"
             />
           </div>
           <EquationBox

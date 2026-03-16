@@ -277,7 +277,7 @@ export default function MaxwellPage() {
         <div className="space-y-6">
           <FigureImage
             className="mb-6"
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/James_Clerk_Maxwell.png/440px-James_Clerk_Maxwell.png"
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/James_Clerk_Maxwell.png/500px-James_Clerk_Maxwell.png"
             alt="Portrait of James Clerk Maxwell"
             caption="James Clerk Maxwell (1831–1879): unified electricity, magnetism, and light into four elegant equations."
             attribution="Public Domain — Wikimedia Commons"
