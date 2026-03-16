@@ -10,6 +10,7 @@ import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
 import { RealWorldHook } from '@/components/common/RealWorldHook';
 import { PredictionGate } from '@/components/common/PredictionGate';
+import { FigureImage } from '@/components/common/FigureImage';
 
 export default function LenzPage() {
   const isDarkMode = useThemeStore((s) => s.theme === 'dark');
@@ -362,6 +363,14 @@ export default function LenzPage() {
       }
       theory={
         <div className="space-y-6">
+          <FigureImage
+            className="mb-6"
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Eddy_currents_due_to_magnet.svg/440px-Eddy_currents_due_to_magnet.svg.png"
+            alt="Eddy currents induced in a conductor by a moving magnet"
+            caption="Eddy currents from Lenz's law: a moving magnet induces currents that create an opposing field, braking the motion."
+            attribution="Wikimedia Commons, CC BY-SA 3.0"
+            sourceUrl="https://commons.wikimedia.org/wiki/File:Eddy_currents_due_to_magnet.svg"
+          />
           <EquationBox
             title="Lenz's Law"
             equations={[

@@ -11,6 +11,7 @@ import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
 import { RealWorldHook } from '@/components/common/RealWorldHook';
 import { PhysicsChart } from '@/components/common/PhysicsChart';
+import { FigureImage } from '@/components/common/FigureImage';
 import type { Charge } from '@/types';
 
 const K_COULOMB = 8.988e9;
@@ -476,6 +477,22 @@ export default function CoulombPage() {
       }
       theory={
         <div className="space-y-6">
+          <div className="grid gap-4 sm:grid-cols-2 mb-6">
+            <FigureImage
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Bcoulomb.png/449px-Bcoulomb.png"
+              alt="Coulomb's torsion balance used to measure electrostatic force"
+              caption="Coulomb's torsion balance (1785): the instrument that first quantified the inverse-square law for electric charges."
+              attribution="Charles-Augustin de Coulomb, Public Domain — Wikimedia Commons"
+              sourceUrl="https://commons.wikimedia.org/wiki/File:Bcoulomb.png"
+            />
+            <FigureImage
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Van_de_Graaff_generator.jpg/468px-Van_de_Graaff_generator.jpg"
+              alt="Van de Graaff generator producing visible electric sparks"
+              caption="A Van de Graaff generator: accumulated charge creates electric fields strong enough to ionize air."
+              attribution="Brocken Inaglory, CC BY-SA 3.0 — Wikimedia Commons"
+              sourceUrl="https://commons.wikimedia.org/wiki/File:Van_de_Graaff_generator.jpg"
+            />
+          </div>
           <EquationBox
             title="Superposition Principle"
             equations={[

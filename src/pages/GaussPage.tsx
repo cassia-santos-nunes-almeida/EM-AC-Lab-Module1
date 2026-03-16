@@ -11,6 +11,7 @@ import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
 import { RealWorldHook } from '@/components/common/RealWorldHook';
 import { PhysicsChart } from '@/components/common/PhysicsChart';
+import { FigureImage } from '@/components/common/FigureImage';
 
 const EPSILON_0 = 8.854e-12;
 
@@ -299,6 +300,14 @@ export default function GaussPage() {
       }
       theory={
         <div className="space-y-6">
+          <FigureImage
+            className="mb-6"
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Faraday_cage_-_FISL_14_-_2013-07-03.jpg/640px-Faraday_cage_-_FISL_14_-_2013-07-03.jpg"
+            alt="Faraday cage demonstration showing electric field shielding"
+            caption="A Faraday cage: Gauss's law explains why the electric field inside a closed conductor is zero."
+            attribution="Rodrigo Ghiraldelli, CC BY-SA 3.0 — Wikimedia Commons"
+            sourceUrl="https://commons.wikimedia.org/wiki/File:Faraday_cage_-_FISL_14_-_2013-07-03.jpg"
+          />
           <EquationBox title={`Gauss's Law for ${mode === 'ELECTRIC' ? 'Electric Fields' : 'Magnetism'}`} equations={equations} />
           {(() => {
             const Q = charge * 1e-6;

@@ -12,6 +12,7 @@ import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
 import { RealWorldHook } from '@/components/common/RealWorldHook';
 import { PhysicsChart } from '@/components/common/PhysicsChart';
+import { FigureImage } from '@/components/common/FigureImage';
 import type { EMWaveState } from '@/types';
 
 const POINTS = 200;
@@ -1045,6 +1046,22 @@ export default function EMWavePage() {
       }
       theory={
         <div className="space-y-6">
+          <div className="grid gap-4 sm:grid-cols-2 mb-6">
+            <FigureImage
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Very_Large_Array%2C_2012.jpg/640px-Very_Large_Array%2C_2012.jpg"
+              alt="Very Large Array radio telescope dishes in New Mexico"
+              caption="The Very Large Array: 27 antennas detect electromagnetic waves from space."
+              attribution="Hajor, CC BY-SA 2.0 — Wikimedia Commons"
+              sourceUrl="https://commons.wikimedia.org/wiki/File:Very_Large_Array,_2012.jpg"
+            />
+            <FigureImage
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/EM_Spectrum_Properties_edit.svg/640px-EM_Spectrum_Properties_edit.svg.png"
+              alt="Electromagnetic spectrum from radio waves to gamma rays"
+              caption="The electromagnetic spectrum: all EM waves obey Maxwell's equations — they differ only in frequency and wavelength."
+              attribution="Inductiveload/NASA, CC BY-SA 3.0 — Wikimedia Commons"
+              sourceUrl="https://commons.wikimedia.org/wiki/File:EM_Spectrum_Properties_edit.svg"
+            />
+          </div>
           <EquationBox
             title={viewMode === WaveViewMode.VIEW_VI ? 'AC Circuit Analysis' : 'Wave Function'}
             equations={

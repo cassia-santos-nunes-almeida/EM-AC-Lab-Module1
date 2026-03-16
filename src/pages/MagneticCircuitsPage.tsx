@@ -12,6 +12,7 @@ import { MODULE_URLS } from '@/constants/modules';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
 import { RealWorldHook } from '@/components/common/RealWorldHook';
 import { PredictionGate } from '@/components/common/PredictionGate';
+import { FigureImage } from '@/components/common/FigureImage';
 import { ArrowRight } from 'lucide-react';
 
 const MU_0 = 4 * Math.PI * 1e-7;
@@ -292,6 +293,14 @@ export default function MagneticCircuitsPage() {
       }
       theory={
         <div className="space-y-6">
+          <FigureImage
+            className="mb-6"
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Elektronik-Transformator.jpg/640px-Elektronik-Transformator.jpg"
+            alt="Toroidal transformer with copper windings on a ferrite core"
+            caption="A toroidal transformer: the closed core confines nearly all magnetic flux, minimizing leakage."
+            attribution="Honina, CC BY-SA 3.0 — Wikimedia Commons"
+            sourceUrl="https://commons.wikimedia.org/wiki/File:Elektronik-Transformator.jpg"
+          />
           {/* Subsection 1: Flux and Reluctance */}
           <EquationBox
             title="Magnetic Flux & Reluctance"
