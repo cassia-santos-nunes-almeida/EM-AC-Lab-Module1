@@ -41,6 +41,7 @@ export function ConceptCheck({ question, onCorrect, hintKey }: ConceptCheckProps
   const handleReset = () => {
     setSelected(null);
     setRevealed(false);
+    setRevealedHintTier(0);
   };
 
   const handleRevealHint = (tier: number) => {

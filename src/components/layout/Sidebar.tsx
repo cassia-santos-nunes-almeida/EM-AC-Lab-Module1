@@ -131,33 +131,39 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             </div>
           ))}
 
-          {/* Capstone: Maxwell */}
+          {/* Capstone modules (Maxwell, Magnetic Circuits) */}
           {(() => {
-            const maxwell = MODULES.find((m) => m.id === 'maxwell')!;
-            const Icon = maxwell.icon;
-            const isActive = location.pathname === maxwell.path;
-            const isCompleted = completedModules.includes(maxwell.id);
+            const capstoneModules = MODULES.filter((m) => m.track === 'capstone');
+            if (capstoneModules.length === 0) return null;
             return (
               <div className="mt-3">
                 <div className="px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-purple-500 dark:text-purple-400">
                   Capstone
                 </div>
-                <Link
-                  to={maxwell.path}
-                  onClick={onClose}
-                  className={cn(
-                    'flex items-center gap-3 px-4 py-2 mx-2 rounded-lg text-sm transition-all',
-                    isActive
-                      ? 'bg-engineering-blue-50 dark:bg-engineering-blue-900/20 text-engineering-blue-700 dark:text-engineering-blue-300 font-semibold'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-                  )}
-                >
-                  <Icon size={16} className={isActive ? 'text-engineering-blue-500' : ''} />
-                  <span className="flex-1">{maxwell.shortLabel}</span>
-                  {isCompleted && (
-                    <CheckCircle size={14} className="text-green-500" />
-                  )}
-                </Link>
+                {capstoneModules.map((mod) => {
+                  const isActive = location.pathname === mod.path;
+                  const isCompleted = completedModules.includes(mod.id);
+                  const Icon = mod.icon;
+                  return (
+                    <Link
+                      key={mod.id}
+                      to={mod.path}
+                      onClick={onClose}
+                      className={cn(
+                        'flex items-center gap-3 px-4 py-2 mx-2 rounded-lg text-sm transition-all',
+                        isActive
+                          ? 'bg-engineering-blue-50 dark:bg-engineering-blue-900/20 text-engineering-blue-700 dark:text-engineering-blue-300 font-semibold'
+                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                      )}
+                    >
+                      <Icon size={16} className={isActive ? 'text-engineering-blue-500' : ''} />
+                      <span className="flex-1">{mod.shortLabel}</span>
+                      {isCompleted && (
+                        <CheckCircle size={14} className="text-green-500" />
+                      )}
+                    </Link>
+                  );
+                })}
               </div>
             );
           })()}

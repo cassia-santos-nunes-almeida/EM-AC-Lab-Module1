@@ -304,8 +304,8 @@ export default function LorentzPage() {
           gateId="lorentz-force-direction"
           question="A positive charge moves to the right in a magnetic field pointing out of the screen. Which direction is the magnetic force?"
           options={[
-            { label: 'Up', correct: true, explanation: 'Using the right-hand rule: point fingers in the velocity direction (right), curl them toward B (out of screen). Your thumb points up — that is the direction of F = qv × B.' },
-            { label: 'Down', correct: false, explanation: 'The right-hand rule gives the opposite direction. Point fingers right (velocity), curl toward the screen (B direction) — your thumb points up, not down.' },
+            { label: 'Up', correct: false, explanation: 'Close, but check the cross product sign carefully. F = q(v × B) = q(x̂ × ẑ) = q(−ŷ), which points downward for a positive charge.' },
+            { label: 'Down', correct: true, explanation: 'Correct! F = q(v × B). With v = x̂ (right) and B = ẑ (out of screen), the cross product x̂ × ẑ = −ŷ. For positive q, the force points in the −y direction (down).' },
             { label: 'Left', correct: false, explanation: 'The force is perpendicular to both v and B. Since v is horizontal and B is out of the screen, the force must be vertical, not horizontal.' },
             { label: 'Right', correct: false, explanation: 'The force is always perpendicular to the velocity. Since the charge moves right, the force cannot also point right.' },
           ]}
