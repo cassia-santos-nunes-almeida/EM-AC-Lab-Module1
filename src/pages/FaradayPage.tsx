@@ -12,6 +12,7 @@ import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
 import { RealWorldHook } from '@/components/common/RealWorldHook';
 import { PredictionGate } from '@/components/common/PredictionGate';
+import { FigureImage } from '@/components/common/FigureImage';
 
 export default function FaradayPage() {
   const isDarkMode = useThemeStore((s) => s.theme === 'dark');
@@ -233,6 +234,22 @@ export default function FaradayPage() {
       }
       theory={
         <div className="space-y-6">
+          <div className="grid gap-4 sm:grid-cols-2 mb-6">
+            <FigureImage
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Faraday_emf_experiment.svg/640px-Faraday_emf_experiment.svg.png"
+              alt="Diagram of Faraday's electromagnetic induction experiment"
+              caption="Faraday's induction experiment (1831): changing magnetic flux through the coil induces an EMF."
+              attribution="Chetvorno, Public Domain — Wikimedia Commons"
+              sourceUrl="https://commons.wikimedia.org/wiki/File:Faraday_emf_experiment.svg"
+            />
+            <FigureImage
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Three_Gorges_Dam%2C_Yangtze_River%2C_China.jpg/640px-Three_Gorges_Dam%2C_Yangtze_River%2C_China.jpg"
+              alt="Three Gorges Dam hydroelectric power station"
+              caption="The Three Gorges Dam: Faraday's law converts mechanical rotation into electrical power at massive scale."
+              attribution="Rehman, CC BY-SA 2.0 — Wikimedia Commons"
+              sourceUrl="https://commons.wikimedia.org/wiki/File:Three_Gorges_Dam,_Yangtze_River,_China.jpg"
+            />
+          </div>
           <EquationBox
             title="Faraday's Law"
             equations={[

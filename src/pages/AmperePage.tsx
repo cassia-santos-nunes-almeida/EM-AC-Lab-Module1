@@ -10,6 +10,7 @@ import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
 import { RealWorldHook } from '@/components/common/RealWorldHook';
+import { FigureImage } from '@/components/common/FigureImage';
 
 export default function AmperePage() {
   const isDarkMode = useThemeStore((s) => s.theme === 'dark');
@@ -302,6 +303,22 @@ export default function AmperePage() {
       }
       theory={
         <div className="space-y-6">
+          <div className="grid gap-4 sm:grid-cols-2 mb-6">
+            <FigureImage
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Solenoid-1.png/640px-Solenoid-1.png"
+              alt="Magnetic field lines around and through a solenoid"
+              caption="Magnetic field of a solenoid: Ampere's law gives B = μ₀nI inside, nearly uniform and parallel to the axis."
+              attribution="Geek3, CC BY-SA 3.0 — Wikimedia Commons"
+              sourceUrl="https://commons.wikimedia.org/wiki/File:Solenoid-1.png"
+            />
+            <FigureImage
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Electromagnet.svg/440px-Electromagnet.svg.png"
+              alt="Diagram of an electromagnet with iron core and coil"
+              caption="An electromagnet: current through coils creates a strong magnetic field in the iron core, demonstrating Ampere's law."
+              attribution="Wikimedia Commons, Public Domain"
+              sourceUrl="https://commons.wikimedia.org/wiki/File:Electromagnet.svg"
+            />
+          </div>
           <EquationBox
             title="Ampère's Law"
             equations={[

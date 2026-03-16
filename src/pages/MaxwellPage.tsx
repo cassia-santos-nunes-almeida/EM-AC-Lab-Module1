@@ -5,6 +5,7 @@ import { MathWrapper } from '@/components/common/MathWrapper';
 import { CollapsibleSection } from '@/components/common/CollapsibleSection';
 import { ModuleLayout } from '@/components/common/ModuleLayout';
 import { RealWorldHook } from '@/components/common/RealWorldHook';
+import { FigureImage } from '@/components/common/FigureImage';
 
 interface MaxwellCardProps {
   title: string;
@@ -274,6 +275,14 @@ export default function MaxwellPage() {
       }
       theory={
         <div className="space-y-6">
+          <FigureImage
+            className="mb-6"
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/James_Clerk_Maxwell.png/440px-James_Clerk_Maxwell.png"
+            alt="Portrait of James Clerk Maxwell"
+            caption="James Clerk Maxwell (1831–1879): unified electricity, magnetism, and light into four elegant equations."
+            attribution="Public Domain — Wikimedia Commons"
+            sourceUrl="https://commons.wikimedia.org/wiki/File:James_Clerk_Maxwell.png"
+          />
           <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
             <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4">Maxwell's Equations — The Complete Framework</h3>
             <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
