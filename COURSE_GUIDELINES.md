@@ -133,6 +133,16 @@ Configured in both `tsconfig.app.json` (paths) and `vite.config.ts` (resolve.ali
 
 10. **ConceptCheck density matters** — Aim for 2-3 per content section, not 1 per page. Sparse checks leave too much unverified understanding between checkpoints.
 
+11. **LaTeX in JSX string attributes needs double backslashes** — `formula="\frac{a}{b}"` silently fails because `\f` becomes a form-feed in JS strings. Always use `\\frac`, `\\alpha`, `\\times`, etc. Detection regex: `formula="[^"]*[^\\]\\[a-zA-Z]`.
+
+12. **Linters can corrupt LaTeX during edits** — ESLint auto-fix or string processing can turn `\\frac` into `\\\1rac`. After any automated edit to files with LaTeX, grep for `\\\1` or similar corruption. KaTeX failures are silent at build time — only visible at runtime.
+
+13. **Wikimedia image URLs are fragile** — Thumbnail URLs require the correct MD5 hash prefix of the exact filename. A wrong hash = 404. Filenames are case-sensitive including extensions (`.JPG` ≠ `.jpg`). Use: `python3 -c "import hashlib; f='Filename.ext'; h=hashlib.md5(f.encode()).hexdigest(); print(f'thumb/{h[0]}/{h[:2]}/{f}/500px-{f}')"` to compute. Always verify the exact filename on the file's Wikimedia Commons page.
+
+14. **FigureImage component pattern** — All 3 modules share a `FigureImage` component for educational images with click-to-enlarge modal, caption, attribution, source link, dark mode, and responsive sizing. Use `sm:max-w-md` or similar constraints.
+
+15. **Dual deployment base paths** — When supporting both Vercel (`/`) and GitHub Pages (`/repo-name/`), use `process.env.GITHUB_ACTIONS ? '/repo-name/' : '/'` in `vite.config.ts`. PWA scope/start_url must also use the same `base`.
+
 ## File Structure Convention
 
 Each module should maintain:
