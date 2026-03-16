@@ -23,8 +23,8 @@
 ## Tech Debt
 
 ### Test Coverage
-- 60 tests passing (shared components + page render tests).
-- Could expand: integration tests for PredictionGate flow, ConceptCheck hint progression, Phasor Sync animation.
+- 71 tests passing (shared components + page render tests + PredictionGate + 3-tier hint progression).
+- Could expand: integration tests for Phasor Sync animation.
 
 ### recharts Not Yet Used
 - recharts is installed but no charts are currently rendered. Could be used for:
