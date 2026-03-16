@@ -43,7 +43,15 @@
   - `MaxwellPage.tsx:85` — `_t` is defined but never used
   - `EMWavePage.tsx` — Missing `isDarkMode` in useCallback dependency array
   - `LorentzPage.tsx:47` — Missing `handleReset` in useEffect dependency array
-- **Note**: Pre-existing from earlier sprints, not introduced by Phase 2 work.
+- **Note**: Pre-existing from earlier sprints, not introduced by Phase 2 or audit work.
+
+### Iron Permeability Linearization
+- **Severity**: Low (documented)
+- **Description**: μᵣ = 5000 for iron is a linearized value. Real iron is nonlinear (μᵣ ~ 100–10,000). A note is shown in the MagneticCircuitsPage UI.
+
+### Fringing Effects Ignored
+- **Severity**: Low (documented)
+- **Description**: Air gap simulation assumes no fringing at the gap boundary. A note explains this in the UI.
 
 ## Resolved Issues
 
@@ -54,7 +62,7 @@
 - Was computing single H = MMF/l which is wrong for composite circuits. Fixed to show H_core = B/(μ₀μᵣ) and H_gap = B/μ₀ separately.
 
 ### ~~Misleading Module 2 Link~~ ✅ (2026-03-05)
-- Button said "Continue to Module 2" but linked to `/` (Overview). Fixed to link to actual Module 2 at `https://em-ac-lab-module.vercel.app/`.
+- Button said "Continue to Module 2" but linked to `/` (Overview). Fixed to link to actual Module 2 at `https://em-ac-lab-module2.vercel.app/`.
 
 ### ~~ConceptCheck/ChallengeCard Not Rendered~~ ✅
 - Fixed: Created `ModuleAssessment` wrapper, integrated into all 9 pages via `ModuleLayout`.

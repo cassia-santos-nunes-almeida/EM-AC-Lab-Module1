@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useCanvasTouch } from '@/hooks/useCanvasTouch';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
-import { useProgressStore } from '@/store/progressStore';
+import { useThemeStore } from '@/store/progressStore';
 import { ControlPanel } from '@/components/common/ControlPanel';
 import { Slider } from '@/components/common/Slider';
 import { EquationBox } from '@/components/common/EquationBox';
@@ -12,7 +12,7 @@ import { RealWorldHook } from '@/components/common/RealWorldHook';
 import { PredictionGate } from '@/components/common/PredictionGate';
 
 export default function LenzPage() {
-  const { isDarkMode } = useProgressStore();
+  const isDarkMode = useThemeStore((s) => s.theme === 'dark');
   const c = isDarkMode ? COLORS_DARK : COLORS;
 
   const [magnetPos, setMagnetPos] = useState(20);

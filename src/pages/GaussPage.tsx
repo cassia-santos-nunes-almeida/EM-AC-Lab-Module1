@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useCanvasTouch } from '@/hooks/useCanvasTouch';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
-import { useProgressStore } from '@/store/progressStore';
+import { useThemeStore } from '@/store/progressStore';
 import { ControlPanel } from '@/components/common/ControlPanel';
 import { Slider } from '@/components/common/Slider';
 import { EquationBox } from '@/components/common/EquationBox';
@@ -15,7 +15,7 @@ import { PhysicsChart } from '@/components/common/PhysicsChart';
 const EPSILON_0 = 8.854e-12;
 
 export default function GaussPage() {
-  const { isDarkMode } = useProgressStore();
+  const isDarkMode = useThemeStore((s) => s.theme === 'dark');
   const col = isDarkMode ? COLORS_DARK : COLORS;
 
   const [mode, setMode] = useState<'ELECTRIC' | 'MAGNETIC'>('ELECTRIC');
@@ -335,13 +335,13 @@ export default function GaussPage() {
           <TheoryGuide>
             {mode === 'ELECTRIC' ? (
               <p>
-                <strong>Electric Flux:</strong> Proportional to enclosed charge (<MathWrapper latex="Q" />).
-                Independent of surface size (<MathWrapper latex="r" />). <MathWrapper latex="\Phi_E \neq 0" />.
+                <strong>Electric Flux:</strong> Proportional to enclosed charge (<MathWrapper formula="Q" />).
+                Independent of surface size (<MathWrapper formula="r" />). <MathWrapper formula="\Phi_E \neq 0" />.
               </p>
             ) : (
               <p>
                 <strong>Magnetic Flux:</strong> Always zero for closed surfaces (
-                <MathWrapper latex="\oint B \cdot dA = 0" />
+                <MathWrapper formula="\oint B \cdot dA = 0" />
                 ). Field lines form loops; what goes in must come out.
               </p>
             )}

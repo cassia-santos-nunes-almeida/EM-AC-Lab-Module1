@@ -27,7 +27,7 @@ export function EquationBox({ title, equations, className }: EquationBoxProps) {
               {eq.label}
             </span>
             <div className={cn('text-lg', eq.color || 'text-indigo-700 dark:text-indigo-400')}>
-              <MathWrapper latex={eq.math} />
+              <MathWrapper formula={eq.math} />
             </div>
           </div>
         ))}

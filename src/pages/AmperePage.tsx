@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useCanvasTouch } from '@/hooks/useCanvasTouch';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
-import { useProgressStore } from '@/store/progressStore';
+import { useThemeStore } from '@/store/progressStore';
 import { ControlPanel } from '@/components/common/ControlPanel';
 import { Slider } from '@/components/common/Slider';
 import { EquationBox } from '@/components/common/EquationBox';
@@ -12,7 +12,7 @@ import { ModuleLayout } from '@/components/common/ModuleLayout';
 import { RealWorldHook } from '@/components/common/RealWorldHook';
 
 export default function AmperePage() {
-  const { isDarkMode } = useProgressStore();
+  const isDarkMode = useThemeStore((s) => s.theme === 'dark');
   const col = isDarkMode ? COLORS_DARK : COLORS;
 
   const [current, setCurrent] = useState(50); // Amperes
@@ -315,9 +315,9 @@ export default function AmperePage() {
                 <strong>Right-Hand Grip Rule:</strong> Point thumb in I direction. Fingers curl in B direction.
               </li>
               <li>
-                <strong>Field Strength:</strong> B is proportional to Current (<MathWrapper latex="I" />) and
-                inversely proportional to radius (<MathWrapper latex="r" />). Field strength drops as{' '}
-                <MathWrapper latex="1/r" />.
+                <strong>Field Strength:</strong> B is proportional to Current (<MathWrapper formula="I" />) and
+                inversely proportional to radius (<MathWrapper formula="r" />). Field strength drops as{' '}
+                <MathWrapper formula="1/r" />.
               </li>
             </ul>
           </TheoryGuide>

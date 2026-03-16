@@ -1,32 +1,47 @@
-# EM&AC Lab — Interactive Electromagnetic & AC Circuit Analysis Lab
+# EM&AC Lab — Module 1: Electromagnetic Fundamentals
 
-An interactive simulation suite designed for engineering students to visualize and experiment with the fundamental laws of Electromagnetism and AC Circuits.
+An interactive simulation suite designed for engineering students to visualize and experiment with the fundamental laws of electromagnetism. This is the first module in the **EM&AC Lab** three-module course at LUT University.
 
-> **Built for** LUT University — Module 1: Electromagnetics
+> **Built for** LUT University — Electromagnetics & Analog Circuits course
+
+## Course Structure
+
+This app is part of a three-module progressive learning sequence:
+
+| Module | Focus | Description |
+|---|---|---|
+| **Module 1 (this app)** | Electromagnetic Fundamentals | Maxwell's equations, field laws, EM waves, magnetic circuits |
+| [Module 2](https://em-ac-lab-module2.vercel.app/) | Circuit Analysis | Component physics, time/s-domain analysis, Laplace transforms |
+| [Module 3](https://em-ac-lab-module3.vercel.app/) | Transmission Lines & Antennas | Coupled coils, transmission line theory, Smith chart, antennas |
+
+**Module 1 → Module 2 bridge:** The Magnetic Circuits module introduces reluctance, mutual inductance, and transformer ratios — concepts that carry directly into Module 2's circuit analysis. **Module 1 → Module 3 bridge:** EM wave propagation and phasor concepts lay the groundwork for transmission line theory in Module 3.
 
 ## Features
 
-- **10 Interactive Physics Modules** — Each with real-time canvas simulations, equations (KaTeX), and guided controls
-- **AI Tutor** — Built-in chat powered by Google Gemini for on-demand physics help
-- **Dark Mode** — Persisted theme toggle with full dark mode support
-- **Progress Tracking** — Sidebar checkmarks track completed modules (persisted to localStorage)
+- **10 Interactive Physics Modules** — Each with real-time HTML5 Canvas simulations, KaTeX equations, and guided controls
+- **"Think it Through" Socratic Tutor** — AI chat (Google Gemini) that guides via questions, never gives direct answers
+- **PredictionGate** — Students commit a prediction before accessing simulations (applied to Lorentz, Faraday, Lenz)
+- **3-Tier Progressive Hints** — Conceptual → Procedural → Worked Example, revealed after wrong answers
+- **Dark Mode** — Persisted theme toggle (shared `emac-theme` key across all three modules)
+- **Progress Tracking** — Section-level tracking with prediction gates, concept checks, and hint usage
 - **Quiz & Challenges** — 27 concept-check questions + 9 guided challenges across all modules
 - **PWA** — Installable as a Progressive Web App with offline support
-- **Accessible** — ARIA-compliant tabs, keyboard navigation, skip-to-content link
+- **Accessible** — WAI-ARIA tabs, roving tabIndex, skip-to-content, aria-live regions
 
 ## Modules
 
-| Module | Topic | Visualization |
+| Route | Module | Visualization |
 |---|---|---|
-| Maxwell's Equations | Four fundamental laws | 4 animated equation cards |
-| Gauss's Law | Electric flux & surfaces | Electric/Magnetic mode toggle |
-| Coulomb's Law | Electrostatic force | Drag charges, field lines, force vectors |
-| Ampère's Law | Magnetic fields from currents | Right-hand rule animation |
-| Lorentz Force | Charged particle motion | Cyclotron simulation |
-| Faraday's Law | Electromagnetic induction | Changing flux animation |
-| Lenz's Law | Opposition to flux change | Magnet + coil interaction |
-| EM Waves | Wave propagation & AC | 2D, 3D, and V-I Phasor views |
-| Polarization | Polarization states | Lissajous + 3D propagation |
+| `/maxwell` | Maxwell's Equations (integral + differential) | 4 animated equation cards |
+| `/gauss` | Gauss's Law | Electric/Magnetic mode toggle |
+| `/coulomb` | Coulomb's Law | Drag charges, field lines, force vectors |
+| `/ampere` | Ampère's Law | Right-hand rule animation |
+| `/lorentz` | Lorentz Force | Boris integrator cyclotron simulation |
+| `/faraday` | Faraday's Law | Electromagnetic induction animation |
+| `/lenz` | Lenz's Law | Axial dipole flux model, magnet + coil |
+| `/em-wave` | EM Waves | 2D, 3D, Phasor Sync dual-canvas views |
+| `/polarization` | Polarization | Lissajous + 3D wave, Stokes parameters |
+| `/magnetic-circuits` | Magnetic Circuits | Toroid simulation, reluctance, bridge to Module 2 |
 
 ## Tech Stack
 
@@ -99,6 +114,12 @@ src/
 | `npm run lint` | ESLint with jsx-a11y accessibility rules |
 | `npm test` | Run Vitest test suite |
 | `npm run preview` | Serve production build locally |
+
+## Cross-Module Features
+
+- **Unified dark mode** — Theme preference syncs across all three modules via shared `emac-theme` localStorage key
+- **Cross-module navigation** — Links between modules via configurable environment variables (see `.env.example`)
+- **Consistent pedagogy** — All modules use PredictionGate, ConceptCheck, CollapsibleSection, and "Think it Through" Socratic tutor
 
 ## Disclaimer
 

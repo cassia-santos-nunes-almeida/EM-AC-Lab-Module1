@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useCanvasTouch } from '@/hooks/useCanvasTouch';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
-import { useProgressStore } from '@/store/progressStore';
+import { useThemeStore } from '@/store/progressStore';
 import { ControlPanel } from '@/components/common/ControlPanel';
 import { Slider } from '@/components/common/Slider';
 import { EquationBox } from '@/components/common/EquationBox';
@@ -15,7 +15,7 @@ import { Layers } from 'lucide-react';
 import type { Equation } from '@/types';
 
 export default function PolarizationPage() {
-  const { isDarkMode } = useProgressStore();
+  const isDarkMode = useThemeStore((s) => s.theme === 'dark');
   const c = isDarkMode ? COLORS_DARK : COLORS;
 
   const [ex, setEx] = useState(50);
@@ -415,12 +415,12 @@ export default function PolarizationPage() {
           <TheoryGuide>
             <p>
               <strong>Linear Polarization:</strong> Fields oscillate in a single plane (
-              <MathWrapper latex="\delta = 0^\circ" />).
+              <MathWrapper formula="\delta = 0^\circ" />).
             </p>
             <p>
               <strong>Circular Polarization:</strong> Field vector rotates. Occurs when{' '}
-              <MathWrapper latex="E_x = E_y" /> and phase shift is{' '}
-              <MathWrapper latex="90^\circ" />.
+              <MathWrapper formula="E_x = E_y" /> and phase shift is{' '}
+              <MathWrapper formula="90^\circ" />.
             </p>
           </TheoryGuide>
         </div>

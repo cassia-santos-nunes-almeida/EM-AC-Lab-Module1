@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useCanvasTouch } from '@/hooks/useCanvasTouch';
 import { Plus, Trash2, MousePointer2 } from 'lucide-react';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
-import { useProgressStore } from '@/store/progressStore';
+import { useThemeStore } from '@/store/progressStore';
 import { ControlPanel } from '@/components/common/ControlPanel';
 import { EquationBox } from '@/components/common/EquationBox';
 import { HintBox } from '@/components/common/HintBox';
@@ -16,7 +16,7 @@ import type { Charge } from '@/types';
 const K_COULOMB = 8.988e9;
 
 export default function CoulombPage() {
-  const { isDarkMode } = useProgressStore();
+  const isDarkMode = useThemeStore((s) => s.theme === 'dark');
   const col = isDarkMode ? COLORS_DARK : COLORS;
 
   const [charges, setCharges] = useState<Charge[]>([
@@ -467,7 +467,7 @@ export default function CoulombPage() {
             </label>
             <HintBox>
               Drag charges close to each other. Notice how the Force vector (F) grows rapidly (
-              <MathWrapper latex="1/r^2" />
+              <MathWrapper formula="1/r^2" />
               )!
             </HintBox>
           </ControlPanel>
@@ -509,7 +509,7 @@ export default function CoulombPage() {
             <p>
               <strong>Coulomb's Law:</strong> Force between charges is proportional to magnitude product,
               inversely proportional to distance squared:{' '}
-              <MathWrapper latex="F = k \frac{q_1 q_2}{r^2}" />.
+              <MathWrapper formula="F = k \frac{q_1 q_2}{r^2}" />.
             </p>
             <p>
               <strong>Field Lines:</strong> Originate from (+) and terminate on (-). Density represents

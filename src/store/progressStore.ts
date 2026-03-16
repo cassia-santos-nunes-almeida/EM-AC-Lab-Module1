@@ -1,6 +1,62 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+/* ── Theme store (shared key with M2/M3) ─────────────────────────── */
+
+export type Theme = 'light' | 'dark';
+
+interface ThemeState {
+  theme: Theme;
+  toggleTheme: () => void;
+}
+
+function applyTheme(theme: Theme) {
+  document.documentElement.classList.toggle('dark', theme === 'dark');
+}
+
+// Migrate from old em-lab-progress isDarkMode to the shared emac-theme key
+function migrateThemeFromLegacy(): Theme {
+  try {
+    const legacy = localStorage.getItem('em-lab-progress');
+    if (legacy) {
+      const parsed = JSON.parse(legacy);
+      if (parsed?.state?.isDarkMode) return 'dark';
+    }
+  } catch { /* ignore parse errors */ }
+  return 'light';
+}
+
+export const useThemeStore = create<ThemeState>()(
+  persist(
+    (set) => ({
+      theme: 'light' as Theme,
+      toggleTheme: () =>
+        set((state) => {
+          const next = state.theme === 'light' ? 'dark' : 'light';
+          applyTheme(next);
+          return { theme: next };
+        }),
+    }),
+    {
+      name: 'emac-theme',
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // If emac-theme was never set, try migrating from legacy key
+          if (state.theme === 'light') {
+            const migrated = migrateThemeFromLegacy();
+            if (migrated === 'dark') {
+              state.theme = 'dark';
+            }
+          }
+          applyTheme(state.theme);
+        }
+      },
+    }
+  )
+);
+
+/* ── Progress store ──────────────────────────────────────────────── */
+
 /** Maps moduleId → set of correctly answered question indices */
 type QuizScores = Record<string, number[]>;
 
@@ -15,9 +71,7 @@ interface ProgressState {
   quizScores: QuizScores;
   predictions: PredictionResults;
   hintUsage: HintUsage;
-  isDarkMode: boolean;
   sidebarOpen: boolean;
-  toggleDarkMode: () => void;
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
   markComplete: (moduleId: string) => void;
@@ -38,13 +92,7 @@ export const useProgressStore = create<ProgressState>()(
       quizScores: {},
       predictions: {},
       hintUsage: {},
-      isDarkMode: false,
       sidebarOpen: false,
-
-      toggleDarkMode: () => {
-        set((s) => ({ isDarkMode: !s.isDarkMode }));
-        document.documentElement.classList.toggle('dark');
-      },
 
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
@@ -95,13 +143,7 @@ export const useProgressStore = create<ProgressState>()(
         quizScores: state.quizScores,
         predictions: state.predictions,
         hintUsage: state.hintUsage,
-        isDarkMode: state.isDarkMode,
       }),
-      onRehydrateStorage: () => (state) => {
-        if (state?.isDarkMode) {
-          document.documentElement.classList.add('dark');
-        }
-      },
     }
   )
 );

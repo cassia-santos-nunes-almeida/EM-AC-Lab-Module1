@@ -91,3 +91,23 @@
 **Decision**: Display H_core = B/(μ₀μᵣ) and H_gap = B/μ₀ separately rather than a single averaged H = MMF/l.
 **Rationale**: In a composite magnetic circuit, H differs by section. An averaged H misleads students into thinking the field is uniform. Showing both values — where H_gap ≫ H_core for ferromagnetic materials — teaches the key insight that air gaps dominate the magnetic field intensity even when they're a small fraction of the path.
 **Date**: 2026-03-05
+
+## ADR-021: Maxwell differential forms in collapsible section
+**Decision**: Add differential forms (∇·E, ∇·B, ∇×E, ∇×B) as a CollapsibleSection on MaxwellPage, separate from the integral forms.
+**Rationale**: The audit identified that only integral forms were presented. Differential forms are essential for advanced EM courses. A collapsible section keeps them accessible without overwhelming introductory students.
+**Date**: 2026-03-15
+
+## ADR-022: Unified emac-theme localStorage key
+**Decision**: Use `emac-theme` as the dark mode localStorage key across all three modules.
+**Rationale**: Students may have multiple module tabs open. A shared key means toggling dark mode in any module affects all others, providing a consistent experience.
+**Date**: 2026-03-15
+
+## ADR-023: Cross-module URL environment variables
+**Decision**: Define `VITE_MODULE1_URL`, `VITE_MODULE2_URL`, `VITE_MODULE3_URL` in `.env`, read via `src/constants/modules.ts`.
+**Rationale**: Hardcoded URLs break across environments. Env vars allow each deployment to configure its own URLs.
+**Date**: 2026-03-15
+
+## ADR-024: derivedRef update in useEffect (React 19)
+**Decision**: Move `derivedRef.current = {...}` from render body to `useEffect` in MagneticCircuitsPage.
+**Rationale**: React 19's `react-hooks/refs` rule forbids writing to refs during render. The useEffect runs synchronously after render with the same values, satisfying the rule without changing behavior.
+**Date**: 2026-03-15

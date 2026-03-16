@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useCanvasTouch } from '@/hooks/useCanvasTouch';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
-import { useProgressStore } from '@/store/progressStore';
+import { useThemeStore } from '@/store/progressStore';
 import { ControlPanel } from '@/components/common/ControlPanel';
 import { Slider } from '@/components/common/Slider';
 import { EquationBox } from '@/components/common/EquationBox';
@@ -14,7 +14,7 @@ import { RealWorldHook } from '@/components/common/RealWorldHook';
 import { PredictionGate } from '@/components/common/PredictionGate';
 
 export default function FaradayPage() {
-  const { isDarkMode } = useProgressStore();
+  const isDarkMode = useThemeStore((s) => s.theme === 'dark');
   const c = isDarkMode ? COLORS_DARK : COLORS;
 
   const [rate, setRate] = useState(1);
@@ -223,7 +223,7 @@ export default function FaradayPage() {
             />
             <HintBox>
               <span>
-                Increase the Rate (<MathWrapper latex="\omega" />) or Loops (<MathWrapper latex="N" />) to generate a stronger induced voltage/current!
+                Increase the Rate (<MathWrapper formula="\omega" />) or Loops (<MathWrapper formula="N" />) to generate a stronger induced voltage/current!
               </span>
             </HintBox>
           </ControlPanel>
@@ -247,7 +247,7 @@ export default function FaradayPage() {
             <p>
               <strong>Lenz&apos;s Law logic:</strong><br />
               1. B (Out) Increasing<br />
-              2. Flux <MathWrapper latex="\Phi" /> increases Out<br />
+              2. Flux <MathWrapper formula="\Phi" /> increases Out<br />
               3. Nature opposes change -&gt; Needs Induced B (In)<br />
               4. RHR: Thumb In -&gt; Fingers <span className="font-bold text-amber-600">CW &#x21bb;</span>
             </p>

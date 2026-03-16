@@ -1,7 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Moon, Sun, CheckCircle, X } from 'lucide-react';
+import { Moon, Sun, CheckCircle, X, ExternalLink } from 'lucide-react';
 import { MODULES, LEARNING_TRACKS } from '@/constants/physics';
-import { useProgressStore } from '@/store/progressStore';
+import { useProgressStore, useThemeStore } from '@/store/progressStore';
+import { MODULE_URLS } from '@/constants/modules';
 import { cn } from '@/utils/cn';
 
 interface SidebarProps {
@@ -11,7 +12,9 @@ interface SidebarProps {
 
 export function Sidebar({ open, onClose }: SidebarProps) {
   const location = useLocation();
-  const { isDarkMode, toggleDarkMode, completedModules } = useProgressStore();
+  const { completedModules } = useProgressStore();
+  const { theme, toggleTheme } = useThemeStore();
+  const isDarkMode = theme === 'dark';
   const progress = Math.round(
     (completedModules.length / (MODULES.length - 1)) * 100 // -1 for overview
   );
@@ -166,10 +169,39 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           })()}
         </nav>
 
+        {/* Course Modules */}
+        <div className="px-4 py-3 border-t border-slate-200 dark:border-slate-700">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2 px-2">
+            Course Modules
+          </p>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-engineering-blue-50 dark:bg-engineering-blue-900/20 text-engineering-blue-700 dark:text-engineering-blue-300 text-xs font-semibold">
+              <span className="w-5 h-5 rounded-full bg-engineering-blue-600 text-white flex items-center justify-center text-[10px] font-bold">1</span>
+              EM Fundamentals
+            </div>
+            <a
+              href={MODULE_URLS.module2}
+              className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center text-[10px] font-bold">2</span>
+              Circuit Analysis
+              <ExternalLink size={10} className="ml-auto opacity-50" />
+            </a>
+            <a
+              href={MODULE_URLS.module3}
+              className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center text-[10px] font-bold">3</span>
+              Transmission Lines
+              <ExternalLink size={10} className="ml-auto opacity-50" />
+            </a>
+          </div>
+        </div>
+
         {/* Footer */}
         <div className="p-4 border-t border-slate-200 dark:border-slate-700 space-y-3">
           <button
-            onClick={toggleDarkMode}
+            onClick={toggleTheme}
             className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
           >
             {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}

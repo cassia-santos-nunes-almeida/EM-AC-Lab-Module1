@@ -40,7 +40,7 @@ export const moduleQuizzes: Record<string, QuizQuestion[]> = {
     },
     {
       question:
-        'How many of Maxwell\'s equations involve magnetic fields?',
+        'How many of Maxwell\'s equations explicitly contain B or Φ_B?',
       options: [
         'One',
         'Two',
@@ -49,7 +49,7 @@ export const moduleQuizzes: Record<string, QuizQuestion[]> = {
       ],
       correctIndex: 2,
       explanation:
-        'Three of the four equations explicitly contain magnetic field terms: Gauss\'s law for magnetism (∮B·dA = 0), Faraday\'s law (∮E·dl = −dΦ_B/dt), and the Ampère–Maxwell law (∮B·dl = μ₀I + μ₀ε₀ dΦ_E/dt). Gauss\'s law for electricity (∮E·dA = Q/ε₀) involves only the electric field and charge — it contains no B term.',
+        'Three of Maxwell\'s equations explicitly contain B or Φ_B: Gauss\'s law for magnetism (∮B·dA = 0), Faraday\'s law (∮E·dl = −dΦ_B/dt), and the Ampère–Maxwell law (∮B·dl = μ₀I + μ₀ε₀ dΦ_E/dt). Gauss\'s law for electricity (∮E·dA = Q/ε₀) involves only E and charge — it contains no magnetic field term.',
     },
   ],
 

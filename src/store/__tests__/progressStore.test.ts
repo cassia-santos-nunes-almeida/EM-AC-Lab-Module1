@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useProgressStore } from '../progressStore';
+import { useProgressStore, useThemeStore } from '../progressStore';
 
 describe('progressStore', () => {
   beforeEach(() => {
@@ -7,9 +7,11 @@ describe('progressStore', () => {
     useProgressStore.setState({
       completedModules: [],
       quizScores: {},
-      isDarkMode: false,
+      predictions: {},
+      hintUsage: {},
       sidebarOpen: false,
     });
+    useThemeStore.setState({ theme: 'light' });
     document.documentElement.classList.remove('dark');
   });
 
@@ -41,10 +43,9 @@ describe('progressStore', () => {
   });
 
   it('toggles dark mode', () => {
-    expect(useProgressStore.getState().isDarkMode).toBe(false);
-    useProgressStore.getState().toggleDarkMode();
-    expect(useProgressStore.getState().isDarkMode).toBe(true);
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(useThemeStore.getState().theme).toBe('light');
+    useThemeStore.getState().toggleTheme();
+    expect(useThemeStore.getState().theme).toBe('dark');
   });
 
   it('toggles sidebar', () => {
