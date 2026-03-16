@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { Layout } from '@/components/layout/Layout';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { lazy, Suspense } from 'react';
@@ -161,6 +162,7 @@ export default function App() {
           />
         </Route>
       </Routes>
+      <Analytics />
     </BrowserRouter>
   );
 }

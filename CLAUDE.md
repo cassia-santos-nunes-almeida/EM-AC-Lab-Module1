@@ -2,6 +2,8 @@
 
 Part of the three-module EM&AC Lab course: **M1 (EM Fundamentals)** → M2 (Circuit Analysis) → M3 (Transmission Lines & Antennas).
 
+> **Shared conventions:** See `COURSE_GUIDELINES.md` for cross-module patterns, lessons learned, and pedagogical guidelines.
+
 ## Quick Start
 
 ```bash
