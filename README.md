@@ -1,8 +1,10 @@
 # EM&AC Lab — Module 1: Electromagnetic Fundamentals
 
+> *Drag charges, watch field lines, and build intuition for all 4 Maxwell equations — 10 interactive HTML5 simulations with Socratic AI tutoring.*
+
 An interactive simulation suite designed for engineering students to visualize and experiment with the fundamental laws of electromagnetism. This is the first module in the **EM&AC Lab** three-module course at LUT University.
 
-> **Built for** LUT University — Electromagnetics & Analog Circuits course
+**Live Demo:** https://em-ac-lab-module1.vercel.app/
 
 ## Course Structure
 
@@ -76,6 +78,9 @@ npm run dev
 
 # Build for production
 npm run build
+
+# Run tests
+npm test
 
 # Preview production build
 npm run preview
