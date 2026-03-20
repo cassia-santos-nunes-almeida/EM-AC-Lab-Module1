@@ -1,8 +1,8 @@
 # EM&AC Lab — Module 1: Electromagnetic Fundamentals
 
-Part of the three-module EM&AC Lab course: **M1 (EM Fundamentals)** → M2 (Circuit Analysis) → M3 (Transmission Lines & Antennas).
+> **Global rules:** see `../CLAUDE.md`. **Recurring corrections:** see `../PATTERNS.md`. **Session state:** see `../SESSION.md`.
 
-> **Shared conventions:** See `COURSE_GUIDELINES.md` for cross-module patterns, lessons learned, and pedagogical guidelines.
+Part of the three-module EM&AC Lab course: **M1 (EM Fundamentals)** → M2 (Circuit Analysis) → M3 (Transmission Lines & Antennas).
 
 ## Quick Start
 
@@ -29,6 +29,7 @@ npm run preview      # Preview production build locally
 | AI Tutor | Google Gemini API (client-side) |
 | PWA | vite-plugin-pwa |
 | Testing | Vitest + @testing-library/react |
+| Analytics | @vercel/analytics |
 
 ## Key Directories
 
@@ -40,23 +41,16 @@ src/
 ├── pages/          — One page per physics module (10 total, lazy-loaded)
 ├── constants/      — Physics colors, module definitions, quiz content, cross-module URLs
 ├── canvas/         — Canvas drawing helpers (arrows, fieldLines, grid)
-├── hooks/          — useAnimationFrame, useCanvasSetup, useOnlineStatus
+├── hooks/          — useAnimationFrame, useCanvasSetup, useCanvasTouch, useOnlineStatus
 ├── store/          — progressStore (Zustand: progress + theme), useThemeStore persisted to `emac-theme`
 ├── types/          — Shared TypeScript interfaces
 └── utils/          — cn() (clsx + tailwind-merge)
 ```
 
-## Conventions
+## Module-Specific Conventions
 
-- **Class merging**: Always use `cn()` from `@/utils/cn` for Tailwind classes
-- **Dark mode**: Class-based (`.dark` on `<html>`). Uses `useThemeStore` persisted to `emac-theme` (shared key across all three modules). Every component MUST have `dark:` variants
 - **Canvas colors**: Import `COLORS` / `COLORS_DARK` from `@/constants/physics`; select based on `isDarkMode` from store
-- **Math rendering**: Use `<MathWrapper formula="..." />` — never raw HTML or custom parsers
-- **Icons**: Import from `lucide-react` — never custom SVG icons
-- **Components**: TypeScript + proper interfaces for all props
-- **State**: Zustand store for cross-component state; local useState for component-internal state
 - **Pages**: Default export, wrapped in ErrorBoundary via App.tsx routing
-- **Cross-module URLs**: Import from `src/constants/modules.ts` (reads `VITE_MODULE*_URL` env vars)
 
 ## Physics Modules
 
@@ -74,23 +68,20 @@ src/
 | `/polarization` | PolarizationPage | Yes | Lissajous + 3D, Stokes parameters |
 | `/magnetic-circuits` | MagneticCircuitsPage | Yes | Toroid, reluctance, mutual inductance, bridge to M2 |
 
-## Cross-Module Integration
+## Content Bridges
 
-- **Dark mode**: Shared `emac-theme` localStorage key — toggling in any module affects all three
-- **Navigation**: `src/constants/modules.ts` provides URLs to M2 and M3 (configurable via `.env`)
-- **Magnetic Circuits page**: Contains "Continue to Module 2" link for course flow
-- **Content bridges**: Phasor concepts → M3 transmission lines; Mutual inductance → M2 transformers
+- **Magnetic Circuits page** → M2 (transformers, mutual inductance) — contains "Continue to Module 2" link
+- **Phasor concepts** → M3 (transmission line phasors)
+- **EM waves** → M3 (wave propagation on lines)
 
 ## Skills
 
 - `/refactor` — 5-phase code refactoring workflow (see `commands/refactor.md`)
 - Frontend Design — Educational app design guidelines (see `skills/frontend-design/SKILL.md`)
 
-## Context Files
+## Reference
 
-- `context/current-sprint.md` — Current work progress
 - `context/decisions.md` — Architecture decisions log (20 ADRs)
-- `context/known-issues.md` — Known bugs and tech debt
 
 ## Do Not Modify
 
