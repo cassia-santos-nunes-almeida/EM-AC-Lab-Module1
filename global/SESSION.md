@@ -5,26 +5,22 @@ Last updated: 2026-03-20 · Session focus: Consolidate session management system
 
 ## Completed This Session
 
-- [x] Consolidated session management system across all 3 EM-AC-Lab repos
-- [x] Created global CLAUDE.md, PATTERNS.md, SESSION.md, PLAYBOOK.md at /home/user/
-- [x] Migrated 15 lessons from COURSE_GUIDELINES.md → P-CODE patterns in PATTERNS.md
-- [x] Updated repo CLAUDE.md files to reference global files
-- [x] Removed redundant context/ files (current-sprint.md, known-issues.md, project-reference.md)
-- [x] Kept context/decisions.md as ADR log per repo
+- [x] Read all context files across all 3 EM-AC-Lab repos (session open protocol)
+- [x] Designed and implemented consolidated session management system
+- [x] Created global CLAUDE.md, PATTERNS.md, SESSION.md, PLAYBOOK.md at `/home/user/`
+- [x] Migrated 15 lessons from COURSE_GUIDELINES.md → P-CODE-01 through P-CODE-15 in PATTERNS.md
+- [x] Updated repo CLAUDE.md files in all 3 modules (added global reference, absorbed project-reference.md, removed duplicated conventions)
+- [x] Removed redundant context/ files (current-sprint.md, known-issues.md, project-reference.md, session-handoff)
+- [x] Kept `context/decisions.md` as ADR log per repo
+- [x] Committed and pushed to `claude/review-docs-context-iYEO4` in all 3 repos
+- [x] Added global files to `EM-AC-Lab-Module1/global/` for version control (committed + pushed)
 
 ## Module 1 — EM Fundamentals
 
 ### Status
-- Branch: `claude/review-docs-context-iYEO4` (clean)
+- Branch: `claude/review-docs-context-iYEO4` (1 commit ahead of main — consolidation commit)
 - Tests: 71/71 passing
 - Build: clean
-
-### Completed (all previous sprints)
-- Phase 1: Canvas interaction improvements (draggable phasors, hover tooltips, touch, keyboard)
-- Phase 2: Pedagogy (Socratic tutor, RealWorldHook, PredictionGate, 3-tier hints, Phasor Sync, Magnetic Circuits page)
-- Cross-module audit: Maxwell Q3 fix, iron permeability note, differential forms, unified dark mode
-- Image & Analytics sprint: 15 FigureImage components, Vercel Analytics, Wikimedia URL fixes
-- 3-tier hints added to all 27 quiz questions
 
 ### In Progress
 - [ ] Add smoke tests for shared components
@@ -44,19 +40,9 @@ Last updated: 2026-03-20 · Session focus: Consolidate session management system
 ## Module 2 — Circuit Analysis
 
 ### Status
-- Branch: `claude/review-docs-context-iYEO4` (clean)
+- Branch: `claude/review-docs-context-iYEO4` (1 commit ahead of main — consolidation commit)
 - Tests: 92/92 passing
 - Build: clean
-
-### Completed (all previous sprints)
-- Initial build: Vite scaffold, 6 pages, circuitSolver, dark mode, responsive layout
-- Component extraction: InteractiveLab/CircuitDiagram subdirectory, CircuitParameterSliders
-- Pedagogy: ConceptCheck, ChallengeCard, CollapsibleSection, PredictionGate, ModuleNavigation
-- S-Domain: SDomainPanel in InteractiveLab, SDomainAnalysis simplified to theory-only
-- Accessibility audit: ARIA patterns, roving tabIndex, skip-to-content, aria-live
-- Component + page tests: 92 total (circuitSolver, componentMath, components, pages, hooks)
-- Shareable lab links (URL params) + chart export (SVG→PNG)
-- Extracted useShareableParams and useChartExport hooks
 
 ### In Progress
 - [ ] ComponentPhysics: shareable URLs for slider state
@@ -72,16 +58,9 @@ Last updated: 2026-03-20 · Session focus: Consolidate session management system
 ## Module 3 — Transmission Lines & Antennas
 
 ### Status
-- Branch: `claude/review-docs-context-iYEO4` (clean)
+- Branch: `claude/review-docs-context-iYEO4` (1 commit ahead of main — consolidation commit)
 - Tests: 81/81 passing
 - Build: clean
-
-### Completed (all previous sprints)
-- Initial build: 6 pages, 7 canvas simulations, transmissionMath.ts
-- Audit: CoupledCoilsSim animated fields, dual V₂ readouts, SmithChartSim interactive
-- LaTeX fix sprint: ~200+ formulas fixed across 6 pages
-- Image fixes: 3 broken URLs replaced, linter-corrupted LaTeX repaired
-- Component + page smoke tests added
 
 ### In Progress
 - [ ] Add component-level tests (only math utils + smoke tests so far)
@@ -106,23 +85,26 @@ Last updated: 2026-03-20 · Session focus: Consolidate session management system
 
 ### Open Decisions / Blockers
 - [ ] PWA icon generation needed across all 3 modules
-- [ ] Production deployment verification pending
+- [ ] Production deployment verification pending (all 3 branches have unpushed consolidation commits — need PRs to main)
 
 ### Notes for Next Session
-- All 3 repos on branch `claude/review-docs-context-iYEO4`
-- Session management system now consolidated — use `open session` / `close session` protocols
-- Check PATTERNS.md at session open for all 21 active patterns
+- All 3 repos on branch `claude/review-docs-context-iYEO4`, 1 commit ahead of main
+- Global session system is now in place — say `open session` at start
+- Canonical global files: `EM-AC-Lab-Module1/global/` (version-controlled)
+- Mirror at `/home/user/` for Claude Code auto-loading
+- When SESSION.md or PATTERNS.md change: paste into both locations, commit `global/` copy
 
 ## Patterns Triggered This Session
 
 | Pattern ID | Triggered? | Applied? |
 |---|---|---|
-| (none — this was a documentation restructuring session) | | |
+| P-ENV-04 | First occurrence | Added to PATTERNS.md |
 
 ## PATTERNS.md Updates This Session
 
-- Added P-CODE-01 through P-CODE-15 (migrated from COURSE_GUIDELINES.md "Lessons Learned")
+Added:
+- **P-ENV-04** — `git init` fails in directories without a GitHub remote. Use a subdirectory of an existing repo instead.
 
 ## Skills Used This Session
 
-- [x] other: documentation restructuring (no code skills needed)
+- [x] other: session management system design and implementation (no domain skills needed)

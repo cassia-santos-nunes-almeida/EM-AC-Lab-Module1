@@ -223,6 +223,14 @@ Each entry has:
 
 ---
 
+### P-ENV-04 — `git init` fails in directories without a GitHub remote
+**Pattern:** Running `git init` + commit in a directory not associated with a GitHub repo (e.g., `/home/user/`) causes the signing server to reject the commit with status 400 "missing source".
+**Rule:** Do not `git init` in directories that lack a GitHub remote. To version-control global files, place them in a subdirectory of an existing repo (e.g., `EM-AC-Lab-Module1/global/`) and commit there instead.
+**Scope:** All Claude Code sessions on this environment
+**First seen:** Session management consolidation, 2026-03-20
+
+---
+
 ## Template for New Entries
 
 Copy this when adding a new pattern at session close:
