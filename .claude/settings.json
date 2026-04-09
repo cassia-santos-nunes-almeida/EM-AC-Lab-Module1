@@ -1,0 +1,60 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "timeout 45 bash //maa1.cc.lut.fi/home/z116447/Documents/GitHub/my-claude-skills/scripts/sync-to-projects.sh EM-AC-Lab-Module1 2>&1 || echo '[SYNC WARNING] Skill sync failed or timed out. Skills may be outdated. Run manually: bash //maa1.cc.lut.fi/home/z116447/Documents/GitHub/my-claude-skills/scripts/sync-to-projects.sh EM-AC-Lab-Module1'"
+          },
+          {
+            "type": "command",
+            "command": "npm install --silent 2>/dev/null && echo 'Dependencies installed' || echo 'npm install failed'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash //maa1.cc.lut.fi/home/z116447/Documents/GitHub/my-claude-skills/scripts/check-skill-edit.sh",
+            "if": "Write(.claude/skill/**)|Edit(.claude/skill/**)"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Read(///maa1.cc.lut.fi/home/z116447/Documents/GitHub/**)",
+      "Write(///maa1.cc.lut.fi/home/z116447/Documents/GitHub/EM-AC-Lab-Module1/**)",
+      "Write(**\\EM-AC-Lab-Module1\\**)",
+      "Write(**/EM-AC-Lab-Module1/**)",
+      "Edit(///maa1.cc.lut.fi/home/z116447/Documents/GitHub/EM-AC-Lab-Module1/**)",
+      "Edit(**\\EM-AC-Lab-Module1\\**)",
+      "Edit(**/EM-AC-Lab-Module1/**)",
+      "Glob(///maa1.cc.lut.fi/home/z116447/Documents/GitHub/**)",
+      "Grep(///maa1.cc.lut.fi/home/z116447/Documents/GitHub/**)",
+      "Bash(cd *)",
+      "Bash(mkdir *)",
+      "Bash(mv *)",
+      "Bash(ls *)",
+      "Bash(git *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(wc *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "mcp__claude_ai_Notion__notion-search",
+      "mcp__claude_ai_Notion__notion-fetch",
+      "mcp__claude_ai_Notion__notion-create-pages",
+      "mcp__claude_ai_Consensus__search",
+      "mcp__claude_ai_Scholar_Gateway__semanticSearch",
+      "mcp__claude_ai_academic-research-mcp__*"
+    ]
+  }
+}
