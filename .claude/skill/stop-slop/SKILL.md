@@ -1,20 +1,33 @@
 ---
 name: stop-slop
-description: Remove AI writing patterns from prose. Use when drafting, editing, or reviewing text to eliminate predictable AI tells.
+description: "Shared quality layer: detect and remove AI writing patterns from prose. Callable with an optional context parameter for cluster-specific enforcement. conorbronsdon/avoid-ai-writing patterns integrated."
 metadata:
-  trigger: Writing prose, editing drafts, reviewing content for AI patterns
-  author: Hardik Pandya (https://hvpandya.com)
+  trigger: Writing prose, editing drafts, reviewing content for AI patterns. Also invoked by message-coach and eer-paper-writing as a final quality pass.
+  author: "Adapted from Hardik Pandya (https://hvpandya.com), extended by Cassia Almeida"
 ---
 
 # Stop Slop
 
-Eliminate predictable AI writing patterns from prose.
+Shared voice-and-pattern quality layer. Detect and remove predictable AI writing patterns from prose.
+
+## Invocation
+
+stop-slop accepts an optional `context` parameter selecting one of four enforcement clusters. When called without a parameter, it defaults to `professional-message`.
+
+| Cluster | Covers | Character |
+|---|---|---|
+| `informal-message` | Personal notes, quick internal writing | Lightest enforcement |
+| `professional-message` | Teams, emails, student materials, lectures | Full enforcement (default) |
+| `academic-formal` | Methods, results, literature review | Strict patterns, skip conversational voice test |
+| `academic-human` | Discussion, conclusion, introduction, abstract | Full patterns, partial conversational voice test |
+
+See [references/context-profiles.md](references/context-profiles.md) for the full tolerance matrix and auto-detection cues.
 
 ## Core Rules
 
-1. **Cut filler phrases.** Remove throat-clearing openers, emphasis crutches, and all adverbs. See [references/phrases.md](references/phrases.md).
+1. **Cut filler phrases.** Remove throat-clearing openers, emphasis crutches, and all adverbs. See [references/banned-phrases.md](references/banned-phrases.md).
 
-2. **Break formulaic structures.** Avoid binary contrasts, negative listings, dramatic fragmentation, rhetorical setups, false agency. See [references/structures.md](references/structures.md).
+2. **Break formulaic structures.** Avoid binary contrasts, negative listings, dramatic fragmentation, rhetorical setups, false agency, copula avoidance, synonym cycling, and all structural AI patterns. See [references/banned-structures.md](references/banned-structures.md).
 
 3. **Use active voice.** Every sentence needs a human subject doing something. No passive constructions. No inanimate objects performing human actions ("the complaint becomes a fix").
 
@@ -22,7 +35,7 @@ Eliminate predictable AI writing patterns from prose.
 
 5. **Put the reader in the room.** No narrator-from-a-distance voice. "You" beats "People." Specifics beat abstractions.
 
-6. **Vary rhythm.** Mix sentence lengths. Two items beat three. End paragraphs differently. No em dashes.
+6. **Vary rhythm.** Mix sentence lengths. Two items beat three. End paragraphs differently. No em dashes. Zero tolerance, all clusters.
 
 7. **Trust readers.** State facts directly. Skip softening, justification, hand-holding.
 
@@ -40,55 +53,64 @@ Before delivering prose:
 - Any "not X, it's Y" contrasts? State Y directly.
 - Three consecutive sentences match length? Break one.
 - Paragraph ends with punchy one-liner? Vary it.
-- Em-dash anywhere? Remove it.
+- Em-dash anywhere? Remove it. Zero tolerance.
 - Vague declarative ("The implications are significant")? Name the specific implication.
 - Narrator-from-a-distance ("Nobody designed this")? Put the reader in the scene.
-- Meta-joiners ("The rest of this essay...")? Delete. Let the essay move.
-- More than ~25% of sentences share an opener ("This," "The," "It")? Vary them.
-- Three or more words from the vocabulary cluster list on one page? Replace with simpler alternatives.
+- Meta-joiners ("The rest of this essay...")? Delete.
+- More than ~25% of sentences share an opener? Vary them.
+- Three or more Tier 2 words in one paragraph? Replace with simpler alternatives.
 - Three or more hedges in one paragraph? Commit or cut.
-- More than two formal transitions ("However," "Moreover," "Furthermore") per page? Remove or restructure.
+- More than two formal transitions per page? Remove or restructure.
 - All paragraphs roughly the same length? Break the pattern.
 - Spot the three-beat setup-bridge-point? Collapse to the point.
+- Copula avoidance ("serves as," "features," "boasts")? Use "is" or "has."
+- Synonym cycling in one paragraph? Repeat the right word.
 
 ## Statistical Detection Patterns
 
-These are the subtler tells that survive after the obvious slop is removed. Check for these in any output longer than two sentences.
+Subtler tells that survive after the obvious slop is removed.
 
 ### 9. Sentence opener monotony
-If more than ~25% of sentences in a passage start with the same word ("This," "The," "It," "However"), rewrite openers to vary them. AI defaults to a narrow set of sentence starters.
+If more than ~25% of sentences start with the same word, rewrite openers to vary them.
 
 ### 10. Vocabulary clustering
-AI reaches for "impressive" filler words. Flag and replace with something specific or simpler:
-
-> notably, particularly, significantly, ultimately, essentially, fundamentally, comprehensive, robust, facilitate, utilize, foster, enhance, underscore, pivotal, critical, transformative, innovative, streamline, employing, spanning, bolster
-
-These are not banned outright. If one is the right word and no simpler alternative says the same thing, keep it. But if three or more appear in one page, something is wrong.
+Detect using the three-tier system in [references/banned-phrases.md](references/banned-phrases.md). Tier 1: always replace. Tier 2: catch 2+ in one paragraph. Tier 3: catch at high density only.
 
 ### 11. Hedging density
-One or two hedges per paragraph is human ("may," "might," "could potentially," "it is possible that," "to some extent," "in many cases"). Three or more per paragraph is a red flag. Fix: commit to the claim or cut it.
-
-**Exception:** Methods sections in academic papers may legitimately need more hedging. Relax this rule there.
+Three or more hedges per paragraph is a problem. Commit to the claim or cut it. **Exception:** Methods sections in academic papers may need more hedging. Scoped by the academic-formal cluster.
 
 ### 12. Transition word overload
-"However," "Moreover," "Furthermore," "Additionally," "Consequently," "Nevertheless" appearing more than twice per page is a classic AI fingerprint. Fix: remove the transition and let the sentence flow from the previous one, or restructure the paragraph.
+"However," "Moreover," "Furthermore," "Additionally" appearing more than twice per page. Remove or restructure.
 
 ### 13. Paragraph length uniformity
-If all paragraphs in a passage are within ~20% of each other in length, break the pattern. Mix short (1-2 sentence) paragraphs with longer developed ones. Uniform blocks read as generated.
+If all paragraphs are within ~20% of each other in length, break the pattern.
 
 ### 14. Setup-then-deliver pattern
-AI loves: "[Context sentence]. [Bridge sentence]. [The actual point]." Humans more often lead with the point or weave context into the same sentence. If you spot this three-beat pattern, collapse it.
+Collapse the three-beat "[Context]. [Bridge]. [Point]." pattern. Lead with the point.
 
-## Hard constraint
+## Execution Order
 
-**The de-AI audit is cosmetic only. It must never alter meaning, remove content, add new ideas, or override the user's voice fingerprint. When choosing between "sounds slightly AI" and "changes what the text says," always keep the meaning. When in doubt, leave the text as-is.**
+1. **Pattern matching:** Core rules (1-8), quick checks, statistical detection (9-14), structural patterns
+2. **Conversational voice test:** Scoped by cluster. See [references/self-audit.md](references/self-audit.md).
+3. **Pasta test:** Runs on all clusters. See [references/self-audit.md](references/self-audit.md).
+4. **Scoring:** 5-dimension rubric (only when requested or on full audit)
+
+## Hard Constraints
+
+**The de-AI audit is cosmetic only.** It must never alter meaning, remove content, add new ideas, or override the caller's voice fingerprint. When choosing between "sounds slightly AI" and "changes what the text says," always keep the meaning. When in doubt, leave the text as-is.
+
+**Self-reference escape hatch.** When writing about AI writing patterns (blog posts, tutorials, skill documentation), quoted examples are exempt from detection. Only catch patterns that appear in the author's own prose, not in cited examples of bad writing.
+
+**Over-polishing warning.** Aggressively removing every irregularity can push human writing toward AI statistical profiles. Natural disfluency, idiosyncratic word choices, and uneven pacing keep text out of the "AI-generated" classification. This skill should make writing sound more human, not less.
+
+**Backward compatibility.** stop-slop remains fully functional when called without a context parameter. The default cluster is `professional-message`.
 
 ## Scoring
 
 Rate 1-10 on each dimension:
 
 | Dimension | Question |
-|-----------|----------|
+|---|---|
 | Directness | Statements or announcements? |
 | Rhythm | Varied or metronomic? |
 | Trust | Respects reader intelligence? |
@@ -97,9 +119,15 @@ Rate 1-10 on each dimension:
 
 Below 35/50: revise.
 
-## Examples
+## Reference Files
 
-See [references/examples.md](references/examples.md) for before/after transformations.
+| File | Contains |
+|---|---|
+| [references/banned-phrases.md](references/banned-phrases.md) | Tiered banned words (1/2/3), phrases, transitions, chatbot artifacts |
+| [references/banned-structures.md](references/banned-structures.md) | All banned structural patterns (original + avoid-ai-writing additions) |
+| [references/before-after.md](references/before-after.md) | Before/after transformation examples |
+| [references/context-profiles.md](references/context-profiles.md) | Cluster definitions, tolerance matrix, auto-detection cues |
+| [references/self-audit.md](references/self-audit.md) | Conversational voice test and pasta test with scoping rules |
 
 ## License
 
