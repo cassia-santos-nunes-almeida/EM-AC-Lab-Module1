@@ -1,18 +1,14 @@
 ---
 name: academic-research
 description: >
-  Conduct academic literature searches across a multi-database research ecosystem:
-  custom MCP databases (Scopus, Web of Science, Semantic Scholar, arXiv, ERIC, IEEE,
-  ScienceDirect, ACL Anthology, ASEE PEER), plus Consensus (evidence synthesis with
-  study-type and journal-quartile filters), Scholar Gateway (passage-level semantic
-  search with citations), and PubMed (biomedical literature). Use this skill whenever
-  Cássia asks to search for papers, build a literature review, find citations to
-  support a claim, map the research landscape on a topic, or asks "what has been done
-  on X." Also use when she says "search the databases," "find me papers on," "what do
-  I cite for," "do a literature review," "deep dive on," "comprehensive review of,"
-  "what does the evidence say about," or "systematic search." Even if she just pastes
-  a claim and says "find me a reference for this," use this skill. Works for any
-  research theme -- detect the topic from context or ask if unclear.
+  Use this skill whenever Cássia asks to search for papers, build a literature review,
+  find citations to support a claim, map the research landscape on a topic, or says
+  "search the databases," "find me papers on," "what do I cite for," "do a literature
+  review," "deep dive on," "what has been done on X," "what does the evidence say
+  about," or "systematic search." Even if she just pastes a claim and says "find me a
+  reference for this," use this skill. Searches across 10+ databases: Scopus, Web of
+  Science, Semantic Scholar, arXiv, ERIC, IEEE, ScienceDirect, ACL Anthology, ASEE
+  PEER, Consensus, Scholar Gateway, and PubMed. Works for any research theme.
 ---
 
 # Academic Research Skill

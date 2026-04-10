@@ -1,6 +1,14 @@
 ---
 name: stop-slop
-description: "Shared quality layer: detect and remove AI writing patterns from prose. Callable with an optional context parameter for cluster-specific enforcement. conorbronsdon/avoid-ai-writing patterns integrated."
+description: >
+  Use this skill whenever Claude is about to deliver prose of any kind -- emails,
+  papers, reports, student materials, lecture notes, any written output. Also trigger
+  when Cássia says "check this for AI patterns," "audit my writing," "de-slop this,"
+  "remove AI language," "make this sound more human," or "clean up my text." Invoked
+  automatically as a final quality pass by message-coach and eer-paper-writing. Detects
+  and removes predictable AI writing patterns: filler phrases, passive voice, formulaic
+  structures, hedging density, and sentence monotony. Supports four enforcement clusters
+  from informal messages to formal academic prose.
 metadata:
   trigger: Writing prose, editing drafts, reviewing content for AI patterns. Also invoked by message-coach and eer-paper-writing as a final quality pass.
   author: "Adapted from Hardik Pandya (https://hvpandya.com), extended by Cassia Almeida"
