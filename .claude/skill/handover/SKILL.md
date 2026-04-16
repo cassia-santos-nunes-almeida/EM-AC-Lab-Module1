@@ -138,6 +138,27 @@ Apply edits, re-show the updated draft. Repeat until user says "looks good", "sa
 
 **Do not save to Notion until the user explicitly approves.**
 
+### Step 3b — Final quality pass (automatic, before showing any draft)
+
+Run `stop-slop` silently on the handover draft before showing it to
+the user and again before saving to Notion. Cluster: `professional-message`
+(handover prose is a written note to a future-you, not an academic
+paper — professional tone, no SEFI-style hedging, no academic register).
+
+stop-slop handles banned-phrase detection, conversational-voice test,
+and the pasta test. See `stop-slop/SKILL.md` for execution order.
+
+**Hard constraint:** cosmetic only. Must never alter meaning, drop
+sections, weaken a concrete fact, or change a named identifier
+(commit hashes, file paths, user-supplied terminology). Handover
+content is *specifically* where future-you needs the raw truth — do
+not polish away specificity.
+
+**Always surface a one-line signal** after running (per P-WRITE-01):
+`[stop-slop: clean]`, `[stop-slop: N edits applied]`, or
+`[stop-slop: N tells left intentionally — <reason>]`. Never run
+silently with no signal.
+
 ### Step 4 — Save to Notion
 
 Once approved:
@@ -257,4 +278,4 @@ following the existing format, and commit the change.
 - **All 7 sections are required.** If context is thin, write "Not discussed this session" rather than omitting.
 - Written **for a cold Claude** — assume zero prior context. Be explicit, not terse.
 - No AI slop: no "In conclusion", no "It's worth noting", no "comprehensive overview". Write like a dev handing off to a colleague.
-- Apply `stop-slop` rules when drafting handover prose.
+- `stop-slop` is run as Step 3b above on every draft and must emit a visible signal line (see P-WRITE-01 in shared-patterns.md). If the signal is missing, the quality pass did not fire — rerun it.
