@@ -1,7 +1,7 @@
 ---
 name: academic-research
 description: >
-  Use this skill whenever Cássia asks to search for papers, build a literature review,
+  Use this skill whenever the user asks to search for papers, build a literature review,
   find citations to support a claim, map the research landscape on a topic, or says
   "search the databases," "find me papers on," "what do I cite for," "do a literature
   review," "deep dive on," "what has been done on X," "what does the evidence say
@@ -28,6 +28,28 @@ ask before searching. Examples:
 - "what should I cite for my paper?" -- check context/memory for the paper topic
 
 Once the theme is identified, select tools and construct queries accordingly.
+
+---
+
+## Data integrity
+
+Every paper cited in any output must come from a tool response received in this
+session. These rules apply equally to chat replies and to generated documents.
+
+- Only cite what a tool returned in this session. If a paper from training
+  knowledge is useful for context, label it `[Not from tools — model knowledge]`
+  and exclude it from counts and bibliography.
+- If a search returns fewer results than expected (0--2 hits for a topic that
+  should have more), surface the gap explicitly. Do not silently backfill from
+  training data.
+- Track three separate numbers: **queries sent**, **unique papers received**
+  (deduplicated by DOI/title), **papers cited** in the final output. Report
+  them when the user asks for an audit or when producing a `.docx`.
+- Every cited paper must have a retrievable URL (DOI, Consensus link, arXiv
+  ID, PMID). No URL = not citable.
+- On tool failure: wait 3 seconds, retry once, log the outcome. After 3
+  consecutive failures across any tools, stop and tell the user what's
+  missing rather than skipping silently.
 
 ---
 
@@ -64,7 +86,7 @@ evidence-finding, then verify with paper-level tools above.
 
 | Tool | Returns | When to use | Key parameters |
 |---|---|---|---|
-| `Consensus:search` | Papers with study-type classification and SJR quartile | "What does the evidence say about X?" -- orientation at the start of deep searches | `study_types` (meta-analysis, rct, systematic review...), `sjr_max` (1=Q1..4=Q4), `year_min`/`year_max`, `sample_size_min`, `human` |
+| `Consensus:search` | Papers with study-type classification and SJR quartile | "What does the evidence say about X?" -- orientation at the start of deep searches | `study_types` (meta-analysis, rct, systematic review...), `sjr_max` (1=Q1..4=Q4), `year_min`/`year_max`, `sample_size_min`, `human`. **Parse plan-tier caps**: responses often say "Found X, showing top Y" -- the *shown* count is what's citable (unauth ~3, free ~10, pro ~20). If a cap is detected, log it and surface: sparse results may reflect the cap, not a literature gap. Rate limit: 1 q/s sequential. |
 | `Scholar Gateway:semanticSearch` | Text passages with inline citations | "Find me a passage that supports claim X" -- evidence for specific claims | `interaction_id` (UUID, reuse per prompt), `inferred_intent` (why the user needs this), `topN`, year range |
 
 **Do not confuse them:**
@@ -92,7 +114,7 @@ or social sciences topics -- use the paper-level tools above instead.
 
 **About Research mode:** Research mode is a Claude.ai feature that the user toggles
 ON before submitting a query -- it is not a tool Claude can activate mid-conversation.
-For deep literature reviews, Cássia can optionally run a Research mode session first
+For deep literature reviews, the user can optionally run a Research mode session first
 to get broad orientation, then start a regular session where this skill handles
 precise database searches. However, Consensus + web search already cover most
 orientation needs within a single session.
@@ -122,17 +144,31 @@ for," "look up [specific paper]," "find the DOI for," or any short factual looku
 **Triggers:** "deep dive," "comprehensive review," "literature review," "map the
 landscape," "what has been done on," "systematic search," or any open-ended question.
 
-**Phase A -- Orientation**
+**Phase A -- Orientation and framework selection**
 Start broad. Get the lay of the land before precise database queries.
 
 1. `Consensus:search` with the main research question (no filters first) to see
    what the evidence says and which subtopics emerge
 2. `web_search` for recent developments not yet in databases: conference
    announcements, new tools, blog posts, emerging terminology
-3. Document what Phase A found: key terms, key authors, subtopics, terminology
+3. **Pick a decomposition framework** to structure the landscape into searchable
+   sub-areas. Try PICO first (it fits more than just clinical questions):
+   - **PICO** -- Population / Intervention / Comparison / Outcome. Default choice.
+     Works for health, clinical, behavioral, educational, and many social-science
+     questions.
+   - **SPIDER** -- Sample / Phenomenon of Interest / Design / Evaluation /
+     Research type. Use for qualitative or lived-experience questions with no
+     clear intervention or comparison group.
+   - **Decomposition** -- Core mechanism / Applications / Limitations /
+     Comparisons with alternatives. Use for technology-focused questions.
+   - Many real questions are hybrids (e.g., "social media and teen wellbeing"
+     has PICO + qualitative components). Pick a primary framework for structure,
+     note which components borrow from others.
+4. Document what Phase A found: framework chosen, key terms, key authors,
+   subtopics, terminology shifts observed across eras.
 
-*Note: If Cássia ran a Research mode session before this one, incorporate any
-orientation findings she shares from that session.*
+*Note: If the user ran a Research mode session before this one, incorporate any
+orientation findings they share from that session.*
 
 **Phase B -- Landscape search (paper-level tools)**
 Run 2--3 tools chosen by topic. Use terms surfaced in Phase A.
@@ -148,10 +184,31 @@ For each promising paper from Phase B:
 - `Scholar Gateway:semanticSearch` if a specific claim needs passage-level evidence
 - Note: title, authors, year, venue, citation count, key claims
 
+**Cross-search intelligence (track across all Phase B/C results)**
+
+While results come in, keep three rolling lists. These convert a pile of hits
+into actual field knowledge:
+
+1. **Repeat-hit papers** -- deduplicate by DOI/title across every search. A paper
+   that surfaces in 3+ subtopics is almost certainly foundational; flag it
+   explicitly in the output, not just in one theme.
+2. **Recurring authors** -- the author groups that appear in multiple searches
+   are the dominant labs/voices. List the top 3--5; a researcher entering the
+   field needs this map.
+3. **Citations-per-year signal** -- citation count divided by years since
+   publication. A 2024 paper with 150 citations is a stronger signal than a
+   2008 paper with 150 citations. Use this to surface seminal work, not just
+   raw citation count.
+
 **Phase D -- Coverage check**
 1. Recent: `arxiv_search` sorted by `submittedDate`; Semantic Scholar with recent year filter
 2. Foundational: Scopus/WoS with `min_citations: 50`, no year filter
-3. Gap identification: what's missing? what should be searched next?
+3. **Era-gated pairs (optional, high-signal)** -- for the most important subtopic,
+   run the same query twice: once with `year_max: <5-7 years ago>` and once with
+   `year_min: <last 2 years>`. The diff surfaces paradigm shifts, terminology
+   drift (e.g., "gut flora" -> "gut microbiome"), and methodological evolution.
+   Document the contrast in the output.
+4. Gap identification: what's missing? what should be searched next?
 
 ---
 
@@ -218,8 +275,8 @@ Citations: [N] | DOI: [doi] | [Relevance note -- 1 sentence]
 
 ## Example playbooks
 
-These playbooks are examples for Cássia's current research topics. They illustrate
-how to build topic-specific search sequences. Adapt the pattern for any theme.
+These playbooks illustrate how to build topic-specific search sequences for a few
+common research themes. Adapt the pattern for any theme.
 
 ### Example: LLM-based automated grading (ASAG)
 
@@ -263,6 +320,43 @@ LLM higher education, AI feedback, AI assessment
 
 ---
 
+## Optional: .docx output mode
+
+Default output is the structured summary above. If the user asks for a "guide,"
+"launch pad," "literature review doc," or explicitly requests a Word file,
+produce a `.docx` using the `docx` npm package (`npm install -g docx`) with the
+following structure. This mode is for formal deliverables (shareable with
+co-authors, mentors, or students), not for quick chat answers.
+
+Sections:
+1. **Topic overview** -- 4--6 sentences, framework used, evidence landscape.
+2. **Start here -- priority reading order** -- 5--7 curated papers in the
+   order a newcomer should read them: best recent review first, then
+   foundational paper(s), then current frontier, ending with a paper that
+   highlights an open gap. Each entry: clickable title, authors/year, one
+   sentence on what it contributes, one sentence on what to notice while
+   reading.
+3. **How the field got here** -- chronological timeline table + note on any
+   terminology shifts observed in era-gated searches.
+4. **Sub-area guides** (one per framework component) -- 2--3-sentence
+   synthesis with inline citations, 3--5 key papers, key search terms,
+   2--3 ready-to-paste Boolean strings.
+5. **Key research groups** -- the recurring-authors list from cross-search
+   intelligence.
+6. **Open questions & gaps** -- methodological / population-context /
+   conceptual. For each gap, explain why it matters.
+7. **Bibliography** -- full list, every inline citation has an entry,
+   URLs full not truncated.
+8. **Audit log** -- queries sent, papers received (deduplicated), papers
+   cited, per-tool result counts, any failed or retried searches, and any
+   Consensus plan-tier cap detected.
+
+Hyperlinks: `ExternalHyperlink` with `style: "Hyperlink"` and the full URL
+returned by the tool. Page: US Letter, 1-inch margins, Arial body. Validate
+with `python <docx-skill-path>/scripts/office/validate.py` after saving.
+
+---
+
 ## Important caveats
 
 **Citation integrity:** Never use search results as citations without verifying DOI
@@ -273,7 +367,7 @@ before adding to a paper. If DOI is missing, search by title to find the verifie
 - Scopus returns first author only -- fetch full details for complete author list
 - WoS Starter API requires WOS_API_KEY — if not configured, the tool returns 401.
   Use Scopus as primary fallback for citation analysis until WoS key is set up.
-  With LUT subscription, up to 5,000 req/day are available once configured.
+  Daily quota depends on the institutional subscription tier.
 - arXiv results are not peer-reviewed -- always flag as preprints
 - ASEE PEER uses HTML parsing -- if results are sparse, try peer.asee.org directly
 - ACL Anthology uses Semantic Scholar index -- very recent papers may lag by weeks

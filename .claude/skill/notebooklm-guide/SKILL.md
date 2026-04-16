@@ -20,7 +20,7 @@ This skill tells you how to use the 32 tools in the `notebooklm-mcp` server effe
 It is not a replacement for the MCP. It is a routing layer that translates user intent
 into the right tool chains, with correct sequencing, confirmation rules, and error handling.
 
-For detailed tool parameters and options, read `references/tool-catalog.md`.
+For detailed tool parameters and options, consult the notebooklm-mcp server's own documentation or the tool schemas surfaced by your MCP client.
 
 ## Auth Recovery
 
@@ -81,8 +81,9 @@ Check both storage locations for aliases:
 - `registry.json` in this skill's directory (Claude Code, writable filesystem)
 - Claude's memory (claude.ai, where the skill directory is read-only)
 
-If the user mentioned a known alias (e.g., "nilsson", "ulaby"), use the mapped UUID
-directly. No confirmation needed.
+If the user mentioned a known alias (e.g., a short label previously saved
+such as "textbook" or "project-notes"), use the mapped UUID directly.
+No confirmation needed.
 
 **2. Extract from URL.**
 If the user pasted a notebooklm.google.com URL, extract the notebook ID from the path.
@@ -90,7 +91,7 @@ Pattern: `https://notebooklm.google.com/notebook/<NOTEBOOK_ID>`
 
 **3. Topic-based matching.**
 If the registry has entries with topic tags, and the user's query clearly matches a topic
-(e.g., "ask about Faraday's law" matches a notebook tagged with "electromagnetic theory"),
+(e.g., a question about a domain concept matches a notebook tagged with that domain),
 use that notebook. If multiple notebooks match, present the candidates and ask.
 Note: topic matching is best-effort. If unsure, fall through to dynamic listing.
 
@@ -193,7 +194,7 @@ User says: "ask only the chapter 5 source about X"
 
 ### W3: Cross-Notebook Query
 
-User says: "compare what Nilsson and Ulaby say about inductance"
+User says: "compare what [notebook A] and [notebook B] say about [topic]"
 
 1. Resolve notebook A and notebook B
 2. Call `notebook_query` on notebook A
@@ -328,5 +329,6 @@ Follow the Auth Recovery escalation ladder at the top of this document.
 ## Tool Reference
 
 For detailed parameters, defaults, and option values for all 32 notebooklm-mcp tools,
-read `references/tool-catalog.md`. Consult it when you need to check parameter names,
-valid enum values, or default behavior for a specific tool.
+consult the tool schemas surfaced by your MCP client, or the notebooklm-mcp server's
+README. The MCP client exposes full parameter names, valid enum values, and default
+behavior for every tool at call time.

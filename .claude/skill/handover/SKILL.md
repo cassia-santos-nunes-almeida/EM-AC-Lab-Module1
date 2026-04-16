@@ -40,18 +40,30 @@ Notion:notion-search  query="Session Handovers"  query_type="internal"
 
 **If found:** note the page URL from results. Call `Notion:notion-fetch` on that URL to get the `data_source_id` from the `<data-source url="collection://...">` tag in the response. Store that ID — it's needed for every SAVE.
 
-**If NOT found:** create the database using SQL DDL syntax:
+**If NOT found:** create the database using SQL DDL syntax. Read the
+tags from `references/projects.md` (parse the `**Tag:**` line of each
+`##` entry, excluding the `Other` free-text entry) and build the
+`"Project"` SELECT options from that list, appending `'Other':default`
+at the end. Before running the DDL, **show the full CREATE TABLE
+statement to the user and ask them to confirm** — the shipped
+`projects.md` belongs to the skill's maintainer, so the first
+first-run is the user's chance to replace any tags they don't
+recognise as theirs. Example shape:
 
 ```
 Notion:notion-create-database
   title: "Session Handovers"
   schema: CREATE TABLE (
     "Title" TITLE,
-    "Project" SELECT('SEFI':blue, 'MCP server':orange, 'EM&AC course':green, 'EP course':purple, 'Personal/Tools':gray, 'Other':default),
+    "Project" SELECT('Tag1':blue, 'Tag2':green, 'Tag3':orange, 'Other':default),
     "Date" DATE,
     "Status" SELECT('Active':green, 'Archived':gray)
   )
 ```
+
+After the DDL runs, tell the user they can edit `references/projects.md`
+to refine the project list later, and point them to Notion's UI to add
+matching SELECT options to the database when they do.
 
 Note: `parent` is omitted → database is created as a private workspace-level page. Tell the user: *"Created 'Session Handovers' in Notion as a private page. You may want to move it to the right place in your workspace."*
 
@@ -68,7 +80,7 @@ Read `references/projects.md` to load auto-detection signals for each project. S
 **If one project clearly matches:** confirm with the user — *"This looks like a [Project] session — saving under that project. Correct?"*
 
 **If unclear or multiple projects touched:** ask —
-> *"Which project should I tag this handover under? Options: SEFI · MCP server · EM&AC course · EP course · Personal/Tools · Other (type a name)."*
+> *"Which project should I tag this handover under? Options: [list the tags from references/projects.md], or 'Other' (type a name)."*
 
 Do not proceed until project is confirmed.
 
@@ -100,7 +112,7 @@ naming conventions, gotchas found — anything not obvious from output alone]
 a new Claude session would need to locate to continue]
 
 ## 5. Dependencies / blockers on other projects
-[e.g. "MCP server WoS bug must be fixed before SEFI results are final"]
+[e.g. "Upstream library bug must be fixed before this analysis is final"]
 
 ## 6. What comes next
 [Ordered list of immediate next actions]
@@ -157,7 +169,7 @@ Confirm: *"Saved ✓ — 'Handover — [Project] — [Date]' is in your Session 
 ### Step 1 — Identify the project
 
 Read `references/projects.md`. Scan context for project signals. If unclear, ask:
-> *"Which project? Options: SEFI · MCP server · EM&AC course · EP course · Personal/Tools · Other."*
+> *"Which project? Options: [list the tags from references/projects.md], or 'Other'."*
 
 ### Step 2 — Find the database and search within it
 
@@ -188,10 +200,10 @@ From the results:
 - If multiple: identify the most recent by date in the title, then show the user a short list:
 
 ```
-Found 3 handovers for SEFI:
-1. Handover — SEFI — 2026-03-31  ← loading this one
-2. Handover — SEFI — 2026-03-28
-3. Handover — SEFI — 2026-03-24
+Found 3 handovers for [Project]:
+1. Handover — [Project] — 2026-03-31  ← loading this one
+2. Handover — [Project] — 2026-03-28
+3. Handover — [Project] — 2026-03-24
 Let me know if you want a different one.
 ```
 

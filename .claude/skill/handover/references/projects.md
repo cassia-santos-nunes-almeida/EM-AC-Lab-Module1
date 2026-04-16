@@ -1,7 +1,26 @@
 # Project Reference — Session Handovers
 
-Used by the handover skill to auto-detect project from conversation context.
-If signals are ambiguous, always ask — never guess silently.
+Used by the handover skill to auto-detect project from conversation
+context. If signals are ambiguous, always ask — never guess silently.
+
+## How to customise
+
+This file is meant to be edited. The entries below are the maintainer's
+live list — treat them as examples of the expected structure and
+replace them with your own. Each entry needs:
+
+- **Tag** — the short label shown in Notion's `Project` SELECT field.
+  Keep it under 20 characters. The same tag must exist as a Notion
+  SELECT option (add new options in Notion's UI).
+- **Signals** — comma-separated keywords, repo names, URLs, acronyms,
+  or any other strings that reliably appear when you work on this
+  project. The skill scans recent conversation for these to auto-detect.
+- **Description** — one sentence for human readers. Can name the
+  current state, active issues, collaborators, or any context that
+  future-you would want when resuming.
+
+Keep 3–7 projects. Fewer than 3 and auto-detection rarely helps; more
+than 7 and the list is unreadable in the "which project?" prompt.
 
 ---
 
