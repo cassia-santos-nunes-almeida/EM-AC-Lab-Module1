@@ -9,7 +9,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "timeout 45 bash //maa1.cc.lut.fi/home/z116447/Documents/GitHub/my-claude-skills/scripts/sync-to-projects.sh EM-AC-Lab-Module1 2>&1 || echo '[SYNC WARNING] Skill sync failed or timed out. Skills may be outdated. Run manually: bash //maa1.cc.lut.fi/home/z116447/Documents/GitHub/my-claude-skills/scripts/sync-to-projects.sh EM-AC-Lab-Module1'"
+            "command": "bash //maa1.cc.lut.fi/home/z116447/Documents/GitHub/my-claude-skills/scripts/sync-to-projects.sh EM-AC-Lab-Module1 2>&1 || echo '[SYNC WARNING] Skill sync failed or timed out. Skills may be outdated. Run manually: bash //maa1.cc.lut.fi/home/z116447/Documents/GitHub/my-claude-skills/scripts/sync-to-projects.sh EM-AC-Lab-Module1'"
           },
           {
             "type": "command",
@@ -26,6 +26,15 @@
             "type": "command",
             "command": "bash //maa1.cc.lut.fi/home/z116447/Documents/GitHub/my-claude-skills/scripts/check-skill-edit.sh",
             "if": "Write(.claude/skill/**)|Edit(.claude/skill/**)"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash //maa1.cc.lut.fi/home/z116447/Documents/GitHub/my-claude-skills/scripts/validate-structured-file.sh"
           }
         ]
       }
