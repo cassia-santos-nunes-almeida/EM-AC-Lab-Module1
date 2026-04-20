@@ -2,6 +2,14 @@
 
 Part of the three-module EM&AC Lab course: **M1 (EM Fundamentals)** → M2 (Circuit Analysis) → M3 (Transmission Lines & Antennas).
 
+## Operating Rules
+
+* **Before claiming done:** run behavioural tests, not static-only. Run Vitest; for visual outputs, load the UI in a browser and check the actual rendering. State explicitly: `Tested: [X]. Not tested: [Y] because [Z].` See **P-TEST-01**.
+* **Environment:** Windows UNC home via `Z:\`. Python is `python` not `python3` (**P-ENV-01**). Sub-agents are read-only on UNC — main agent performs writes (**P-ENV-05**). Always work from `Z:\`, never `\\maa1\...` (**P-ENV-09**). Short alias vs FQDN are distinct SMB caches (**P-ENV-10**).
+* **Hooks:** limited PATH — no Python/Node interpreters in hook scripts (**P-ENV-06**).
+* **Settings changes:** `.claude/settings.local.json` edits need session restart + Shift+Tab opt-in (**P-ENV-08**).
+* Full rules: `.claude/skill/context_evaluator/shared-patterns.md`.
+
 ## Quick Start
 
 ```bash
