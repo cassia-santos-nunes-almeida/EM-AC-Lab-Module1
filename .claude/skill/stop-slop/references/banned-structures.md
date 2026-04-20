@@ -156,11 +156,31 @@ builders" in the same paragraph. Human writers repeat the clearest word.
 If the same noun or verb appears three times in a paragraph and that is the right word,
 keep all three. Forced variation reads as thesaurus abuse.
 
+## Buzzword Motif Repetition
+
+The inverse failure of synonym cycling. AI anchors a paragraph by repeating one buzzword
+two or three times as a structural motif: "data-driven transformation... data-driven
+outcomes... data-driven approach" in a single short paragraph. One Tier 1 or Tier 2
+buzzword becomes the load-bearing anchor.
+
+If a banned buzzword appears more than once in a short paragraph (under 100 words),
+rewrite to replace most occurrences with the specific thing being described. Example:
+"our data-driven transformation... data-driven outcomes" becomes "the analytics-based
+redesign... the outcomes we measured."
+
+Normal word repetition is fine. The pattern is specifically about a banned buzzword used
+as a paragraph theme.
+
 ## Vague Attributions
 
 "Experts believe," "Studies show," "Research suggests," "Industry leaders agree" without
 naming the expert, study, or leader. Either cite a specific source or drop the attribution
 and state the claim directly.
+
+Also catches the corporate-collective "our": "our team", "our approach", "our community",
+"our solution" used as a collective voice without naming the specific group. If a specific
+group exists, name it ("the EM/AC course team", "the PED faculty cohort"). If not, cut
+"our" and rephrase. Corporate "we/our" without antecedent is AI boilerplate.
 
 ## Significance Inflation
 
@@ -258,6 +278,23 @@ collaboration." These say nothing. Replace with specific facts or cut entirely.
 organization remains resilient." This is a non-statement. Name the actual challenge and
 the actual response, or cut the sentence.
 
+## Continues-to Padding
+
+"Continues to [verb]" reads as AI padding before a simple action. Strip the padding.
+
+| Pattern | Fix |
+|---------|-----|
+| "continues to delve" | "explores" or "is exploring" |
+| "continues to grow" | "is growing" or cite a number |
+| "continues to evolve" | Describe how, or cut |
+| "continues to thrive" | Name the specific success (see Formulaic Challenges above) |
+| "continues to shape" | Name what was shaped and how |
+| "continues to emphasize" | "emphasizes" or restructure |
+| "continues to showcase" | "shows" or cut |
+
+Exception: genuine temporal continuity where "continues to" adds real information ("the
+journal continues to publish since 1974"). If the phrase just pads the verb, cut it.
+
 ## "Let's" Constructions
 
 "Let's explore," "Let's take a look," "Let's break this down," "Let's examine"
@@ -281,13 +318,47 @@ should probably be paragraphs instead.
 - Too many list items: 8+ bullet points in under 200 words means the content should be
   a paragraph, not a list.
 - Formulaic section headers: "Overview," "Key Points," "Summary," "Conclusion,"
-  "Introduction" as default AI scaffolding. Use headers that tell the reader something
-  specific about what follows.
+  "Introduction," "Challenges and Future Directions," "Future Outlook," "Legacy,"
+  "Key Takeaways" as default AI scaffolding. Use headers that tell the reader
+  something specific about what follows.
 
 ## Bold Overuse
 
 Strip bold from most phrases. One bolded phrase per major section at most, or none.
 If something is important enough to bold, restructure the sentence to lead with it instead.
+
+## Surface Formatting Tells
+
+Small format choices that flag AI output immediately. Cost almost nothing to fix.
+
+### Title Case Headings
+
+Use sentence case in headings: only the first word and proper nouns are capitalized.
+"Key Findings And Recommendations" becomes "Key findings and recommendations", or
+better, rewrite the heading to say something specific: "What the data shows." Title
+Case Throughout is a ChatGPT and Gemini default, not a human pattern.
+
+Exception: venue or style-guide requirements (APA 7 allows title case for level-1
+headings; some journals mandate it). Follow the venue.
+
+### Curly / Smart Quotes in Code-Adjacent Text
+
+Use straight quotes (`"` and `'`) in any text that might be pasted into a terminal,
+code block, config file, LaTeX source, or Markdown that will be re-rendered. Smart
+quotes (" " ' ') break syntax and signal that the text went through a Word, Docs,
+or Gemini pass.
+
+Exception: finished prose intended only for print, PDF, or rich HTML display.
+
+### Emoji in Professional or Academic Prose
+
+Zero emoji in the `professional-message`, `academic-formal`, and `academic-human`
+clusters. Remove every one. AI models default to emoji as warmth-signalers, bullet
+markers, or section headers. They read as marketing copy in any serious context.
+
+Exception: `informal-message` cluster only, and only when a specific emoji carries
+meaning the reader expects (e.g., a single thumbs-up as acknowledgment in a Teams
+chat with a close colleague). Even there, fewer is better.
 
 ## When to Rewrite from Scratch vs. Patch
 

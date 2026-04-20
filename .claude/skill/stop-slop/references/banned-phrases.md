@@ -67,6 +67,28 @@ Replace with plain language.
 | Touch base | Check in, talk about, discuss |
 | As per my last email | (cut; restate the point directly) |
 
+### Hyphenated Business-Speak Pairs
+
+Pre-compounded qualifiers read as deck or pitch language. Pick a specific word or phrase instead.
+
+| Avoid | Use instead |
+|-------|-------------|
+| cross-functional | across teams |
+| data-driven | based on data, uses data |
+| customer-centric | focused on customers |
+| user-centric | focused on users |
+| forward-thinking | (describe the actual thinking) |
+| future-proof | lasting, durable |
+| end-to-end | complete, full |
+| results-driven | (describe the results) |
+| mission-critical | essential, required |
+| growth-minded | (describe the mindset) |
+| purpose-driven | (state the purpose) |
+| value-added | useful, worth it |
+| solution-oriented | practical |
+
+"World-class", "state-of-the-art", and "best-in-class" stay at Tier 3 (density detection) because they appear in legitimate benchmark comparisons. The pairs above are slot-fill qualifiers that rarely add meaning.
+
 ### Adverbs
 
 Kill all adverbs. No -ly words. No softeners, no intensifiers, no hedges.
@@ -204,6 +226,28 @@ These words appear far more often in AI text than human text. Replace on sight.
 | keen (as intensifier) | interested, eager |
 | symphony (metaphor) | (describe the coordination) |
 | embrace (metaphor) | adopt, accept, use |
+| Additionally (sentence-opener) | (cut, use "also", or restructure) |
+| align with | match, fit, agree with |
+| delve | explore, look at, examine |
+| enhance | improve, strengthen, add to |
+| garner | earn, receive, collect |
+| focal point | center, key part (or name the specific thing) |
+| indelible mark | (describe the specific change, or cut) |
+| deeply rooted | (name the origin, or cut) |
+| setting the stage for | (state what it enables, or cut) |
+| shaping the | (describe how, or use "changed", "influenced") |
+| reflects broader | (name the broader thing, or cut) |
+| profound | (describe the specific effect) |
+| exemplifies | shows, illustrates, is an example of |
+| in the heart of | in, at the center of |
+| breathtaking | (describe what's impressive) |
+| stunning | (describe what's impressive) |
+| renowned | well-known, respected |
+| commitment to | (state the specific action, or cut) |
+| in the event that | if |
+| has the ability to | can |
+| at this point in time | now |
+| up to my last training update | (cut; cutoff disclaimer) |
 
 ### Vague Endorsement Phrases
 
@@ -254,6 +298,21 @@ Conversational tics from chat interfaces, not writing. Remove entirely.
 - "Let me know if you need anything else"
 - "In this article, we will explore..."
 - "Let's dive in!"
+
+### Cutoff and Sourcing Disclaimers
+
+Phrases that announce knowledge limits or an information cutoff. These are chatbot-internal notes, not prose the reader needs. Delete them.
+
+- "based on available information"
+- "as of my last update"
+- "as of my knowledge cutoff"
+- "details are limited in available sources"
+- "information is limited in available sources"
+- "I don't have access to"
+- "according to my training data"
+- "I cannot verify this"
+
+If a source is genuinely missing, state it specifically ("I could not find a 2025 enrollment number for LUT") or cut the claim.
 
 ### Confidence Calibration Phrases
 
@@ -342,5 +401,5 @@ of total words or 4+ instances per page).
 ultimately, essentially, fundamentally, comprehensive, robust, facilitate, utilize,
 foster, enhance, underscore, pivotal, critical, transformative, innovative, streamline,
 employing, spanning, bolster) is preserved. Words that appear in both that list and Tier 1
-above (robust, comprehensive, pivotal, underscores, utilize) are promoted to Tier 1
+above (robust, comprehensive, pivotal, underscores, utilize, enhance) are promoted to Tier 1
 (always replace). The rest remain in their respective tiers.

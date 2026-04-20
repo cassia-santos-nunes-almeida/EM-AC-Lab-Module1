@@ -11,7 +11,7 @@ description: >
   from informal messages to formal academic prose.
 metadata:
   trigger: Writing prose, editing drafts, reviewing content for AI patterns. Also invoked by message-coach and eer-paper-writing as a final quality pass.
-  author: "Adapted from Hardik Pandya (https://hvpandya.com), extended by Cassia Almeida"
+  author: "Adapted from Hardik Pandya (https://hvpandya.com), extended by Cassia Almeida. Patterns cross-validated 2026-04-18 against Wikipedia:Signs_of_AI_writing (CC-BY-SA 4.0) and blader/humanizer (MIT)."
 ---
 
 # Stop Slop
@@ -62,6 +62,8 @@ Before delivering prose:
 - Three consecutive sentences match length? Break one.
 - Paragraph ends with punchy one-liner? Vary it.
 - Em-dash anywhere? Remove it. Zero tolerance.
+- Any curly quotes, emoji, or Title Case Heading? Fix.
+- Any cutoff or sourcing disclaimer ("as of my last update", "based on available information")? Delete.
 - Vague declarative ("The implications are significant")? Name the specific implication.
 - Narrator-from-a-distance ("Nobody designed this")? Put the reader in the scene.
 - Meta-joiners ("The rest of this essay...")? Delete.
@@ -102,6 +104,7 @@ Collapse the three-beat "[Context]. [Bridge]. [Point]." pattern. Lead with the p
 2. **Conversational voice test:** Scoped by cluster. See [references/self-audit.md](references/self-audit.md).
 3. **Pasta test:** Runs on all clusters. See [references/self-audit.md](references/self-audit.md).
 4. **Scoring:** 5-dimension rubric (only when requested or on full audit)
+5. **Final em-dash gate (mandatory, runs last, never skipped):** Before declaring any version clean or delivering output, scan the text character by character for any em-dash (`—`, Unicode U+2014) or en-dash (`–`, Unicode U+2013). If any are found, replace with comma, period, or semicolon as appropriate. This gate runs even when all prior checks reported clean. The rule is absolute across all four clusters with no exception. Do not confuse em-dash with hyphen (`-`, U+002D): hyphens in compound words (`end-to-end`, `cross-functional`) are fine; the ban is on dashes used as punctuation. If you catch an em-dash at this stage, the correct narration is "removed 1 em-dash at final gate," matching the "removed N em-dashes" wording used by callers in their version/section footers. Do not report "clean" for a version that had an em-dash caught at any stage.
 
 ## Hard Constraints
 
@@ -109,7 +112,13 @@ Collapse the three-beat "[Context]. [Bridge]. [Point]." pattern. Lead with the p
 
 **Self-reference escape hatch.** When writing about AI writing patterns (blog posts, tutorials, skill documentation), quoted examples are exempt from detection. Only catch patterns that appear in the author's own prose, not in cited examples of bad writing.
 
-**Over-polishing warning.** Aggressively removing every irregularity can push human writing toward AI statistical profiles. Natural disfluency, idiosyncratic word choices, and uneven pacing keep text out of the "AI-generated" classification. This skill should make writing sound more human, not less.
+**Over-polishing warning.** Aggressively removing every irregularity can push human writing toward AI statistical profiles. Natural disfluency, idiosyncratic word choices, and uneven pacing keep text out of the "AI-generated" classification. Watch for three cosmetic signs the rewrite has overshot:
+
+- Every sentence within 5 words of the same length: vary one.
+- Every idiosyncratic word normalized to its plainest synonym: keep one.
+- Zero hedges remaining where genuine uncertainty exists: restore one.
+
+This skill should make writing sound more human, not less. Voice-level signs of over-polish (first-person use, opinions, symmetric framing) are owned by the voice layer in `style/writing-voice.md` and `style/signs-of-over-polish.md`.
 
 **Backward compatibility.** stop-slop remains fully functional when called without a context parameter. The default cluster is `professional-message`.
 
