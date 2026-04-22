@@ -10,10 +10,6 @@
           {
             "type": "command",
             "command": "bash //maa1.cc.lut.fi/home/z116447/Documents/GitHub/my-claude-skills/scripts/sync-to-projects.sh EM-AC-Lab-Module1 2>&1 || echo '[SYNC WARNING] Skill sync failed or timed out. Skills may be outdated. Run manually: bash //maa1.cc.lut.fi/home/z116447/Documents/GitHub/my-claude-skills/scripts/sync-to-projects.sh EM-AC-Lab-Module1'"
-          },
-          {
-            "type": "command",
-            "command": "npm install --silent 2>/dev/null && echo 'Dependencies installed' || echo 'npm install failed'"
           }
         ]
       }
