@@ -55,95 +55,151 @@ export const useThemeStore = create<ThemeState>()(
   )
 );
 
-/* ── Progress store ──────────────────────────────────────────────── */
+/* ── Progress store (section-based model) ────────────────────────── */
 
-/** Maps moduleId → set of correctly answered question indices */
-type QuizScores = Record<string, number[]>;
+/** Progress tracking for a single section. */
+export interface SectionProgress {
+  visited: boolean;
+  predictionGatesAnswered: number;
+  predictionGatesCorrect: number;
+  conceptChecksCompleted: number;
+  hintsUsed: number;
+}
 
-/** Maps gateId → { correct: boolean; chosenLabel: string } */
-type PredictionResults = Record<string, { correct: boolean; chosenLabel: string }>;
+function defaultSectionProgress(): SectionProgress {
+  return {
+    visited: false,
+    predictionGatesAnswered: 0,
+    predictionGatesCorrect: 0,
+    conceptChecksCompleted: 0,
+    hintsUsed: 0,
+  };
+}
 
-/** Maps moduleId:questionIndex → highest hint tier revealed (1-3) */
-type HintUsage = Record<string, number>;
+/**
+ * Concept-check targets per section, used to derive the "complete" badge shown
+ * in the sidebar and overview (docs/m1-section-migration-spec.md §3). Overview
+ * is a landing section with no checks and is excluded from completion counts.
+ */
+export const EXPECTED_CHECKS: Record<string, number> = {
+  coulomb: 3,
+  gauss: 3,
+  ampere: 3,
+  lorentz: 3,
+  faraday: 3,
+  lenz: 3,
+  'em-wave': 3,
+  polarization: 3,
+  maxwell: 3,
+  'magnetic-circuits': 3,
+};
+
+/** A section is "complete" once it has been visited and its concept checks done. */
+export function isModuleComplete(progress: SectionProgress | undefined, id: string): boolean {
+  if (!progress) return false;
+  return progress.visited && progress.conceptChecksCompleted >= (EXPECTED_CHECKS[id] ?? 0);
+}
+
+/**
+ * One-time migration from the legacy page-model key (`em-lab-progress`) to the
+ * section-model key (`emac-m1-progress`): if the new key is absent but the
+ * legacy blob exists, seed `visited = true` for each previously-completed
+ * module (best-effort — the old shape had no per-section counters, so those
+ * start at 0). The legacy `isDarkMode` field is handled separately by the theme
+ * store. See docs/m1-section-migration-spec.md §3.
+ */
+export function migrateSectionsFromLegacy(): Record<string, SectionProgress> {
+  try {
+    if (typeof localStorage === 'undefined') return {};
+    if (localStorage.getItem('emac-m1-progress')) return {}; // already on the new key
+    const legacy = localStorage.getItem('em-lab-progress');
+    if (!legacy) return {};
+    const parsed = JSON.parse(legacy);
+    const completed = parsed?.state?.completedModules;
+    if (!Array.isArray(completed)) return {};
+    const sections: Record<string, SectionProgress> = {};
+    for (const id of completed) {
+      if (typeof id === 'string') {
+        sections[id] = { ...defaultSectionProgress(), visited: true };
+      }
+    }
+    return sections;
+  } catch {
+    return {};
+  }
+}
 
 interface ProgressState {
-  completedModules: string[];
-  quizScores: QuizScores;
-  predictions: PredictionResults;
-  hintUsage: HintUsage;
+  sections: Record<string, SectionProgress>;
+  markVisited: (sectionId: string) => void;
+  markPredictionGate: (sectionId: string, correct: boolean) => void;
+  incrementConceptChecks: (sectionId: string) => void;
+  incrementHints: (sectionId: string) => void;
+
+  // UI state (not persisted)
   sidebarOpen: boolean;
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
-  markComplete: (moduleId: string) => void;
-  markIncomplete: (moduleId: string) => void;
-  isComplete: (moduleId: string) => boolean;
-  recordCorrect: (moduleId: string, questionIndex: number) => void;
-  getScore: (moduleId: string) => number[];
-  recordPrediction: (gateId: string, correct: boolean, chosenLabel: string) => void;
-  getPrediction: (gateId: string) => { correct: boolean; chosenLabel: string } | undefined;
-  recordHintUsage: (key: string, tier: number) => void;
-  getHintTier: (key: string) => number;
 }
 
 export const useProgressStore = create<ProgressState>()(
   persist(
-    (set, get) => ({
-      completedModules: [],
-      quizScores: {},
-      predictions: {},
-      hintUsage: {},
-      sidebarOpen: false,
+    (set) => ({
+      sections: migrateSectionsFromLegacy(),
 
+      markVisited: (sectionId) =>
+        set((s) => ({
+          sections: {
+            ...s.sections,
+            [sectionId]: { ...(s.sections[sectionId] ?? defaultSectionProgress()), visited: true },
+          },
+        })),
+
+      markPredictionGate: (sectionId, correct) =>
+        set((s) => {
+          const prev = s.sections[sectionId] ?? defaultSectionProgress();
+          return {
+            sections: {
+              ...s.sections,
+              [sectionId]: {
+                ...prev,
+                predictionGatesAnswered: prev.predictionGatesAnswered + 1,
+                predictionGatesCorrect: prev.predictionGatesCorrect + (correct ? 1 : 0),
+              },
+            },
+          };
+        }),
+
+      incrementConceptChecks: (sectionId) =>
+        set((s) => {
+          const prev = s.sections[sectionId] ?? defaultSectionProgress();
+          return {
+            sections: {
+              ...s.sections,
+              [sectionId]: { ...prev, conceptChecksCompleted: prev.conceptChecksCompleted + 1 },
+            },
+          };
+        }),
+
+      incrementHints: (sectionId) =>
+        set((s) => {
+          const prev = s.sections[sectionId] ?? defaultSectionProgress();
+          return {
+            sections: {
+              ...s.sections,
+              [sectionId]: { ...prev, hintsUsed: prev.hintsUsed + 1 },
+            },
+          };
+        }),
+
+      // ── UI state (not persisted) ──
+      sidebarOpen: false,
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
-
-      markComplete: (moduleId) =>
-        set((s) => ({
-          completedModules: s.completedModules.includes(moduleId)
-            ? s.completedModules
-            : [...s.completedModules, moduleId],
-        })),
-
-      markIncomplete: (moduleId) =>
-        set((s) => ({
-          completedModules: s.completedModules.filter((id) => id !== moduleId),
-        })),
-
-      isComplete: (moduleId) => get().completedModules.includes(moduleId),
-
-      recordCorrect: (moduleId, questionIndex) =>
-        set((s) => {
-          const prev = s.quizScores[moduleId] ?? [];
-          if (prev.includes(questionIndex)) return s;
-          return { quizScores: { ...s.quizScores, [moduleId]: [...prev, questionIndex] } };
-        }),
-
-      getScore: (moduleId) => get().quizScores[moduleId] ?? [],
-
-      recordPrediction: (gateId, correct, chosenLabel) =>
-        set((s) => ({
-          predictions: { ...s.predictions, [gateId]: { correct, chosenLabel } },
-        })),
-
-      getPrediction: (gateId) => get().predictions[gateId],
-
-      recordHintUsage: (key, tier) =>
-        set((s) => {
-          const prev = s.hintUsage[key] ?? 0;
-          if (tier <= prev) return s;
-          return { hintUsage: { ...s.hintUsage, [key]: tier } };
-        }),
-
-      getHintTier: (key) => get().hintUsage[key] ?? 0,
     }),
     {
-      name: 'em-lab-progress',
-      partialize: (state) => ({
-        completedModules: state.completedModules,
-        quizScores: state.quizScores,
-        predictions: state.predictions,
-        hintUsage: state.hintUsage,
-      }),
+      name: 'emac-m1-progress',
+      partialize: (state) => ({ sections: state.sections }),
     }
   )
 );

@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Moon, Sun, CheckCircle, X, ExternalLink } from 'lucide-react';
 import { MODULES, LEARNING_TRACKS } from '@/constants/physics';
-import { useProgressStore, useThemeStore } from '@/store/progressStore';
+import { useProgressStore, useThemeStore, isModuleComplete } from '@/store/progressStore';
 import { MODULE_URLS } from '@/constants/modules';
 import { cn } from '@/utils/cn';
 
@@ -12,11 +12,14 @@ interface SidebarProps {
 
 export function Sidebar({ open, onClose }: SidebarProps) {
   const location = useLocation();
-  const { completedModules } = useProgressStore();
+  const sections = useProgressStore((s) => s.sections);
   const { theme, toggleTheme } = useThemeStore();
   const isDarkMode = theme === 'dark';
+  const completedCount = MODULES.filter(
+    (m) => m.id !== 'overview' && isModuleComplete(sections[m.id], m.id)
+  ).length;
   const progress = Math.round(
-    (completedModules.length / (MODULES.length - 1)) * 100 // -1 for overview
+    (completedCount / (MODULES.length - 1)) * 100 // -1 for overview
   );
 
   return (
@@ -106,7 +109,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               </div>
               {MODULES.filter((m) => track.modules.includes(m.id)).map((mod) => {
                 const isActive = location.pathname === mod.path;
-                const isCompleted = completedModules.includes(mod.id);
+                const isCompleted = isModuleComplete(sections[mod.id], mod.id);
                 const Icon = mod.icon;
                 return (
                   <Link
@@ -142,7 +145,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 </div>
                 {capstoneModules.map((mod) => {
                   const isActive = location.pathname === mod.path;
-                  const isCompleted = completedModules.includes(mod.id);
+                  const isCompleted = isModuleComplete(sections[mod.id], mod.id);
                   const Icon = mod.icon;
                   return (
                     <Link

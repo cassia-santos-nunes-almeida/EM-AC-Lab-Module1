@@ -1,45 +1,16 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useProgressStore, useThemeStore } from '../progressStore';
+import {
+  useProgressStore,
+  useThemeStore,
+  isModuleComplete,
+  migrateSectionsFromLegacy,
+} from '../progressStore';
 
-describe('progressStore', () => {
+describe('progressStore — theme + UI', () => {
   beforeEach(() => {
-    // Reset to defaults
-    useProgressStore.setState({
-      completedModules: [],
-      quizScores: {},
-      predictions: {},
-      hintUsage: {},
-      sidebarOpen: false,
-    });
+    useProgressStore.setState({ sections: {}, sidebarOpen: false });
     useThemeStore.setState({ theme: 'light' });
     document.documentElement.classList.remove('dark');
-  });
-
-  it('starts with empty completed modules', () => {
-    expect(useProgressStore.getState().completedModules).toEqual([]);
-  });
-
-  it('marks a module complete', () => {
-    useProgressStore.getState().markComplete('gauss');
-    expect(useProgressStore.getState().completedModules).toContain('gauss');
-  });
-
-  it('does not duplicate completed modules', () => {
-    useProgressStore.getState().markComplete('gauss');
-    useProgressStore.getState().markComplete('gauss');
-    expect(useProgressStore.getState().completedModules.filter((m) => m === 'gauss')).toHaveLength(1);
-  });
-
-  it('marks a module incomplete', () => {
-    useProgressStore.getState().markComplete('gauss');
-    useProgressStore.getState().markIncomplete('gauss');
-    expect(useProgressStore.getState().completedModules).not.toContain('gauss');
-  });
-
-  it('isComplete returns correct value', () => {
-    expect(useProgressStore.getState().isComplete('maxwell')).toBe(false);
-    useProgressStore.getState().markComplete('maxwell');
-    expect(useProgressStore.getState().isComplete('maxwell')).toBe(true);
   });
 
   it('toggles dark mode', () => {
@@ -60,20 +31,74 @@ describe('progressStore', () => {
     useProgressStore.getState().setSidebarOpen(false);
     expect(useProgressStore.getState().sidebarOpen).toBe(false);
   });
+});
 
-  it('records correct quiz answers', () => {
-    useProgressStore.getState().recordCorrect('gauss', 0);
-    useProgressStore.getState().recordCorrect('gauss', 2);
-    expect(useProgressStore.getState().getScore('gauss')).toEqual([0, 2]);
+describe('isModuleComplete — derived completion badge', () => {
+  it('is false for an unvisited / missing section', () => {
+    expect(isModuleComplete(undefined, 'gauss')).toBe(false);
+    expect(isModuleComplete(
+      { visited: false, predictionGatesAnswered: 0, predictionGatesCorrect: 0, conceptChecksCompleted: 3, hintsUsed: 0 },
+      'gauss',
+    )).toBe(false);
   });
 
-  it('does not duplicate quiz scores', () => {
-    useProgressStore.getState().recordCorrect('gauss', 0);
-    useProgressStore.getState().recordCorrect('gauss', 0);
-    expect(useProgressStore.getState().getScore('gauss')).toEqual([0]);
+  it('is false when visited but checks are incomplete', () => {
+    expect(isModuleComplete(
+      { visited: true, predictionGatesAnswered: 0, predictionGatesCorrect: 0, conceptChecksCompleted: 2, hintsUsed: 0 },
+      'gauss',
+    )).toBe(false);
   });
 
-  it('returns empty array for unscored modules', () => {
-    expect(useProgressStore.getState().getScore('unknown')).toEqual([]);
+  it('is true when visited and all expected checks are done', () => {
+    expect(isModuleComplete(
+      { visited: true, predictionGatesAnswered: 0, predictionGatesCorrect: 0, conceptChecksCompleted: 3, hintsUsed: 0 },
+      'gauss',
+    )).toBe(true);
+  });
+
+  it('treats overview (0 expected checks) as complete once visited', () => {
+    expect(isModuleComplete(
+      { visited: true, predictionGatesAnswered: 0, predictionGatesCorrect: 0, conceptChecksCompleted: 0, hintsUsed: 0 },
+      'overview',
+    )).toBe(true);
+  });
+});
+
+describe('migrateSectionsFromLegacy — one-time em-lab-progress → emac-m1-progress', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('returns {} when no legacy data exists', () => {
+    expect(migrateSectionsFromLegacy()).toEqual({});
+  });
+
+  it('seeds visited=true from legacy completedModules', () => {
+    localStorage.setItem('em-lab-progress', JSON.stringify({
+      state: { completedModules: ['gauss', 'coulomb'] },
+    }));
+    const seeded = migrateSectionsFromLegacy();
+    expect(seeded.gauss).toEqual({
+      visited: true,
+      predictionGatesAnswered: 0,
+      predictionGatesCorrect: 0,
+      conceptChecksCompleted: 0,
+      hintsUsed: 0,
+    });
+    expect(seeded.coulomb.visited).toBe(true);
+    expect(Object.keys(seeded)).toHaveLength(2);
+  });
+
+  it('does not migrate when the new key already exists', () => {
+    localStorage.setItem('emac-m1-progress', JSON.stringify({ state: { sections: {} } }));
+    localStorage.setItem('em-lab-progress', JSON.stringify({
+      state: { completedModules: ['gauss'] },
+    }));
+    expect(migrateSectionsFromLegacy()).toEqual({});
+  });
+
+  it('tolerates a malformed legacy blob', () => {
+    localStorage.setItem('em-lab-progress', 'not json');
+    expect(migrateSectionsFromLegacy()).toEqual({});
   });
 });
