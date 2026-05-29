@@ -431,6 +431,15 @@ export default function PolarizationPage() {
               <MathWrapper formula="E_x = E_y" /> and phase shift is{' '}
               <MathWrapper formula="90^\circ" />.
             </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              <strong>Handedness convention:</strong> this simulation uses the optics convention
+              (observer faces the incoming wave), so <MathWrapper formula="\\delta = +90^\\circ" /> is
+              labeled right-circular, with Jones vector{' '}
+              <MathWrapper formula="\\tfrac{1}{\\sqrt{2}}\\,[1,\\,-i]^{T}" /> for RCP. The IEEE/antenna
+              convention used by Ulaby (and in the Module 3 antenna material) labels the opposite
+              sense as right-hand circular, so compare the stated convention, not just the rotation
+              direction.
+            </p>
           </TheoryGuide>
         </div>
       }
