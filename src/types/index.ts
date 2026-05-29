@@ -33,7 +33,7 @@ export interface QuizQuestion {
   hints?: QuizHint[];
 }
 
-/** Challenge for ChallengeCard component */
+/** Challenge for GuidedChallenge component */
 export interface Challenge {
   title: string;
   description: string;

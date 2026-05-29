@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState, useId, type ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
@@ -6,41 +6,69 @@ interface CollapsibleSectionProps {
   title: string;
   children: ReactNode;
   defaultOpen?: boolean;
+  icon?: ReactNode;
+  variant?: 'card' | 'inline';
   className?: string;
+  id?: string;
 }
 
-/** Progressive disclosure component for long content sections */
+/**
+ * Progressive-disclosure section. Accessible (aria-expanded/aria-controls,
+ * role=region), supports an optional leading icon, an `id` for TOC anchoring,
+ * and a `card`/`inline` visual variant. Canonical variant shared with M2/M3.
+ */
 export function CollapsibleSection({
   title,
   children,
   defaultOpen = false,
+  icon,
+  variant = 'card',
   className,
+  id,
 }: CollapsibleSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const contentId = useId();
 
   return (
-    <div className={cn('border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden', className)}>
+    <div
+      id={id}
+      className={cn(
+        variant === 'card' && 'bg-white dark:bg-slate-800 rounded-lg shadow-md',
+        className,
+      )}
+    >
       <button
         onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          'w-full flex items-center justify-between gap-3 text-left',
+          'px-5 py-3 min-h-[44px]',
+          'text-slate-900 dark:text-white font-semibold',
+          'hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors',
+          variant === 'card' && 'rounded-lg',
+        )}
         aria-expanded={isOpen}
-        className="w-full flex items-center justify-between p-4 text-left bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 transition-colors"
+        aria-controls={contentId}
       >
-        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{title}</span>
-        <ChevronDown
-          size={16}
-          className={cn(
-            'text-slate-400 transition-transform duration-200',
-            isOpen && 'rotate-180'
-          )}
-        />
+        <span className="flex items-center gap-2">
+          {icon}
+          {title}
+        </span>
+        <ChevronDown className={cn(
+          'w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200',
+          isOpen && 'rotate-180',
+        )} />
       </button>
       <div
+        id={contentId}
+        role="region"
         className={cn(
-          'overflow-hidden transition-all duration-300',
-          isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+          'overflow-hidden transition-[max-height] duration-200 ease-in-out',
+          isOpen ? 'max-h-[5000px]' : 'max-h-0',
         )}
       >
-        <div className="p-4 bg-white dark:bg-slate-800/50">{children}</div>
+        <div className={cn(variant === 'card' && 'px-5 pb-5')}>
+          {children}
+        </div>
       </div>
     </div>
   );

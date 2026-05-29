@@ -3,7 +3,7 @@ import { Trophy, ChevronRight, Lightbulb, CheckCircle } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import type { Challenge } from '@/types';
 
-interface ChallengeCardProps {
+interface GuidedChallengeProps {
   challenge: Challenge;
   onComplete?: () => void;
 }
@@ -11,8 +11,12 @@ interface ChallengeCardProps {
 /**
  * Guided challenge component with step-by-step instructions,
  * optional hints, and completion tracking.
+ *
+ * Renamed from `ChallengeCard` per the cross-module conventions spec (§5):
+ * `ChallengeCard` is reserved for M2's auto-check variant; M1's multi-step
+ * guided component is `GuidedChallenge`.
  */
-export function ChallengeCard({ challenge, onComplete }: ChallengeCardProps) {
+export function GuidedChallenge({ challenge, onComplete }: GuidedChallengeProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [showHint, setShowHint] = useState(false);
   const [completed, setCompleted] = useState(false);

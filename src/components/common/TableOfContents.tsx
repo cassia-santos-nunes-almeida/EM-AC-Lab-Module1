@@ -10,14 +10,26 @@ interface TableOfContentsProps {
   activeId?: string;
 }
 
-/** Jump-to-section pill navigation */
+/**
+ * Jump-to-section pill navigation. Clicking a pill smooth-scrolls to the
+ * matching `id` (canonical behaviour shared with M2/M3); the `href` is retained
+ * as a no-JS / accessibility fallback.
+ */
 export function TableOfContents({ items, activeId }: TableOfContentsProps) {
   return (
     <nav className="flex flex-wrap gap-2 mb-6" aria-label="Table of contents">
+      <span className="text-xs text-slate-500 dark:text-slate-400 font-medium py-1">Jump to:</span>
       {items.map((item) => (
         <a
           key={item.id}
           href={`#${item.id}`}
+          onClick={(e) => {
+            const target = document.getElementById(item.id);
+            if (target) {
+              e.preventDefault();
+              target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }}
           className={cn(
             'px-3 py-1 rounded-full text-xs font-medium transition-colors border',
             activeId === item.id
