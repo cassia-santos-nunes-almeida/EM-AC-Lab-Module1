@@ -1,16 +1,16 @@
 import { Link } from 'react-router-dom';
 import { Activity, ArrowRight, ArrowDown, AlertTriangle, CheckCircle, ChevronDown } from 'lucide-react';
 import { MODULES, LEARNING_TRACKS } from '@/constants/physics';
-import { useProgressStore } from '@/store/progressStore';
+import { useProgressStore, isModuleComplete } from '@/store/progressStore';
 import { cn } from '@/utils/cn';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 /** A single module node in the learning path */
 function ModuleNode({ moduleId }: { moduleId: string }) {
   const mod = MODULES.find((m) => m.id === moduleId);
-  const { completedModules } = useProgressStore();
+  const sections = useProgressStore((s) => s.sections);
   if (!mod) return null;
-  const done = completedModules.includes(mod.id);
+  const done = isModuleComplete(sections[mod.id], mod.id);
   const Icon = mod.icon;
 
   return (
@@ -51,11 +51,18 @@ function Connector({ color }: { color: string }) {
   );
 }
 
-export default function OverviewPage() {
+export function OverviewSection() {
   const [disclaimerOpen, setDisclaimerOpen] = useState(false);
-  const { completedModules } = useProgressStore();
+  const sections = useProgressStore((s) => s.sections);
+  const markVisited = useProgressStore((s) => s.markVisited);
   const totalModules = MODULES.filter((m) => m.id !== 'overview').length;
-  const completedCount = completedModules.length;
+  const completedCount = MODULES.filter(
+    (m) => m.id !== 'overview' && isModuleComplete(sections[m.id], m.id)
+  ).length;
+
+  useEffect(() => {
+    markVisited('overview');
+  }, [markVisited]);
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
@@ -107,7 +114,7 @@ export default function OverviewPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {LEARNING_TRACKS.map((track) => {
             const trackModules = track.modules;
-            const trackComplete = trackModules.every((id) => completedModules.includes(id));
+            const trackComplete = trackModules.every((id) => isModuleComplete(sections[id], id));
             return (
               <div key={track.id} className="space-y-1">
                 {/* Track header */}

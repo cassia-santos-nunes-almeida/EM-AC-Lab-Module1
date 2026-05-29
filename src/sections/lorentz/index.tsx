@@ -2,17 +2,20 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useCanvasTouch } from '@/hooks/useCanvasTouch';
 import { Move } from 'lucide-react';
 import { COLORS, COLORS_DARK } from '@/constants/physics';
-import { useThemeStore } from '@/store/progressStore';
+import { useThemeStore, useProgressStore } from '@/store/progressStore';
 import { ControlPanel } from '@/components/common/ControlPanel';
 import { Slider } from '@/components/common/Slider';
 import { EquationBox } from '@/components/common/EquationBox';
 import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
-import { ModuleLayout } from '@/components/common/ModuleLayout';
-import { RealWorldHook } from '@/components/common/RealWorldHook';
-import { PredictionGate } from '@/components/common/PredictionGate';
 import { FigureImage } from '@/components/common/FigureImage';
+import { SectionLayout } from '@/components/common/section/SectionLayout';
+import { ConceptCheck } from '@/components/common/section/ConceptCheck';
+import { PredictionGate } from '@/components/common/section/PredictionGate';
+import { toConceptCheck } from '@/components/common/section/quizAdapter';
+import { GuidedChallenge } from '@/components/common/GuidedChallenge';
+import type { Challenge, QuizQuestion } from '@/types';
 
 interface ParticleState {
   x: number;
@@ -22,9 +25,72 @@ interface ParticleState {
   trail: { x: number; y: number }[];
 }
 
-export default function LorentzPage() {
+// ── Inline ConceptCheck content (verified; ported from constants/quizContent.ts) ──
+const Q_CIRCULAR: QuizQuestion = {
+  question:
+    'A proton moves with velocity v perpendicular to a uniform magnetic field B. The resulting Lorentz force causes the proton to:',
+  options: ['Accelerate in a straight line', 'Decelerate and stop', 'Move in a circular path', 'Spiral outward indefinitely'],
+  correctIndex: 2,
+  explanation:
+    'The magnetic force F = qv×B is always perpendicular to the velocity, so it changes the direction but not the speed. This centripetal force results in uniform circular motion with radius r = mv/(qB).',
+  hints: [
+    { tier: 1, label: 'Conceptual hint', content: 'The magnetic force is always perpendicular to the velocity. What kind of motion results from a constant-magnitude force that is always perpendicular to the direction of travel?' },
+    { tier: 2, label: 'Procedural hint', content: 'F = qv×B is perpendicular to v, so it does no work (F·v = 0). Speed stays constant, but direction changes continuously. This is the definition of what type of motion?' },
+    { tier: 3, label: 'Show worked step', content: 'Since |F| = qvB = constant and F ⊥ v always, the force acts as a centripetal force: qvB = mv²/r → r = mv/(qB). The proton moves in a circle — option C.' },
+  ],
+};
+
+const Q_RADIUS: QuizQuestion = {
+  question:
+    "The cyclotron radius of a charged particle in a magnetic field is r = mv/(qB). If the particle's speed is doubled while B remains constant, the radius:",
+  options: ['Is halved', 'Stays the same', 'Is doubled', 'Is quadrupled'],
+  correctIndex: 2,
+  explanation:
+    'Since r = mv/(qB), the radius is directly proportional to v. Doubling the speed doubles the cyclotron radius while the period of revolution remains the same (for non-relativistic speeds).',
+  hints: [
+    { tier: 1, label: 'Conceptual hint', content: 'Look at the formula r = mv/(qB). How does r depend on v — linearly, quadratically, or inversely?' },
+    { tier: 2, label: 'Procedural hint', content: 'r = mv/(qB). Since m, q, and B are all constant, r is directly proportional to v. If v doubles, what happens to r?' },
+    { tier: 3, label: 'Show worked step', content: 'r_new = m(2v)/(qB) = 2·mv/(qB) = 2r. The radius doubles — option C.' },
+  ],
+};
+
+const Q_FORCE_DIR: QuizQuestion = {
+  question:
+    'A negative charge moves in the +x direction through a magnetic field pointing in the +z direction. What is the direction of the magnetic force on the charge?',
+  options: ['+y direction', '−y direction', '+z direction', '−x direction'],
+  correctIndex: 0,
+  explanation:
+    'Using F = qv×B: v×B = x̂×ẑ = −ŷ for the cross-product. For a negative charge, q < 0, so F = q(−ŷ) = +ŷ. The force is in the +y direction.',
+  hints: [
+    { tier: 1, label: 'Conceptual hint', content: 'First find the direction of v×B using the right-hand rule, then remember to flip the direction because the charge is negative.' },
+    { tier: 2, label: 'Procedural hint', content: 'v = v x̂, B = B ẑ. Compute x̂ × ẑ using the cyclic rule (x̂ × ŷ = ẑ, ŷ × ẑ = x̂, ẑ × x̂ = ŷ). Then apply the negative sign for q < 0.' },
+    { tier: 3, label: 'Show worked step', content: 'x̂ × ẑ = −(ẑ × x̂) = −ŷ. So v×B = vB(−ŷ). For negative charge: F = qv×B = (−|q|)(vB)(−ŷ) = |q|vB(+ŷ). The force is in the +y direction — option A.' },
+  ],
+};
+
+const CHALLENGE: Challenge = {
+  title: `Cyclotron Radius Investigation`,
+  description: `Send a charged particle circling in a uniform magnetic field and discover how the cyclotron radius depends on speed, field strength, mass, and charge — verifying r = mv / (|q|B) using the simulation's live readouts and on-screen vectors.`,
+  instructions: [
+    `Set the 'Velocity v' slider to a clear positive value (e.g. 50) and the 'B-field' slider positive (the canvas label should read 'External B: Into Page'), then click 'Respawn' so the particle launches into a steady circular orbit. Hover the mouse over the canvas (without dragging) to reveal the readout box and note the |v| and r_c (cyclotron radius) values.`,
+    `Without changing anything else, drag the 'Velocity v' slider to roughly double its value and click 'Respawn'. Hover again and confirm r_c grows in proportion to |v| — doubling the speed roughly doubles the radius.`,
+    `Return 'Velocity v' to its original value and Respawn. Now increase the magnitude of the 'B-field' slider (push it further from 0). Hover and confirm r_c shrinks: a stronger field tightens the orbit (r_c is inversely proportional to B).`,
+    `Raise the 'Mass m' slider toward 5 and Respawn. Hover to see r_c expand — heavier particles are harder to deflect — matching the m in r = mv / (|q|B). Cross-check your numbers against the live 'Computed r' line in the Lorentz Force equation box.`,
+    `Watch the green 'v' arrow and the 'F' force arrow on the particle: confirm F is always perpendicular to v (it points toward the orbit centre), so the magnetic force does no work and the speed stays constant — only the direction turns.`,
+    `Flip the 'Charge q' slider to a negative value and Respawn; observe that the orbit circulates the opposite way (the canvas readout still shows the same r_c, since r depends on |q|). Conclude how velocity, field, mass, and charge each shape the cyclotron orbit.`,
+  ],
+  hint: `The hover readout's r_c and the equation box's 'Computed r' both follow r = mv / (|q|B): radius rises with speed and mass, falls with field strength, and the sign of the charge only flips the direction of circulation, not the size of the circle.`,
+};
+
+export function LorentzSection() {
   const isDarkMode = useThemeStore((s) => s.theme === 'dark');
   const col = isDarkMode ? COLORS_DARK : COLORS;
+
+  const markPredictionGate = useProgressStore((s) => s.markPredictionGate);
+  const incrementConceptChecks = useProgressStore((s) => s.incrementConceptChecks);
+  const incrementHints = useProgressStore((s) => s.incrementHints);
+  const onCheckComplete = () => incrementConceptChecks('lorentz');
+  const onCheckHint = () => incrementHints('lorentz');
 
   const [velocity, setVelocity] = useState(50);
   const [bField, setBField] = useState(50);
@@ -253,7 +319,7 @@ export default function LorentzPage() {
         ctx.fillStyle = col.TEXT_MUTED;
         ctx.font = '11px sans-serif';
         ctx.textAlign = 'left';
-        ctx.fillText('Drag particle to move \u00B7 Drag arrow tip to aim', 10, cvs.height - 10);
+        ctx.fillText('Drag particle to move · Drag arrow tip to aim', 10, cvs.height - 10);
 
         // Hover readout: show speed, |F|, cyclotron radius
         if (hoverPos.current && dragMode === 'none') {
@@ -262,7 +328,7 @@ export default function LorentzPage() {
           const Fmag = Math.abs(charge) * speed * Beff;
           const rCyc = Beff > 0.01 && charge !== 0
             ? (mass * speed / (Math.abs(charge) * Beff)).toFixed(1)
-            : '\u221E';
+            : '∞';
 
           const lines = [
             `|v| = ${speed.toFixed(1)}`,
@@ -296,21 +362,30 @@ export default function LorentzPage() {
   }, [velocity, bField, charge, mass, isDarkMode, col, dragMode]);
 
   return (
-    <ModuleLayout
-      moduleId="lorentz"
-      simulation={
-        <>
-        <RealWorldHook text="Particle accelerators like CERN steer proton beams using magnetic fields. A proton travelling at 99.9999991% of the speed of light is bent into a circle by this force — the same one you're about to calculate." />
-        <PredictionGate
-          gateId="lorentz-force-direction"
-          question="A positive charge moves to the right in a magnetic field pointing out of the screen. Which direction is the magnetic force?"
-          options={[
-            { label: 'Up', correct: false, explanation: 'Close, but check the cross product sign carefully. F = q(v × B) = q(x̂ × ẑ) = q(−ŷ), which points downward for a positive charge.' },
-            { label: 'Down', correct: true, explanation: 'Correct! F = q(v × B). With v = x̂ (right) and B = ẑ (out of screen), the cross product x̂ × ẑ = −ŷ. For positive q, the force points in the −y direction (down).' },
-            { label: 'Left', correct: false, explanation: 'The force is perpendicular to both v and B. Since v is horizontal and B is out of the screen, the force must be vertical, not horizontal.' },
-            { label: 'Right', correct: false, explanation: 'The force is always perpendicular to the velocity. Since the charge moves right, the force cannot also point right.' },
-          ]}
-        >
+    <SectionLayout
+      sectionId="lorentz"
+      hook="Particle accelerators like CERN steer proton beams using magnetic fields. A proton travelling at 99.9999991% of the speed of light is bent into a circle by this force — the same one you're about to calculate."
+    >
+      {/* ── Predict-first gate around the simulation ── */}
+      <PredictionGate
+        question="A positive charge moves to the right in a magnetic field pointing out of the screen. Which direction is the magnetic force?"
+        options={[
+          { id: 'up', label: 'Up' },
+          { id: 'down', label: 'Down' },
+          { id: 'left', label: 'Left' },
+          { id: 'right', label: 'Right' },
+        ]}
+        getCorrectAnswer={() => 'down'}
+        explanation={
+          <span>
+            F = q(<MathWrapper formula="\vec{v} \times \vec{B}" />). With <MathWrapper formula="\vec{v} = \hat{x}" /> (right)
+            and <MathWrapper formula="\vec{B} = \hat{z}" /> (out of screen), the cross product{' '}
+            <MathWrapper formula="\hat{x} \times \hat{z} = -\hat{y}" />. For a positive charge the force points in the
+            −y direction (down).
+          </span>
+        }
+        onPredict={(correct) => markPredictionGate('lorentz', correct)}
+      >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div
@@ -348,48 +423,57 @@ export default function LorentzPage() {
             </HintBox>
           </ControlPanel>
         </div>
-        </PredictionGate>
-        </>
-      }
-      theory={
-        <div className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-2 mb-6">
-            <FigureImage
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Cyclotron_patent.png/500px-Cyclotron_patent.png"
-              alt="Lawrence's original cyclotron patent diagram"
-              caption="Lawrence's cyclotron patent: charged particles spiral outward as the Lorentz force bends their path into circles."
-              attribution="Ernest O. Lawrence, Public Domain — Wikimedia Commons"
-              sourceUrl="https://commons.wikimedia.org/wiki/File:Cyclotron_patent.png"
-            />
-            <FigureImage
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Polarlicht_2.jpg/500px-Polarlicht_2.jpg"
-              alt="Aurora borealis (Northern Lights)"
-              caption="Aurora borealis: solar wind particles spiral along Earth's magnetic field due to the Lorentz force, exciting atmospheric gases."
-              attribution="United States Air Force, Public Domain — Wikimedia Commons"
-              sourceUrl="https://commons.wikimedia.org/wiki/File:Polarlicht_2.jpg"
-            />
-          </div>
-          <EquationBox
-            title="Lorentz Force"
-            equations={[
-              { label: 'Force', math: '\\vec{F} = q(\\vec{v} \\times \\vec{B})', color: 'text-amber-600 dark:text-amber-400' },
-              { label: 'Radius', math: 'r = \\frac{mv}{|q|B}', color: 'text-emerald-600 dark:text-emerald-400' },
-              { label: 'Computed r', math: charge !== 0 && bField !== 0
-                ? `r = \\frac{${mass} \\times ${Math.abs(velocity)}}{${Math.abs(charge)} \\times ${Math.abs(bField / 20).toFixed(1)}} = ${(mass * Math.abs(velocity) / (Math.abs(charge) * Math.abs(bField / 20 || 1))).toFixed(1)} \\text{ (arb.)}`
-                : '\\text{—}' },
-            ]}
+      </PredictionGate>
+
+      {/* Check: circular motion (after observing the v × B trajectory) */}
+      <ConceptCheck data={toConceptCheck(Q_CIRCULAR)} onComplete={onCheckComplete} onHint={onCheckHint} />
+
+      {/* ── Theory ── */}
+      <div className="space-y-6">
+        <div className="grid gap-4 sm:grid-cols-2 mb-6">
+          <FigureImage
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Cyclotron_patent.png/500px-Cyclotron_patent.png"
+            alt="Lawrence's original cyclotron patent diagram"
+            caption="Lawrence's cyclotron patent: charged particles spiral outward as the Lorentz force bends their path into circles."
+            attribution="Ernest O. Lawrence, Public Domain — Wikimedia Commons"
+            sourceUrl="https://commons.wikimedia.org/wiki/File:Cyclotron_patent.png"
           />
-          <TheoryGuide>
-            <p>
-              <strong>Right Hand Rule:</strong> Force is perpendicular to both velocity and B-field.
-            </p>
-            <p>
-              <strong>Cyclotron Radius:</strong> <MathWrapper formula="r = mv / qB" />. Faster/heavier particles
-              orbit wider. Stronger fields tighten the orbit.
-            </p>
-          </TheoryGuide>
+          <FigureImage
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Polarlicht_2.jpg/500px-Polarlicht_2.jpg"
+            alt="Aurora borealis (Northern Lights)"
+            caption="Aurora borealis: solar wind particles spiral along Earth's magnetic field due to the Lorentz force, exciting atmospheric gases."
+            attribution="United States Air Force, Public Domain — Wikimedia Commons"
+            sourceUrl="https://commons.wikimedia.org/wiki/File:Polarlicht_2.jpg"
+          />
         </div>
-      }
-    />
+        <EquationBox
+          title="Lorentz Force"
+          equations={[
+            { label: 'Force', math: '\\vec{F} = q(\\vec{v} \\times \\vec{B})', color: 'text-amber-600 dark:text-amber-400' },
+            { label: 'Radius', math: 'r = \\frac{mv}{|q|B}', color: 'text-emerald-600 dark:text-emerald-400' },
+            { label: 'Computed r', math: charge !== 0 && bField !== 0
+              ? `r = \\frac{${mass} \\times ${Math.abs(velocity)}}{${Math.abs(charge)} \\times ${Math.abs(bField / 20).toFixed(1)}} = ${(mass * Math.abs(velocity) / (Math.abs(charge) * Math.abs(bField / 20 || 1))).toFixed(1)} \\text{ (arb.)}`
+              : '\\text{—}' },
+          ]}
+        />
+
+        {/* Check: cyclotron radius dependence on speed (after the radius equation) */}
+        <ConceptCheck data={toConceptCheck(Q_RADIUS)} onComplete={onCheckComplete} onHint={onCheckHint} />
+
+        {/* Check: force direction from v × B */}
+        <ConceptCheck data={toConceptCheck(Q_FORCE_DIR)} onComplete={onCheckComplete} onHint={onCheckHint} />
+
+        <TheoryGuide>
+          <p>
+            <strong>Right Hand Rule:</strong> Force is perpendicular to both velocity and B-field.
+          </p>
+          <p>
+            <strong>Cyclotron Radius:</strong> <MathWrapper formula="r = mv / qB" />. Faster/heavier particles
+            orbit wider. Stronger fields tighten the orbit.
+          </p>
+        </TheoryGuide>
+      </div>
+      <GuidedChallenge challenge={CHALLENGE} />
+    </SectionLayout>
   );
 }

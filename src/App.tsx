@@ -23,17 +23,17 @@ function lazyRetry(importFn: () => Promise<any>) {
 }
 
 // Lazy-load all pages for code splitting (with stale-cache recovery)
-const OverviewPage = lazyRetry(() => import('@/pages/OverviewPage'));
-const MaxwellPage = lazyRetry(() => import('@/pages/MaxwellPage'));
-const GaussPage = lazyRetry(() => import('@/pages/GaussPage'));
-const CoulombPage = lazyRetry(() => import('@/pages/CoulombPage'));
-const AmperePage = lazyRetry(() => import('@/pages/AmperePage'));
-const LorentzPage = lazyRetry(() => import('@/pages/LorentzPage'));
-const FaradayPage = lazyRetry(() => import('@/pages/FaradayPage'));
-const LenzPage = lazyRetry(() => import('@/pages/LenzPage'));
-const EMWavePage = lazyRetry(() => import('@/pages/EMWavePage'));
-const PolarizationPage = lazyRetry(() => import('@/pages/PolarizationPage'));
-const MagneticCircuitsPage = lazyRetry(() => import('@/pages/MagneticCircuitsPage'));
+const OverviewSection = lazyRetry(() => import('@/sections/overview').then((m) => ({ default: m.OverviewSection })));
+const MaxwellSection = lazyRetry(() => import('@/sections/maxwell').then((m) => ({ default: m.MaxwellSection })));
+const GaussSection = lazyRetry(() => import('@/sections/gauss').then((m) => ({ default: m.GaussSection })));
+const CoulombSection = lazyRetry(() => import('@/sections/coulomb').then((m) => ({ default: m.CoulombSection })));
+const AmpereSection = lazyRetry(() => import('@/sections/ampere').then((m) => ({ default: m.AmpereSection })));
+const LorentzSection = lazyRetry(() => import('@/sections/lorentz').then((m) => ({ default: m.LorentzSection })));
+const FaradaySection = lazyRetry(() => import('@/sections/faraday').then((m) => ({ default: m.FaradaySection })));
+const LenzSection = lazyRetry(() => import('@/sections/lenz').then((m) => ({ default: m.LenzSection })));
+const EMWaveSection = lazyRetry(() => import('@/sections/em-wave').then((m) => ({ default: m.EMWaveSection })));
+const PolarizationSection = lazyRetry(() => import('@/sections/polarization').then((m) => ({ default: m.PolarizationSection })));
+const MagneticCircuitsSection = lazyRetry(() => import('@/sections/magnetic-circuits').then((m) => ({ default: m.MagneticCircuitsSection })));
 
 function PageLoader() {
   return (
@@ -58,7 +58,7 @@ export default function App() {
             element={
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
-                  <OverviewPage />
+                  <OverviewSection />
                 </Suspense>
               </ErrorBoundary>
             }
@@ -68,7 +68,7 @@ export default function App() {
             element={
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
-                  <MaxwellPage />
+                  <MaxwellSection />
                 </Suspense>
               </ErrorBoundary>
             }
@@ -78,7 +78,7 @@ export default function App() {
             element={
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
-                  <GaussPage />
+                  <GaussSection />
                 </Suspense>
               </ErrorBoundary>
             }
@@ -88,7 +88,7 @@ export default function App() {
             element={
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
-                  <CoulombPage />
+                  <CoulombSection />
                 </Suspense>
               </ErrorBoundary>
             }
@@ -98,7 +98,7 @@ export default function App() {
             element={
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
-                  <AmperePage />
+                  <AmpereSection />
                 </Suspense>
               </ErrorBoundary>
             }
@@ -108,7 +108,7 @@ export default function App() {
             element={
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
-                  <LorentzPage />
+                  <LorentzSection />
                 </Suspense>
               </ErrorBoundary>
             }
@@ -118,7 +118,7 @@ export default function App() {
             element={
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
-                  <FaradayPage />
+                  <FaradaySection />
                 </Suspense>
               </ErrorBoundary>
             }
@@ -128,7 +128,7 @@ export default function App() {
             element={
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
-                  <LenzPage />
+                  <LenzSection />
                 </Suspense>
               </ErrorBoundary>
             }
@@ -138,7 +138,7 @@ export default function App() {
             element={
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
-                  <EMWavePage />
+                  <EMWaveSection />
                 </Suspense>
               </ErrorBoundary>
             }
@@ -148,7 +148,7 @@ export default function App() {
             element={
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
-                  <PolarizationPage />
+                  <PolarizationSection />
                 </Suspense>
               </ErrorBoundary>
             }
@@ -158,7 +158,7 @@ export default function App() {
             element={
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
-                  <MagneticCircuitsPage />
+                  <MagneticCircuitsSection />
                 </Suspense>
               </ErrorBoundary>
             }

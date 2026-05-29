@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useCanvasTouch } from '@/hooks/useCanvasTouch';
 import { COLORS, COLORS_DARK, WaveViewMode, type WaveViewModeType } from '@/constants/physics';
-import { useThemeStore } from '@/store/progressStore';
+import { useThemeStore, useProgressStore } from '@/store/progressStore';
 import { ControlPanel } from '@/components/common/ControlPanel';
 import { Slider } from '@/components/common/Slider';
 import { EquationBox } from '@/components/common/EquationBox';
@@ -9,17 +9,81 @@ import { PlayControls } from '@/components/common/PlayControls';
 import { HintBox } from '@/components/common/HintBox';
 import { MathWrapper } from '@/components/common/MathWrapper';
 import { TheoryGuide } from '@/components/common/TheoryGuide';
-import { ModuleLayout } from '@/components/common/ModuleLayout';
-import { RealWorldHook } from '@/components/common/RealWorldHook';
 import { PhysicsChart } from '@/components/common/PhysicsChart';
 import { FigureImage } from '@/components/common/FigureImage';
-import type { EMWaveState } from '@/types';
+import type { Challenge, EMWaveState, QuizQuestion } from '@/types';
+import { SectionLayout } from '@/components/common/section/SectionLayout';
+import { ConceptCheck } from '@/components/common/section/ConceptCheck';
+import { toConceptCheck } from '@/components/common/section/quizAdapter';
+import { GuidedChallenge } from '@/components/common/GuidedChallenge';
 
 const POINTS = 200;
 
-export default function EMWavePage() {
+// ── Inline ConceptCheck content (verified; ported from constants/quizContent.ts) ──
+const Q_TRIAD: QuizQuestion = {
+  question:
+    'In a plane electromagnetic wave propagating in the +z direction, the electric field oscillates in the x direction. In which direction does the magnetic field oscillate?',
+  options: ['+z direction', '−z direction', '+y direction', '+x direction'],
+  correctIndex: 2,
+  explanation:
+    'In an EM wave, E, B, and the propagation direction k are mutually perpendicular and form a right-handed triad. With E along x and k along z, B must oscillate along the y direction (x̂ × ŷ = ẑ).',
+  hints: [
+    { tier: 1, label: 'Conceptual hint', content: 'In an EM wave, E, B, and the propagation direction are all mutually perpendicular. If E is along x and the wave travels along z, what direction is left for B?' },
+    { tier: 2, label: 'Procedural hint', content: 'E × B must point in the propagation direction (Poynting vector). If E = E₀ x̂ and k = ẑ, then B must be along ŷ so that x̂ × ŷ = ẑ.' },
+    { tier: 3, label: 'Show worked step', content: 'Propagation direction: k̂ = ẑ. E along x̂. For right-handed triad: E × B ∝ k̂, so x̂ × B̂ = ẑ, which means B̂ = ŷ. B oscillates in the +y direction — option C.' },
+  ],
+};
+
+const Q_MEDIUM_SPEED: QuizQuestion = {
+  question:
+    'The speed of light in vacuum is given by c = 1/√(μ₀ε₀). If light enters a medium with refractive index n = 1.5, its speed becomes:',
+  options: ['1.5c', 'c', 'c/1.5 ≈ 2 × 10⁸ m/s', 'c/1.5² ≈ 1.33 × 10⁸ m/s'],
+  correctIndex: 2,
+  explanation:
+    'The speed of light in a medium is v = c/n. For n = 1.5, v = (3 × 10⁸)/1.5 = 2 × 10⁸ m/s. The refractive index quantifies how much slower light travels in the medium compared to vacuum.',
+  hints: [
+    { tier: 1, label: 'Conceptual hint', content: 'The refractive index tells you how much slower light travels in the medium. A higher n means slower light.' },
+    { tier: 2, label: 'Procedural hint', content: 'The relationship is v = c/n. Plug in n = 1.5 and c = 3 × 10⁸ m/s.' },
+    { tier: 3, label: 'Show worked step', content: 'v = c/n = (3 × 10⁸)/1.5 = 2 × 10⁸ m/s — option C.' },
+  ],
+};
+
+const Q_PHASOR: QuizQuestion = {
+  question:
+    'In an AC circuit, voltage and current phasors are represented as rotating vectors. If the current lags the voltage by 90°, the circuit element is:',
+  options: ['A pure resistor', 'A pure capacitor', 'A pure inductor', 'An open circuit'],
+  correctIndex: 2,
+  explanation:
+    "In a pure inductor, the voltage leads the current by 90° (equivalently, current lags voltage by 90°). This phase relationship arises because the inductor's back-EMF is proportional to di/dt, introducing a quarter-cycle delay.",
+  hints: [
+    { tier: 1, label: 'Conceptual hint', content: 'Remember the mnemonic "ELI the ICE man": E leads I in an inductor (L), I leads E in a capacitor (C).' },
+    { tier: 2, label: 'Procedural hint', content: 'For an inductor: V = L di/dt. If i = sin(ωt), then V = Lω cos(ωt) = Lω sin(ωt + 90°). Voltage leads current by 90°, i.e., current lags voltage by 90°.' },
+    { tier: 3, label: 'Show worked step', content: 'Current lags voltage by 90° → "ELI" → E leads I in an inductor (L). Resistor: 0° phase. Capacitor: current leads voltage by 90°. The element is a pure inductor — option C.' },
+  ],
+};
+
+const CHALLENGE: Challenge = {
+  title: `Wave Propagation and Phasors`,
+  description: `Explore how the E and B fields of an electromagnetic wave relate to one another and how a medium changes the wave, then connect the same sinusoidal physics to AC voltage/current phasors and power transfer — all using the section's view selector and control sliders.`,
+  instructions: [
+    `Click the "EM Wave 3D" button (top-left of the canvas), then the "EM Wave 2D" button. In 3D note that the E field oscillates along the y (E) axis while the B field oscillates along the z (B) axis, both perpendicular to the horizontal propagation (x) direction; in 2D confirm E and B stay in step (in phase) and the "S (Poynting)" arrow always points forward along +x.`,
+    `Drag the "Frequency" slider across its range (0.5 to 3.0, arbitrary units) and watch the on-canvas wavelength marker (the labelled λ bracket). Note that raising frequency shortens the wavelength while the wave speed (set by the medium) is unchanged.`,
+    `Open the "Propagation Medium (n)" dropdown and switch from "Vacuum (n=1.00)" to "Water (n=1.33)" then "Glass (n=1.50)". Observe the wave slow down and the wavelength shrink as n increases, and check the Velocity / Wavelength lines in the equation box (v = c/n, λ = λ₀/n) — confirm the frequency you set has not changed.`,
+    `Click the "AC Phasors" button. Drag the red V phasor tip and the amber I phasor tip around the dial (or use the "V Phase" and "I Phase" sliders), and watch both rotate together while keeping their fixed angular separation — read the live "Δφ = …°" and the "V leads I" / "V lags I" label.`,
+    `With the phasors in phase (Δφ ≈ 0°), note the purple P(t) power curve sits mostly positive and the equation box shows the largest P_avg = ½V₀I₀cos(Δφ). Then set the phase difference to 90° and observe P_avg collapse toward zero — the cos(Δφ) power factor is doing the work.`,
+    `Sweep Δφ between 0° and 90° (and try 180°) and conclude how the time-averaged power depends on cos(Δφ): maximum when in phase, zero at 90°, and negative-leaning when the phasors oppose.`,
+  ],
+  hint: `The same sinusoid drives both halves of this section: a faster-oscillating or denser medium reshapes the wave (v = c/n, λ shrinks, f fixed), and the angle between two rotating phasors sets the AC power through the cos(Δφ) factor — line up the phasors and power peaks, cross them at 90° and power vanishes.`,
+};
+
+export function EMWaveSection() {
   const isDarkMode = useThemeStore((s) => s.theme === 'dark');
   const c = isDarkMode ? COLORS_DARK : COLORS;
+
+  const incrementConceptChecks = useProgressStore((s) => s.incrementConceptChecks);
+  const incrementHints = useProgressStore((s) => s.incrementHints);
+  const onCheckComplete = () => incrementConceptChecks('em-wave');
+  const onCheckHint = () => incrementHints('em-wave');
 
   const [viewMode, setViewMode] = useState<WaveViewModeType>(WaveViewMode.VIEW_3D);
   const [state, setState] = useState<EMWaveState>({
@@ -144,7 +208,7 @@ export default function EMWavePage() {
 
     ctx.fillStyle = c.TEXT_MUTED;
     ctx.textAlign = 'center';
-    ctx.fillText('0 rad / 0\u00B0', phasorCX + phasorRadius + 30, phasorCY + 3);
+    ctx.fillText('0 rad / 0°', phasorCX + phasorRadius + 30, phasorCY + 3);
 
     const radV = (state.vPhase * Math.PI) / 180;
     const radI = (state.iPhase * Math.PI) / 180;
@@ -255,7 +319,7 @@ export default function EMWavePage() {
     ctx.fillText(leadLagText, phasorCX, phasorCY + phasorRadius + 20);
     ctx.font = '12px sans-serif';
     ctx.fillStyle = c.TEXT_MUTED;
-    ctx.fillText(`\u0394\u03C6 = ${Math.abs(diff).toFixed(0)}\u00B0`, phasorCX, phasorCY + phasorRadius + 35);
+    ctx.fillText(`Δφ = ${Math.abs(diff).toFixed(0)}°`, phasorCX, phasorCY + phasorRadius + 35);
 
     // Power Curve Fill & Stroke
     let maxP = 0;
@@ -368,7 +432,7 @@ export default function EMWavePage() {
         ctx.stroke();
         ctx.fillStyle = c.TEXT_MAIN;
         ctx.textAlign = 'center';
-        ctx.fillText('\u0394\u03C6', (vPeakX + iPeakX) / 2, dimY - 5);
+        ctx.fillText('Δφ', (vPeakX + iPeakX) / 2, dimY - 5);
       }
     }
   }, [state, c]);
@@ -450,7 +514,7 @@ export default function EMWavePage() {
         ctx.stroke();
         ctx.textAlign = 'center';
         ctx.fillStyle = c.TEXT_MAIN;
-        ctx.fillText(`\u03BB \u2248 ${lambdaPx.toFixed(0)}px`, waveStart + lambdaPx / 2, waveY + 15);
+        ctx.fillText(`λ ≈ ${lambdaPx.toFixed(0)}px`, waveStart + lambdaPx / 2, waveY + 15);
       }
 
       // B-field axis and wave
@@ -477,7 +541,7 @@ export default function EMWavePage() {
         const ph = k * ((i / POINTS) * drawWidth) - omega * t * 0.02 * state.speed;
         const val = bVisualAmplitude * Math.sin(ph);
         if (Math.abs(val) > 5) {
-          const symbol = val > 0 ? '\u2299' : '\u2297';
+          const symbol = val > 0 ? '⊙' : '⊗';
           ctx.fillText(symbol, x, cyB + (val > 0 ? 15 : -15));
         }
       }
@@ -887,279 +951,285 @@ export default function EMWavePage() {
   const pAvg = (0.5 * state.vAmplitude * state.iAmplitude * Math.cos(phaseDiff * Math.PI / 180)).toFixed(0);
 
   return (
-    <ModuleLayout
-      moduleId="em-wave"
-      simulation={
-        <>
-        <RealWorldHook text="The 2.4 GHz signal from your WiFi router has a wavelength of 12.5 cm — roughly the width of a laptop. When the wavelength matches physical dimensions, wave behavior dominates. That is exactly what this section is about." />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 flex flex-col gap-4">
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 flex-grow relative min-h-[350px]">
-              <div className="absolute top-4 left-4 z-10 flex gap-2">
-                {[WaveViewMode.VIEW_2D, WaveViewMode.VIEW_3D, WaveViewMode.VIEW_VI, WaveViewMode.VIEW_PHASOR_SYNC].map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setViewMode(m)}
-                    className={`px-3 py-1 rounded text-xs font-bold border ${
-                      viewMode === m
-                        ? 'bg-indigo-600 text-white border-indigo-600'
-                        : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600'
-                    }`}
-                  >
-                    {m}
-                  </button>
-                ))}
-              </div>
-              {viewMode === WaveViewMode.VIEW_PHASOR_SYNC ? (
-                <div className="flex flex-col sm:flex-row gap-2 w-full h-full pt-10">
-                  <div className="flex-1 flex flex-col min-h-[200px]">
-                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 text-center mb-1">Time domain</p>
-                    <div className="flex-1 relative">
-                      <canvas ref={phasorSyncTimeRef} className="w-full h-full" role="img" aria-label="Time-domain sinusoid" />
-                    </div>
-                  </div>
-                  <div className="flex-1 flex flex-col min-h-[200px]">
-                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 text-center mb-1">Phasor (rotating)</p>
-                    <div className="flex-1 relative">
-                      <canvas ref={phasorSyncPhasorRef} className="w-full h-full" role="img" aria-label="Rotating phasor diagram" />
-                    </div>
+    <SectionLayout
+      sectionId="em-wave"
+      hook="The 2.4 GHz signal from your WiFi router has a wavelength of 12.5 cm — roughly the width of a laptop. When the wavelength matches physical dimensions, wave behavior dominates. That is exactly what this section is about."
+    >
+      {/* ── Interactive simulation with internal view selector (genuine sim state) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 flex flex-col gap-4">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 flex-grow relative min-h-[350px]">
+            <div className="absolute top-4 left-4 z-10 flex gap-2">
+              {[WaveViewMode.VIEW_2D, WaveViewMode.VIEW_3D, WaveViewMode.VIEW_VI, WaveViewMode.VIEW_PHASOR_SYNC].map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setViewMode(m)}
+                  className={`px-3 py-1 rounded text-xs font-bold border ${
+                    viewMode === m
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600'
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+            {viewMode === WaveViewMode.VIEW_PHASOR_SYNC ? (
+              <div className="flex flex-col sm:flex-row gap-2 w-full h-full pt-10">
+                <div className="flex-1 flex flex-col min-h-[200px]">
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 text-center mb-1">Time domain</p>
+                  <div className="flex-1 relative">
+                    <canvas ref={phasorSyncTimeRef} className="w-full h-full" role="img" aria-label="Time-domain sinusoid" />
                   </div>
                 </div>
-              ) : (
-                <canvas
-                  ref={canvasRef}
-                  className="w-full h-full"
-                  role="img"
-                  aria-label="Electromagnetic wave simulation showing E and B field oscillations"
-                  onMouseDown={handlePhasorMouseDown}
-                  onMouseMove={handlePhasorMouseMove}
-                  onMouseUp={handlePhasorMouseUp}
-                  onMouseLeave={handlePhasorMouseUp}
-                  style={{ cursor: viewMode === WaveViewMode.VIEW_VI ? 'crosshair' : undefined }}
-                />
-              )}
-            </div>
-            {viewMode === WaveViewMode.VIEW_VI && (
-              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-2 text-xs text-amber-800 dark:text-amber-300">
-                <strong>AC Circuits &amp; EM Waves:</strong> Maxwell&apos;s equations predict that time-varying fields propagate as waves.
-                In circuits, the same sinusoidal solutions appear as voltage/current phasors. The power factor
-                <MathWrapper formula="\cos(\Delta\phi)" /> determines energy transfer efficiency.
+                <div className="flex-1 flex flex-col min-h-[200px]">
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 text-center mb-1">Phasor (rotating)</p>
+                  <div className="flex-1 relative">
+                    <canvas ref={phasorSyncPhasorRef} className="w-full h-full" role="img" aria-label="Rotating phasor diagram" />
+                  </div>
+                </div>
               </div>
+            ) : (
+              <canvas
+                ref={canvasRef}
+                className="w-full h-full"
+                role="img"
+                aria-label="Electromagnetic wave simulation showing E and B field oscillations"
+                onMouseDown={handlePhasorMouseDown}
+                onMouseMove={handlePhasorMouseMove}
+                onMouseUp={handlePhasorMouseUp}
+                onMouseLeave={handlePhasorMouseUp}
+                style={{ cursor: viewMode === WaveViewMode.VIEW_VI ? 'crosshair' : undefined }}
+              />
             )}
           </div>
-          <div className="lg:col-span-1 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-140px)]">
-            <ControlPanel title="Configuration">
-              {viewMode !== WaveViewMode.VIEW_VI && (
-                <div className="mb-4">
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block">
-                    Propagation Medium (n)
-                  </label>
-                  <select
-                    value={state.refractiveIndex}
-                    onChange={(e) => setState((s) => ({ ...s, refractiveIndex: parseFloat(e.target.value) }))}
-                    className="w-full bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg p-2 text-sm"
-                  >
-                    <option value="1.0">Vacuum (n=1.00)</option>
-                    <option value="1.33">Water (n=1.33)</option>
-                    <option value="1.5">Glass (n=1.50)</option>
-                  </select>
-                </div>
-              )}
+          {viewMode === WaveViewMode.VIEW_VI && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-2 text-xs text-amber-800 dark:text-amber-300">
+              <strong>AC Circuits &amp; EM Waves:</strong> Maxwell&apos;s equations predict that time-varying fields propagate as waves.
+              In circuits, the same sinusoidal solutions appear as voltage/current phasors. The power factor
+              <MathWrapper formula="\cos(\Delta\phi)" /> determines energy transfer efficiency.
+            </div>
+          )}
+        </div>
+        <div className="lg:col-span-1 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-140px)]">
+          <ControlPanel title="Configuration">
+            {viewMode !== WaveViewMode.VIEW_VI && (
+              <div className="mb-4">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block">
+                  Propagation Medium (n)
+                </label>
+                <select
+                  value={state.refractiveIndex}
+                  onChange={(e) => setState((s) => ({ ...s, refractiveIndex: parseFloat(e.target.value) }))}
+                  className="w-full bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg p-2 text-sm"
+                >
+                  <option value="1.0">Vacuum (n=1.00)</option>
+                  <option value="1.33">Water (n=1.33)</option>
+                  <option value="1.5">Glass (n=1.50)</option>
+                </select>
+              </div>
+            )}
+            <Slider
+              label="Frequency"
+              value={state.frequency}
+              min={0.5}
+              max={3.0}
+              step={0.1}
+              onChange={(v) => setState((s) => ({ ...s, frequency: v }))}
+              color="bg-purple-600"
+            />
+            {viewMode !== WaveViewMode.VIEW_VI && (
               <Slider
-                label="Frequency"
-                value={state.frequency}
-                min={0.5}
-                max={3.0}
-                step={0.1}
-                onChange={(v) => setState((s) => ({ ...s, frequency: v }))}
-                color="bg-purple-600"
+                label="Amplitude"
+                value={state.amplitude}
+                min={10}
+                max={100}
+                onChange={(v) => setState((s) => ({ ...s, amplitude: v }))}
+                color="bg-pink-600"
               />
-              {viewMode !== WaveViewMode.VIEW_VI && (
+            )}
+            {viewMode === WaveViewMode.VIEW_VI && (
+              <>
                 <Slider
-                  label="Amplitude"
-                  value={state.amplitude}
+                  label="V Peak"
+                  value={state.vAmplitude}
                   min={10}
                   max={100}
-                  onChange={(v) => setState((s) => ({ ...s, amplitude: v }))}
-                  color="bg-pink-600"
+                  onChange={(v) => setState((s) => ({ ...s, vAmplitude: v }))}
+                  color="bg-red-600"
                 />
-              )}
-              {viewMode === WaveViewMode.VIEW_VI && (
-                <>
-                  <Slider
-                    label="V Peak"
-                    value={state.vAmplitude}
-                    min={10}
-                    max={100}
-                    onChange={(v) => setState((s) => ({ ...s, vAmplitude: v }))}
-                    color="bg-red-600"
-                  />
-                  <Slider
-                    label="V Phase"
-                    value={state.vPhase}
-                    min={-180}
-                    max={180}
-                    onChange={(v) => setState((s) => ({ ...s, vPhase: v }))}
-                    color="bg-red-600"
-                  />
-                  <Slider
-                    label="I Peak"
-                    value={state.iAmplitude}
-                    min={10}
-                    max={100}
-                    onChange={(v) => setState((s) => ({ ...s, iAmplitude: v }))}
-                    color="bg-amber-600"
-                  />
-                  <Slider
-                    label="I Phase"
-                    value={state.iPhase}
-                    min={-180}
-                    max={180}
-                    onChange={(v) => setState((s) => ({ ...s, iPhase: v }))}
-                    color="bg-amber-600"
-                  />
-                </>
-              )}
-              <Slider
-                label="Speed"
-                value={state.speed}
-                min={0}
-                max={3}
-                step={0.1}
-                onChange={(v) => setState((s) => ({ ...s, speed: v }))}
-                color="bg-emerald-600"
-              />
-              <PlayControls
-                isPlaying={state.isPlaying}
-                onToggle={() => setState((s) => ({ ...s, isPlaying: !s.isPlaying }))}
-                onReset={() => setState((s) => ({ ...s, vPhase: 0, iPhase: 0, speed: 1 }))}
-              />
-              <HintBox>
-                {viewMode === WaveViewMode.VIEW_VI
-                  ? 'Set V and I phase difference to 90\u00B0 to see power drop to zero (Pure Inductive/Capacitive Load).'
-                  : 'Increase the Refractive Index (n) to see the wave slow down and the wavelength shorten.'}
-              </HintBox>
-            </ControlPanel>
-          </div>
+                <Slider
+                  label="V Phase"
+                  value={state.vPhase}
+                  min={-180}
+                  max={180}
+                  onChange={(v) => setState((s) => ({ ...s, vPhase: v }))}
+                  color="bg-red-600"
+                />
+                <Slider
+                  label="I Peak"
+                  value={state.iAmplitude}
+                  min={10}
+                  max={100}
+                  onChange={(v) => setState((s) => ({ ...s, iAmplitude: v }))}
+                  color="bg-amber-600"
+                />
+                <Slider
+                  label="I Phase"
+                  value={state.iPhase}
+                  min={-180}
+                  max={180}
+                  onChange={(v) => setState((s) => ({ ...s, iPhase: v }))}
+                  color="bg-amber-600"
+                />
+              </>
+            )}
+            <Slider
+              label="Speed"
+              value={state.speed}
+              min={0}
+              max={3}
+              step={0.1}
+              onChange={(v) => setState((s) => ({ ...s, speed: v }))}
+              color="bg-emerald-600"
+            />
+            <PlayControls
+              isPlaying={state.isPlaying}
+              onToggle={() => setState((s) => ({ ...s, isPlaying: !s.isPlaying }))}
+              onReset={() => setState((s) => ({ ...s, vPhase: 0, iPhase: 0, speed: 1 }))}
+            />
+            <HintBox>
+              {viewMode === WaveViewMode.VIEW_VI
+                ? 'Set V and I phase difference to 90° to see power drop to zero (Pure Inductive/Capacitive Load).'
+                : 'Increase the Refractive Index (n) to see the wave slow down and the wavelength shorten.'}
+            </HintBox>
+          </ControlPanel>
         </div>
-        </>
-      }
-      theory={
-        <div className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-2 mb-6">
-            <FigureImage
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Very_Large_Array%2C_2012.jpg/500px-Very_Large_Array%2C_2012.jpg"
-              alt="Very Large Array radio telescope dishes in New Mexico"
-              caption="The Very Large Array: 27 antennas detect electromagnetic waves from space."
-              attribution="Hajor, CC BY-SA 2.0 — Wikimedia Commons"
-              sourceUrl="https://commons.wikimedia.org/wiki/File:Very_Large_Array,_2012.jpg"
-            />
-            <FigureImage
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/EM_Spectrum_Properties_edit.svg/500px-EM_Spectrum_Properties_edit.svg.png"
-              alt="Electromagnetic spectrum from radio waves to gamma rays"
-              caption="The electromagnetic spectrum: all EM waves obey Maxwell's equations — they differ only in frequency and wavelength."
-              attribution="Inductiveload/NASA, CC BY-SA 3.0 — Wikimedia Commons"
-              sourceUrl="https://commons.wikimedia.org/wiki/File:EM_Spectrum_Properties_edit.svg"
-            />
-          </div>
-          <EquationBox
-            title={viewMode === WaveViewMode.VIEW_VI ? 'AC Circuit Analysis' : 'Wave Function'}
-            equations={
-              viewMode !== WaveViewMode.VIEW_VI
-                ? [
-                    { label: 'E(x,t)', math: `E_0 \\sin(kx - \\omega t),\\quad k=${kVal},\\; \\omega=${omega}`, color: 'text-red-600' },
-                    { label: 'B(x,t)', math: `\\frac{E_0}{v} \\sin(kx - \\omega t) = \\frac{n E_0}{c} \\sin(kx - \\omega t)`, color: 'text-blue-600' },
-                    { label: 'Velocity', math: `v = \\frac{c}{n} = \\frac{c}{${state.refractiveIndex}}` },
-                    { label: 'Wavelength', math: `\\lambda = \\frac{\\lambda_0}{n} \\approx ${lambda} \\text{ (arb.)}` },
-                    { label: 'Energy', math: 'u = \\frac{1}{2}\\epsilon_0 E^2 + \\frac{1}{2\\mu_0} B^2', color: 'text-purple-600 dark:text-purple-400' },
-                    { label: 'Poynting', math: '\\vec{S} = \\frac{1}{\\mu_0}(\\vec{E} \\times \\vec{B})', color: 'text-purple-600 dark:text-purple-400' },
-                  ]
-                : [
-                    { label: 'v(t)', math: `${state.vAmplitude}\\sin(\\omega t ${formatPhase(state.vPhase)})`, color: 'text-red-600' },
-                    { label: 'i(t)', math: `${state.iAmplitude}\\sin(\\omega t ${formatPhase(state.iPhase)})`, color: 'text-amber-600' },
-                    { label: 'p(t)', math: 'v(t) \\cdot i(t)', color: 'text-purple-600' },
-                    { label: 'Power', math: `P_{avg} = \\frac{1}{2}V_0 I_0 \\cos(\\Delta\\phi) \\approx ${pAvg} \\text{ W}`, color: 'text-slate-700 dark:text-slate-300' },
-                    { label: 'Phase Diff', math: `\\Delta\\phi = \\phi_v - \\phi_i = ${phaseDiff.toFixed(0)}^\\circ` },
-                  ]
-            }
+      </div>
+
+      {/* ── Inline concept checks (distributed across the wave/medium/phasor views) ── */}
+      <div className="space-y-4">
+        <ConceptCheck data={toConceptCheck(Q_TRIAD)} onComplete={onCheckComplete} onHint={onCheckHint} />
+        <ConceptCheck data={toConceptCheck(Q_MEDIUM_SPEED)} onComplete={onCheckComplete} onHint={onCheckHint} />
+        <ConceptCheck data={toConceptCheck(Q_PHASOR)} onComplete={onCheckComplete} onHint={onCheckHint} />
+      </div>
+
+      {/* ── Theory ── */}
+      <div className="space-y-6">
+        <div className="grid gap-4 sm:grid-cols-2 mb-6">
+          <FigureImage
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Very_Large_Array%2C_2012.jpg/500px-Very_Large_Array%2C_2012.jpg"
+            alt="Very Large Array radio telescope dishes in New Mexico"
+            caption="The Very Large Array: 27 antennas detect electromagnetic waves from space."
+            attribution="Hajor, CC BY-SA 2.0 — Wikimedia Commons"
+            sourceUrl="https://commons.wikimedia.org/wiki/File:Very_Large_Array,_2012.jpg"
           />
-          {(() => {
-            const k = (2 * Math.PI * state.frequency * state.refractiveIndex) / 300;
-            if (viewMode !== WaveViewMode.VIEW_VI) {
-              const data = Array.from({ length: 50 }, (_, i) => {
-                const x = i * 6;
-                const E = state.amplitude * Math.sin(k * x);
-                const Braw = (state.amplitude * state.refractiveIndex / 300) * Math.sin(k * x);
-                // Multiply B by c so it is visible alongside E on the same scale
-                const Bscaled = Braw * 300;
-                return { x: x.toFixed(0), E: +E.toFixed(2), B: +Bscaled.toFixed(2) };
-              });
-              return (
-                <PhysicsChart
-                  title="E & B Field Snapshot (t = 0)"
-                  data={data}
-                  xKey="x"
-                  xLabel="Position (arb.)"
-                  yLabel="Amplitude"
-                  lines={[
-                    { dataKey: 'E', color: '#dc2626', name: 'E-field' },
-                    { dataKey: 'B', color: '#2563eb', name: 'B-field (×c)' },
-                  ]}
-                />
-              );
-            }
-            const omegaVal = 2 * Math.PI * state.frequency;
-            const phiV = state.vPhase * Math.PI / 180;
-            const phiI = state.iPhase * Math.PI / 180;
-            const data = Array.from({ length: 60 }, (_, i) => {
-              const t = i * 0.05;
-              const v = state.vAmplitude * Math.sin(omegaVal * t + phiV);
-              const iVal = state.iAmplitude * Math.sin(omegaVal * t + phiI);
-              return { t: t.toFixed(2), P: +(v * iVal / 1000).toFixed(2) };
+          <FigureImage
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/EM_Spectrum_Properties_edit.svg/500px-EM_Spectrum_Properties_edit.svg.png"
+            alt="Electromagnetic spectrum from radio waves to gamma rays"
+            caption="The electromagnetic spectrum: all EM waves obey Maxwell's equations — they differ only in frequency and wavelength."
+            attribution="Inductiveload/NASA, CC BY-SA 3.0 — Wikimedia Commons"
+            sourceUrl="https://commons.wikimedia.org/wiki/File:EM_Spectrum_Properties_edit.svg"
+          />
+        </div>
+        <EquationBox
+          title={viewMode === WaveViewMode.VIEW_VI ? 'AC Circuit Analysis' : 'Wave Function'}
+          equations={
+            viewMode !== WaveViewMode.VIEW_VI
+              ? [
+                  { label: 'E(x,t)', math: `E_0 \\sin(kx - \\omega t),\\quad k=${kVal},\\; \\omega=${omega}`, color: 'text-red-600' },
+                  { label: 'B(x,t)', math: `\\frac{E_0}{v} \\sin(kx - \\omega t) = \\frac{n E_0}{c} \\sin(kx - \\omega t)`, color: 'text-blue-600' },
+                  { label: 'Velocity', math: `v = \\frac{c}{n} = \\frac{c}{${state.refractiveIndex}}` },
+                  { label: 'Wavelength', math: `\\lambda = \\frac{\\lambda_0}{n} \\approx ${lambda} \\text{ (arb.)}` },
+                  { label: 'Energy', math: 'u = \\frac{1}{2}\\epsilon_0 E^2 + \\frac{1}{2\\mu_0} B^2', color: 'text-purple-600 dark:text-purple-400' },
+                  { label: 'Poynting', math: '\\vec{S} = \\frac{1}{\\mu_0}(\\vec{E} \\times \\vec{B})', color: 'text-purple-600 dark:text-purple-400' },
+                ]
+              : [
+                  { label: 'v(t)', math: `${state.vAmplitude}\\sin(\\omega t ${formatPhase(state.vPhase)})`, color: 'text-red-600' },
+                  { label: 'i(t)', math: `${state.iAmplitude}\\sin(\\omega t ${formatPhase(state.iPhase)})`, color: 'text-amber-600' },
+                  { label: 'p(t)', math: 'v(t) \\cdot i(t)', color: 'text-purple-600' },
+                  { label: 'Power', math: `P_{avg} = \\frac{1}{2}V_0 I_0 \\cos(\\Delta\\phi) \\approx ${pAvg} \\text{ W}`, color: 'text-slate-700 dark:text-slate-300' },
+                  { label: 'Phase Diff', math: `\\Delta\\phi = \\phi_v - \\phi_i = ${phaseDiff.toFixed(0)}^\\circ` },
+                ]
+          }
+        />
+        {(() => {
+          const k = (2 * Math.PI * state.frequency * state.refractiveIndex) / 300;
+          if (viewMode !== WaveViewMode.VIEW_VI) {
+            const data = Array.from({ length: 50 }, (_, i) => {
+              const x = i * 6;
+              const E = state.amplitude * Math.sin(k * x);
+              const Braw = (state.amplitude * state.refractiveIndex / 300) * Math.sin(k * x);
+              // Multiply B by c so it is visible alongside E on the same scale
+              const Bscaled = Braw * 300;
+              return { x: x.toFixed(0), E: +E.toFixed(2), B: +Bscaled.toFixed(2) };
             });
             return (
               <PhysicsChart
-                title="Instantaneous Power p(t) = v·i"
+                title="E & B Field Snapshot (t = 0)"
                 data={data}
-                xKey="t"
-                xLabel="Time (s)"
-                yLabel="Power (kW)"
-                lines={[{ dataKey: 'P', color: '#9333ea', name: 'p(t)' }]}
+                xKey="x"
+                xLabel="Position (arb.)"
+                yLabel="Amplitude"
+                lines={[
+                  { dataKey: 'E', color: '#dc2626', name: 'E-field' },
+                  { dataKey: 'B', color: '#2563eb', name: 'B-field (×c)' },
+                ]}
               />
             );
-          })()}
-          <TheoryGuide>
-            {viewMode === WaveViewMode.VIEW_VI ? (
-              <>
-                <p>
-                  <strong>Instantaneous Power:</strong>{' '}
-                  <MathWrapper formula="p(t) = v(t) \cdot i(t)" />. It oscillates at{' '}
-                  <MathWrapper formula="2\omega" />.
-                </p>
-                <p>
-                  <strong>Average Power:</strong> Depends on phase difference{' '}
-                  <MathWrapper formula="\Delta\phi" />. Max when in phase (
-                  <MathWrapper formula="\Delta\phi=0" />), zero when{' '}
-                  <MathWrapper formula="90^\circ" /> out of phase.
-                </p>
-              </>
-            ) : (
-              <>
-                <p>
-                  An EM wave consists of oscillating{' '}
-                  <strong className="text-red-600 dark:text-red-400">Electric (E)</strong> and{' '}
-                  <strong className="text-blue-600 dark:text-blue-400">Magnetic (B)</strong> fields.
-                  They are perpendicular to each other and to the direction of propagation.
-                </p>
-                <p>
-                  In a vacuum, velocity <MathWrapper formula="v = c" />. In a medium with refractive
-                  index <MathWrapper formula="n" />, velocity becomes <MathWrapper formula="v = c/n" />.
-                </p>
-              </>
-            )}
-          </TheoryGuide>
-        </div>
-      }
-    />
+          }
+          const omegaVal = 2 * Math.PI * state.frequency;
+          const phiV = state.vPhase * Math.PI / 180;
+          const phiI = state.iPhase * Math.PI / 180;
+          const data = Array.from({ length: 60 }, (_, i) => {
+            const t = i * 0.05;
+            const v = state.vAmplitude * Math.sin(omegaVal * t + phiV);
+            const iVal = state.iAmplitude * Math.sin(omegaVal * t + phiI);
+            return { t: t.toFixed(2), P: +(v * iVal / 1000).toFixed(2) };
+          });
+          return (
+            <PhysicsChart
+              title="Instantaneous Power p(t) = v·i"
+              data={data}
+              xKey="t"
+              xLabel="Time (s)"
+              yLabel="Power (kW)"
+              lines={[{ dataKey: 'P', color: '#9333ea', name: 'p(t)' }]}
+            />
+          );
+        })()}
+        <TheoryGuide>
+          {viewMode === WaveViewMode.VIEW_VI ? (
+            <>
+              <p>
+                <strong>Instantaneous Power:</strong>{' '}
+                <MathWrapper formula="p(t) = v(t) \cdot i(t)" />. It oscillates at{' '}
+                <MathWrapper formula="2\omega" />.
+              </p>
+              <p>
+                <strong>Average Power:</strong> Depends on phase difference{' '}
+                <MathWrapper formula="\Delta\phi" />. Max when in phase (
+                <MathWrapper formula="\Delta\phi=0" />), zero when{' '}
+                <MathWrapper formula="90^\circ" /> out of phase.
+              </p>
+            </>
+          ) : (
+            <>
+              <p>
+                An EM wave consists of oscillating{' '}
+                <strong className="text-red-600 dark:text-red-400">Electric (E)</strong> and{' '}
+                <strong className="text-blue-600 dark:text-blue-400">Magnetic (B)</strong> fields.
+                They are perpendicular to each other and to the direction of propagation.
+              </p>
+              <p>
+                In a vacuum, velocity <MathWrapper formula="v = c" />. In a medium with refractive
+                index <MathWrapper formula="n" />, velocity becomes <MathWrapper formula="v = c/n" />.
+              </p>
+            </>
+          )}
+        </TheoryGuide>
+      </div>
+      <GuidedChallenge challenge={CHALLENGE} />
+    </SectionLayout>
   );
 }
